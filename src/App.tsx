@@ -1,3 +1,4 @@
+import { saveClothingItems, loadClothingItems, saveClothingSets, loadClothingSets } from './services/firestoreService';
 import React, { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
@@ -38,6 +39,37 @@ const App: React.FC = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  // Charger les données de l'utilisateur
+useEffect(() => {
+  if (user) {
+    const loadUserData = async () => {
+      try {
+        const items = await loadClothingItems(user.uid);
+        const sets = await loadClothingSets(user.uid);
+        setClothingItems(items);
+        setClothingSets(sets);
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+      }
+    };
+    loadUserData();
+  }
+}, [user]);
+
+// Sauvegarder automatiquement les vêtements
+useEffect(() => {
+  if (user && clothingItems.length > 0) {
+    saveClothingItems(user.uid, clothingItems).catch(console.error);
+  }
+}, [clothingItems, user]);
+
+// Sauvegarder automatiquement les ensembles
+useEffect(() => {
+  if (user && clothingSets.length > 0) {
+    saveClothingSets(user.uid, clothingSets).catch(console.error);
+  }
+}, [clothingSets, user]);
 
   useEffect(() => {
     const root = window.document.documentElement;
