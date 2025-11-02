@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { saveClothingItems, loadClothingItems, saveClothingSets, loadClothingSets } from './services/firestoreService';
 import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan } from './types.ts';
 import { analyzeClothingImages, generateOutfits, generateVacationPlan } from './services/geminiService.ts';
 import Header from './components/Header.tsx';
