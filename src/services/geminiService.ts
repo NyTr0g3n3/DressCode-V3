@@ -1,13 +1,15 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan } from '../types.ts';
 
-declare const __GEMINI_API_KEY__: string;
+import { GoogleGenAI, Type } from "@google/genai";
+import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan } from '../types.ts';
+import { config } from '../config.ts';
 
-if (!__GEMINI_API_KEY__) {
+if (!config.geminiApiKey) {
   throw new Error("Clé API manquante. Veuillez la configurer dans vos variables d'environnement.");
 }
 
-const ai = new GoogleGenAI({ apikey: __GEMINI_API_KEY__ });
+const ai = new GoogleGenAI({ apikey: config.geminiApiKey });
 
 type AnalysisResult = Omit<ClothingItem, 'id' | 'imageSrc'>;
 
