@@ -32,7 +32,9 @@ jobs:
       
     - name: Build
       run: npm run build
-      
+      env:
+        VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
+    
     - name: Check build output
       run: |
         echo "Checking if JS files contain the API key..."
