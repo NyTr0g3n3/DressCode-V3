@@ -1,11 +1,11 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan } from '../types.ts';
 
-if (!process.env.API_KEY) {
-    throw new Error("Clé API manquante. Veuillez la configurer dans vos variables d'environnement.");
+if (!import.meta.env.VITE_GEMINI_API_KEY) {
+  throw new Error("Clé API manquante. Veuillez la configurer dans vos variables d'environnement.");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apikey: import.meta.env.VITE_GEMINI_API_KEY });
 
 type AnalysisResult = Omit<ClothingItem, 'id' | 'imageSrc'>;
 
