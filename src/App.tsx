@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { saveClothingItems, loadClothingItems, saveClothingSets, loadClothingSets } from './services/firestoreService';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase';
 import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan } from './types.ts';
 import { analyzeClothingImages, generateOutfits, generateVacationPlan } from './services/geminiService.ts';
 import Header from './components/Header.tsx';
+import Auth from './components/Auth.tsx';
 import ClothingUpload from './components/ClothingUpload.tsx';
 import ClothingGallery from './components/ClothingGallery.tsx';
 import OutfitGenerator from './components/OutfitGenerator.tsx';
@@ -14,6 +16,8 @@ import VacationResultDisplay from './components/VacationResultDisplay.tsx';
 
 
 const App: React.FC = () => {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [clothingItems, setClothingItems] = useState<ClothingItem[]>([]);
   const [clothingSets, setClothingSets] = useState<ClothingSet[]>([]);
@@ -26,43 +30,20 @@ const App: React.FC = () => {
   const [vacationPlan, setVacationPlan] = useState<VacationPlan | null>(null);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
 
+  // Écouter les changements d'authentification
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove(theme === 'light' ? 'dark' : 'light');
     root.classList.add(theme);
   }, [theme]);
-
-  // Charger les données de l'utilisateur
-useEffect(() => {
-  if (user) {
-    const loadUserData = async () => {
-      try {
-        const items = await loadClothingItems(user.uid);
-        const sets = await loadClothingSets(user.uid);
-        setClothingItems(items);
-        setClothingSets(sets);
-      } catch (error) {
-        console.error('Erreur lors du chargement des données:', error);
-      }
-    };
-    loadUserData();
-  }
-}, [user]);
-
-// Sauvegarder automatiquement les vêtements
-useEffect(() => {
-  if (user && clothingItems.length > 0) {
-    saveClothingItems(user.uid, clothingItems).catch(console.error);
-  }
-}, [clothingItems, user]);
-
-// Sauvegarder automatiquement les ensembles
-useEffect(() => {
-  if (user && clothingSets.length > 0) {
-    saveClothingSets(user.uid, clothingSets).catch(console.error);
-  }
-}, [clothingSets, user]);
 
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
@@ -156,19 +137,15 @@ useEffect(() => {
   }, [clothingItems, clothingSets]);
 
   const handleRemoveItem = (id: string) => {
-    // Supprimer l'article de la liste principale
     setClothingItems(prev => prev.filter(item => item.id !== id));
     
-    // Vérifier les ensembles et les mettre à jour
     setClothingSets(prev => {
         const newSets = prev.map(set => {
-            // Si l'ensemble inclut l'article supprimé, le retirer de l'ensemble
             if (set.itemIds.includes(id)) {
                 return { ...set, itemIds: set.itemIds.filter(itemId => itemId !== id) };
             }
             return set;
         });
-        // Filtrer les ensembles qui sont maintenant invalides (moins de 2 articles)
         return newSets.filter(set => set.itemIds.length > 1);
     });
   };
@@ -214,9 +191,30 @@ useEffect(() => {
     setClothingSets(prev => [...prev, newSet]);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-snow dark:bg-onyx flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-snow dark:bg-onyx text-raisin-black dark:text-snow transition-colors duration-500">
+        <Header theme={theme} toggleTheme={toggleTheme} />
+        <main className="container mx-auto px-4 py-20 flex items-center justify-center min-h-[calc(100vh-200px)]">
+          <Auth user={user} />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-snow dark:bg-onyx text-raisin-black dark:text-snow transition-colors duration-500">
-      <Header theme={theme} toggleTheme={toggleTheme} />
+      <Header theme={theme} toggleTheme={toggleTheme}>
+        <Auth user={user} />
+      </Header>
       <main className="container mx-auto px-4 lg:px-8 py-10">
         {error && (
           <div className="bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-lg relative mb-8" role="alert">
