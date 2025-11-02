@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
-    base: '/Dresscode-V3/',
+    base: '/DressCode-V3/',
     root: '.',
     build: {
       outDir: 'dist',
