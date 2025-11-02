@@ -23,8 +23,8 @@ jobs:
     - name: Install dependencies
       run: npm install
     
-    - name: Create .env file
-      run: echo "VITE_GEMINI_API_KEY=${{ secrets.VITE_GEMINI_API_KEY }}" > .env
+    - name: Create .env.production file
+      run: echo "VITE_GEMINI_API_KEY=${{ secrets.VITE_GEMINI_API_KEY }}" > .env.production
       
     - name: Build
       run: npm run build
