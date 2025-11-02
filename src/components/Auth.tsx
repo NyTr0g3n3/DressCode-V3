@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './firebase';
+import { auth } from '../firebase';
 import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan } from './types.ts';
 import { analyzeClothingImages, generateOutfits, generateVacationPlan } from './services/geminiService.ts';
 import Header from './components/Header.tsx';
