@@ -22,23 +22,11 @@ jobs:
         
     - name: Install dependencies
       run: npm install
-    
-    - name: Create .env.production file
-      run: |
-        echo "VITE_GEMINI_API_KEY=${{ secrets.VITE_GEMINI_API_KEY }}" > .env.production
-        echo "Contents of .env.production:"
-        cat .env.production
-        echo "Secret value (masked): ${{ secrets.VITE_GEMINI_API_KEY }}"
       
     - name: Build
       run: npm run build
       env:
         VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
-    
-    - name: Check build output
-      run: |
-        echo "Checking if JS files contain the API key..."
-        grep -r "VITE_GEMINI_API_KEY" dist/ || echo "Key not found in build"
       
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
