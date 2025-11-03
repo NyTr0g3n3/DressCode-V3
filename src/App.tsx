@@ -86,51 +86,64 @@ useEffect(() => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
   };
 
-  const handleAnalyzeItems = useCallback(async (files: File[]) => {
-    if (files.length === 0) return;
-    setIsAnalyzing(true);
-    setError(null);
+const handleAnalyzeItems = useCallback(async (files: File[]) => {
+  if (files.length === 0) return;
+  setIsAnalyzing(true);
+  setError(null);
 
-    try {
-      const imagePromises = files.map(file => {
-        return new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
+  try {
+    const imagePromises = files.map(file => {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
       });
+    });
 
-      const imageDataUrls = await Promise.all(imagePromises);
-      const base64Images = imageDataUrls.map(url => url.split(',')[1]);
+    const imageDataUrls = await Promise.all(imagePromises);
+    const base64Images = imageDataUrls.map(url => url.split(',')[1]);
+    
+    const analysisResults = await analyzeClothingImages(base64Images);
+    
+    const itemsCount = Math.min(analysisResults.length, files.length);
+    const newItems: ClothingItem[] = [];
+
+    for (let i = 0; i < itemsCount; i++) {
+      const itemId = `${Date.now()}-${files[i].name}-${Math.random()}`;
       
-      const analysisResults = await analyzeClothingImages(base64Images);
+      // Upload l'image dans Storage et récupère l'URL
+      let imageUrl = imageDataUrls[i]; // Fallback vers base64
+      if (user) {
+        try {
+          imageUrl = await uploadClothingImage(user.uid, imageDataUrls[i], itemId);
+          console.log('✅ Image uploaded to Storage:', imageUrl);
+        } catch (uploadError) {
+          console.error('⚠️ Failed to upload image, using base64:', uploadError);
+        }
+      }
       
-      const itemsCount = Math.min(analysisResults.length, files.length);
-      const newItems: ClothingItem[] = [];
-
-      for (let i = 0; i < itemsCount; i++) {
-        newItems.push({
-          id: `${Date.now()}-${files[i].name}-${Math.random()}`,
-          imageSrc: imageDataUrls[i],
-          ...analysisResults[i],
-        });
-      }
-
-      if (analysisResults.length !== files.length) {
-        console.warn(`Le nombre de résultats d'analyse (${analysisResults.length}) ne correspond pas au nombre de fichiers (${files.length}).`);
-        setError(`L'IA a analysé ${newItems.length} sur ${files.length} image(s). Certaines ont peut-être été ignorées.`);
-      }
-
-      setClothingItems(prev => [...prev, ...newItems]);
-
-    } catch (err) {
-      console.error("Erreur lors de l'analyse par lot des images:", err);
-      setError("Une erreur est survenue lors de l'analyse des images. L'IA a peut-être rencontré un problème. Veuillez réessayer.");
-    } finally {
-      setIsAnalyzing(false);
+      newItems.push({
+        id: itemId,
+        imageSrc: imageUrl, // Maintenant c'est une URL, pas du base64
+        ...analysisResults[i],
+      });
     }
-  }, []);
+
+    if (analysisResults.length !== files.length) {
+      console.warn(`Le nombre de résultats d'analyse (${analysisResults.length}) ne correspond pas au nombre de fichiers (${files.length}).`);
+      setError(`L'IA a analysé ${newItems.length} sur ${files.length} image(s). Certaines ont peut-être été ignorées.`);
+    }
+
+    setClothingItems(prev => [...prev, ...newItems]);
+
+  } catch (err) {
+    console.error("Erreur lors de l'analyse par lot des images:", err);
+    setError("Une erreur est survenue lors de l'analyse des images. L'IA a peut-être rencontré un problème. Veuillez réessayer.");
+  } finally {
+    setIsAnalyzing(false);
+  }
+}, [user]);
 
   const handleGenerateOutfits = useCallback(async (context: string, anchorItemOrSet?: ClothingItem | ClothingSet) => {
     const totalItems = clothingItems.length - clothingSets.flatMap(s => s.itemIds).length + clothingSets.length;
