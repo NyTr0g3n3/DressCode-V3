@@ -59,8 +59,12 @@ useEffect(() => {
 
 // Sauvegarder automatiquement les vêtements
 useEffect(() => {
+  console.log('🔄 Save Effect:', { user: !!user, itemsLength: clothingItems.length });
   if (user && clothingItems.length > 0) {
-    saveClothingItems(user.uid, clothingItems).catch(console.error);
+    console.log('💾 SAVING ITEMS...');
+    saveClothingItems(user.uid, clothingItems)
+      .then(() => console.log('✅ SAVE SUCCESS!'))
+      .catch(error => console.error('❌ SAVE ERROR:', error));
   }
 }, [clothingItems, user]);
 
