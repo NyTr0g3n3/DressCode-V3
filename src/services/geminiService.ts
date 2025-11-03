@@ -1,8 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan } from '../types.ts';
+import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan, WardrobeAnalysis } from '../types';
 
-import { GoogleGenAI, Type } from "@google/genai";
-import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan } from '../types.ts';
 import { config } from '../config.ts';
 
 if (!config.geminiApiKey) {
@@ -174,6 +172,57 @@ export async function generateOutfits(
     }
 }
 
+export async function analyzeWardrobeGaps(
+  clothingItems: ClothingItem[],
+  clothingSets: ClothingSet[]
+): Promise<WardrobeAnalysis> {
+  const itemsDescription = clothingItems.map(item => 
+    `${item.category}: ${item.description}, couleur ${item.color}, style ${item.style}`
+  ).join('\n');
+
+  const prompt = `Tu es un expert en mode et stylisme. Analyse cette garde-robe et suggère des pièces stratégiques à acheter pour la rendre plus versatile et polyvalente.
+
+GARDE-ROBE ACTUELLE (${clothingItems.length} pièces):
+${itemsDescription}
+
+Analyse la garde-robe et retourne un JSON avec:
+{
+  "summary": "Résumé général de la garde-robe (2-3 phrases)",
+  "strengths": ["Point fort 1", "Point fort 2", "Point fort 3"],
+  "gaps": ["Manque identifié 1", "Manque identifié 2", "Manque identifié 3"],
+  "suggestions": [
+    {
+      "category": "Catégorie (ex: Hauts, Pantalons, etc.)",
+      "description": "Description précise de la pièce (ex: 'Jean brut coupe droite')",
+      "reason": "Pourquoi cette pièce rendrait la garde-robe plus versatile",
+      "priority": "high/medium/low",
+      "estimatedPrice": "Fourchette de prix (ex: '50-100€')"
+    }
+  ]
+}
+
+IMPORTANT: 
+- Suggère 3-5 pièces maximum
+- Priorise les basiques polyvalents
+- Considère les couleurs existantes pour suggérer des pièces complémentaires
+- Explique concrètement comment chaque pièce augmente les possibilités de tenues
+- Réponds UNIQUEMENT avec un JSON valide, rien d'autre`;
+
+  try {
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    
+    // Nettoyer le JSON
+    let cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
+    const analysis: WardrobeAnalysis = JSON.parse(cleanedText);
+    return analysis;
+  } catch (error) {
+    console.error('Erreur lors de l\'analyse de la garde-robe:', error);
+    throw error;
+  }
+}
 
 export async function generateVacationPlan(
     clothingList: ClothingItem[],
