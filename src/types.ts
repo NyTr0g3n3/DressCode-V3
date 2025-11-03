@@ -29,3 +29,18 @@ export interface VacationPlan {
   valise: string[]; // Liste des descriptions des vêtements
 }
 
+export interface WardrobeSuggestion {
+  category: string;
+  description: string;
+  reason: string;
+  priority: 'high' | 'medium' | 'low';
+  estimatedPrice?: string;
+}
+
+export interface WardrobeAnalysis {
+  summary: string;
+  strengths: string[];
+  gaps: string[];
+  suggestions: WardrobeSuggestion[];
+}
+
