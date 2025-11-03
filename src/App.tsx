@@ -266,18 +266,7 @@ const handleAnalyzeItems = useCallback(async (files: File[]) => {
         <Auth user={user} />
         
       </Header>
-<div style={{
-  position: 'fixed', 
-  top: '10px', 
-  right: '10px', 
-  background: user ? 'green' : 'red', 
-  color: 'white', 
-  padding: '10px', 
-  zIndex: 9999,
-  borderRadius: '8px'
-}}>
-  {user ? `✅ Connecté: ${user.email || user.displayName}` : '❌ NON CONNECTÉ'}
-</div>
+      
       <main className="container mx-auto px-4 lg:px-8 py-10">
         {error && (
           <div className="bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-lg relative mb-8" role="alert">
