@@ -301,8 +301,6 @@ const handleAnalyzeItems = useCallback(async (files: File[]) => {
         )}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-10">
-
-            <div className="lg:col-span-2 space-y-10">
   {/* Bouton d'analyse de garde-robe */}
   {clothingItems.length >= 3 && (
     <div className="bg-gradient-to-r from-gold/10 to-gold-dark/10 border-2 border-gold/30 rounded-xl p-6 flex items-center justify-between">
