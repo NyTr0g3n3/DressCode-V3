@@ -380,8 +380,6 @@ const handleAnalyzeItems = useCallback(async (files: File[]) => {
                 onRemoveSet={handleRemoveSet}
             />
         )}
-
-            {/* Modal de suggestions de garde-robe */}
               {wardrobeAnalysis && (
                 <WardrobeSuggestions
                   analysis={wardrobeAnalysis}
