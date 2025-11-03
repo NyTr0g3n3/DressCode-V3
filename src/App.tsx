@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import WardrobeSuggestions from './components/WardrobeSuggestions.tsx';
+import { analyzeWardrobeGaps } from './services/geminiService.ts';
+import type { WardrobeAnalysis } from './types.ts';
 import { uploadClothingImage } from './services/storageService';
 import { saveClothingItems, loadClothingItems, saveClothingSets, loadClothingSets } from './services/firestoreService';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -20,6 +23,8 @@ import VacationResultDisplay from './components/VacationResultDisplay.tsx';
 const App: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [wardrobeAnalysis, setWardrobeAnalysis] = useState<WardrobeAnalysis | null>(null);
+  const [isAnalyzingWardrobe, setIsAnalyzingWardrobe] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [clothingItems, setClothingItems] = useState<ClothingItem[]>([]);
   const [clothingSets, setClothingSets] = useState<ClothingSet[]>([]);
@@ -241,6 +246,26 @@ const handleAnalyzeItems = useCallback(async (files: File[]) => {
     setClothingSets(prev => [...prev, newSet]);
   };
 
+  const handleAnalyzeWardrobe = useCallback(async () => {
+  if (clothingItems.length < 3) {
+    setError("Ajoutez au moins 3 vêtements pour une analyse pertinente.");
+    return;
+  }
+
+  setIsAnalyzingWardrobe(true);
+  setError(null);
+  
+  try {
+    const analysis = await analyzeWardrobeGaps(clothingItems, clothingSets);
+    setWardrobeAnalysis(analysis);
+  } catch (err) {
+    console.error("Erreur lors de l'analyse de la garde-robe:", err);
+    setError("Impossible d'analyser la garde-robe. L'IA est peut-être surchargée. Veuillez réessayer.");
+  } finally {
+    setIsAnalyzingWardrobe(false);
+  }
+}, [clothingItems, clothingSets]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-snow dark:bg-onyx flex items-center justify-center">
@@ -276,6 +301,41 @@ const handleAnalyzeItems = useCallback(async (files: File[]) => {
         )}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-10">
+
+            <div className="lg:col-span-2 space-y-10">
+  {/* Bouton d'analyse de garde-robe */}
+  {clothingItems.length >= 3 && (
+    <div className="bg-gradient-to-r from-gold/10 to-gold-dark/10 border-2 border-gold/30 rounded-xl p-6 flex items-center justify-between">
+      <div>
+        <h3 className="text-xl font-bold mb-2">💡 Besoin d'inspiration ?</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Découvrez quelles pièces acheter pour rendre votre garde-robe plus polyvalente
+        </p>
+      </div>
+      <button
+        onClick={handleAnalyzeWardrobe}
+        disabled={isAnalyzingWardrobe}
+        className="px-6 py-3 bg-gradient-to-r from-gold to-gold-dark text-onyx rounded-xl hover:shadow-lg hover:shadow-gold/30 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+      >
+        {isAnalyzingWardrobe ? (
+          <>
+            <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Analyse...
+          </>
+        ) : (
+          <>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            Analyser ma garde-robe
+          </>
+        )}
+      </button>
+    </div>
+  )}
             <ClothingUpload onAnalyze={handleAnalyzeItems} isAnalyzing={isAnalyzing} />
             <ClothingGallery 
               clothingItems={clothingItems}
@@ -320,6 +380,14 @@ const handleAnalyzeItems = useCallback(async (files: File[]) => {
                 onRemoveSet={handleRemoveSet}
             />
         )}
+
+            {/* Modal de suggestions de garde-robe */}
+              {wardrobeAnalysis && (
+                <WardrobeSuggestions
+                  analysis={wardrobeAnalysis}
+                  onClose={() => setWardrobeAnalysis(null)}
+                />
+              )}
       </main>
     </div>
   );
