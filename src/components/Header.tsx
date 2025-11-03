@@ -14,13 +14,16 @@ const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, children }) => {
         <h1 className="text-4xl font-serif font-bold tracking-wider text-raisin-black dark:text-snow">
           <span className="text-gold">DRESS</span>CODE
         </h1>
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold dark:focus:ring-offset-onyx transition-colors"
-          aria-label="Changer le thème"
-        >
-          {theme === 'light' ? <MoonIcon /> : <SunIcon />}
-        </button>
+        <div className="flex items-center gap-4">
+          {children}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold dark:focus:ring-offset-onyx transition-colors"
+            aria-label="Changer le thème"
+          >
+            {theme === 'light' ? <MoonIcon /> : <SunIcon />}
+          </button>
+        </div>
       </div>
     </header>
   );
