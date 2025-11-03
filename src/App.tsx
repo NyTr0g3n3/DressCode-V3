@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { uploadClothingImage } from './services/storageService';
 import { saveClothingItems, loadClothingItems, saveClothingSets, loadClothingSets } from './services/firestoreService';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
