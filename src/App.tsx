@@ -303,7 +303,7 @@ const handleAnalyzeItems = useCallback(async (files: File[]) => {
           <div className="lg:col-span-2 space-y-10">
   {/* Bouton d'analyse de garde-robe */}
   {clothingItems.length >= 3 && (
-    <div className="bg-gradient-to-r from-gold/10 to-gold-dark/10 border-2 border-gold/30 rounded-xl p-6 flex items-center justify-between">
+    <div className="bg-gradient-to-r from-gold/10 to-gold-dark/10 border-2 border-gold/30 rounded-xl p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4 md:justify-between">
       <div>
         <h3 className="text-xl font-bold mb-2">💡 Besoin d'inspiration ?</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -311,10 +311,10 @@ const handleAnalyzeItems = useCallback(async (files: File[]) => {
         </p>
       </div>
       <button
-        onClick={handleAnalyzeWardrobe}
-        disabled={isAnalyzingWardrobe}
-        className="px-6 py-3 bg-gradient-to-r from-gold to-gold-dark text-onyx rounded-xl hover:shadow-lg hover:shadow-gold/30 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
-      >
+  onClick={handleAnalyzeWardrobe}
+  disabled={isAnalyzingWardrobe}
+  className="px-4 md:px-6 py-3 bg-gradient-to-r from-gold to-gold-dark text-onyx rounded-xl hover:shadow-lg hover:shadow-gold/30 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm md:text-base flex-shrink-0"
+>
         {isAnalyzingWardrobe ? (
           <>
             <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
