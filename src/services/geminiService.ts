@@ -190,9 +190,7 @@ Analyse la garde-robe et identifie:
 2. Les manques ou gaps à combler
 3. Les pièces à acheter pour maximiser la polyvalence
 
-Suggère 3-5 pièces maximum en priorisant les basiques polyvalents.
-Considère les couleurs existantes pour suggérer des pièces complémentaires.
-Explique concrètement comment chaque pièce augmente les possibilités de tenues.`;
+Suggère 3-5 pièces maximum en priorisant les basiques polyvalents.`;
 
   const response = await ai.models.generateContent({
     model: "gemini-2.5-pro",
@@ -209,39 +207,26 @@ Explique concrètement comment chaque pièce augmente les possibilités de tenue
           strengths: {
             type: Type.ARRAY,
             items: { type: Type.STRING },
-            description: "Liste des points forts de la garde-robe"
+            description: "Liste des points forts"
           },
           gaps: {
             type: Type.ARRAY,
             items: { type: Type.STRING },
-            description: "Liste des manques identifiés"
+            description: "Liste des manques"
           },
           suggestions: {
             type: Type.ARRAY,
             items: {
               type: Type.OBJECT,
               properties: {
-                category: {
-                  type: Type.STRING,
-                  description: "Catégorie de la pièce suggérée"
-                },
-                description: {
-                  type: Type.STRING,
-                  description: "Description précise de la pièce"
-                },
-                reason: {
-                  type: Type.STRING,
-                  description: "Pourquoi cette pièce rendrait la garde-robe plus versatile"
-                },
+                category: { type: Type.STRING },
+                description: { type: Type.STRING },
+                reason: { type: Type.STRING },
                 priority: {
                   type: Type.STRING,
-                  enum: ["high", "medium", "low"],
-                  description: "Niveau de priorité"
+                  enum: ["high", "medium", "low"]
                 },
-                estimatedPrice: {
-                  type: Type.STRING,
-                  description: "Fourchette de prix estimée"
-                }
+                estimatedPrice: { type: Type.STRING }
               },
               required: ["category", "description", "reason", "priority", "estimatedPrice"]
             }
@@ -256,8 +241,7 @@ Explique concrètement comment chaque pièce augmente les possibilités de tenue
     const analysis: WardrobeAnalysis = JSON.parse(response.text);
     return analysis;
   } catch (error) {
-    console.error('Erreur lors de l\'analyse de la garde-robe:', error);
-    console.error('Réponse reçue:', response.text);
+    console.error('Erreur:', error);
     throw error;
   }
 }
