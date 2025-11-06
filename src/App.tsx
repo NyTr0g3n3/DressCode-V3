@@ -388,8 +388,7 @@ const handleAnalyzeItems = useCallback(async (files: File[]) => {
                   onClose={() => setWardrobeAnalysis(null)}
                 />
               )}
-      </main>
-      {wardrobeAnalysis && (
+        {wardrobeAnalysis && (
           <WardrobeSuggestions
             analysis={wardrobeAnalysis}
             onClose={() => setWardrobeAnalysis(null)}
