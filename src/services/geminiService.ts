@@ -245,3 +245,63 @@ Suggère 3-5 pièces maximum en priorisant les basiques polyvalents.`;
     throw error;
   }
 }
+export async function generateVacationPlan(
+    clothingList: ClothingItem[],
+    sets: ClothingSet[],
+    days: number,
+    context: string,
+): Promise<VacationPlan> {
+    const itemIdsInSets = new Set(sets.flatMap(s => s.itemIds));
+    const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
+
+    const individualItemsFormatted = individualItems.map(item => `- ${item.analysis} (Catégorie: ${item.category}, Couleur: ${item.color}, Matière: ${item.material})`).join('\n');
+    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble)`).join('\n');
+
+    const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
+
+    const prompt = `
+    Tu es un styliste de voyage et un expert en organisation. Ta mission est de créer une valise optimisée pour un voyage.
+
+    Détails du voyage :
+    - Durée : ${days} jour(s)
+    - Contexte / Météo : "${context}"
+
+    Vêtements et Ensembles disponibles dans la garde-robe :
+    ${availableClothes}
+    
+    RÈGLES :
+    1. Crée une liste de vêtements à emporter qui soit polyvalente et minimale.
+    2. Ne sélectionne QUE des articles de la liste fournie.
+    3. Les articles marqués comme "(Ensemble)" sont inséparables.
+    4. Assure-toi que la quantité de vêtements est appropriée pour ${days} jour(s).
+    `;
+
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-pro",
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                    titre: { type: Type.STRING, description: "Le nom du plan de valise." },
+                    resume: { type: Type.STRING, description: "Un bref résumé de la stratégie de la valise." },
+                    valise: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING },
+                        description: "La liste des vêtements à emporter.",
+                    }
+                },
+                required: ["titre", "resume", "valise"],
+            }
+        }
+    });
+
+    try {
+        const jsonResponse = JSON.parse(response.text);
+        return jsonResponse as VacationPlan;
+    } catch (e) {
+        console.error("Erreur de parsing JSON:", e);
+        throw new Error("L'IA a renvoyé une réponse malformée.");
+    }
+}
