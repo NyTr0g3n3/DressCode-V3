@@ -405,8 +405,5 @@ const handleAnalyzeItems = useCallback(async (files: File[]) => {
     </div>
   );
 };
-    </div>
-  );
-};
 
 export default App;
