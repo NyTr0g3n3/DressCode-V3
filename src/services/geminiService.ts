@@ -177,7 +177,7 @@ export async function analyzeWardrobeGaps(
   clothingSets: ClothingSet[]
 ): Promise<WardrobeAnalysis> {
   const itemsDescription = clothingItems.map(item => 
-    `${item.category}: ${item.description}, couleur ${item.color}, style ${item.style}`
+    `${item.category}: ${item.analysis}, couleur ${item.color}, matière ${item.material}`
   ).join('\n');
 
   const prompt = `Tu es un expert en mode et stylisme. Analyse cette garde-robe et suggère des pièces stratégiques à acheter pour la rendre plus versatile et polyvalente.
@@ -185,108 +185,79 @@ export async function analyzeWardrobeGaps(
 GARDE-ROBE ACTUELLE (${clothingItems.length} pièces):
 ${itemsDescription}
 
-Analyse la garde-robe et retourne un JSON avec:
-{
-  "summary": "Résumé général de la garde-robe (2-3 phrases)",
-  "strengths": ["Point fort 1", "Point fort 2", "Point fort 3"],
-  "gaps": ["Manque identifié 1", "Manque identifié 2", "Manque identifié 3"],
-  "suggestions": [
-    {
-      "category": "Catégorie (ex: Hauts, Pantalons, etc.)",
-      "description": "Description précise de la pièce (ex: 'Jean brut coupe droite')",
-      "reason": "Pourquoi cette pièce rendrait la garde-robe plus versatile",
-      "priority": "high/medium/low",
-      "estimatedPrice": "Fourchette de prix (ex: '50-100€')"
-    }
-  ]
-}
+Analyse la garde-robe et identifie:
+1. Les points forts de cette garde-robe
+2. Les manques ou gaps à combler
+3. Les pièces à acheter pour maximiser la polyvalence
 
-IMPORTANT: 
-- Suggère 3-5 pièces maximum
-- Priorise les basiques polyvalents
-- Considère les couleurs existantes pour suggérer des pièces complémentaires
-- Explique concrètement comment chaque pièce augmente les possibilités de tenues
-- Réponds UNIQUEMENT avec un JSON valide, rien d'autre`;
+Suggère 3-5 pièces maximum en priorisant les basiques polyvalents.
+Considère les couleurs existantes pour suggérer des pièces complémentaires.
+Explique concrètement comment chaque pièce augmente les possibilités de tenues.`;
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-pro",
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          summary: {
+            type: Type.STRING,
+            description: "Résumé général de la garde-robe (2-3 phrases)"
+          },
+          strengths: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "Liste des points forts de la garde-robe"
+          },
+          gaps: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "Liste des manques identifiés"
+          },
+          suggestions: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                category: {
+                  type: Type.STRING,
+                  description: "Catégorie de la pièce suggérée"
+                },
+                description: {
+                  type: Type.STRING,
+                  description: "Description précise de la pièce"
+                },
+                reason: {
+                  type: Type.STRING,
+                  description: "Pourquoi cette pièce rendrait la garde-robe plus versatile"
+                },
+                priority: {
+                  type: Type.STRING,
+                  enum: ["high", "medium", "low"],
+                  description: "Niveau de priorité"
+                },
+                estimatedPrice: {
+                  type: Type.STRING,
+                  description: "Fourchette de prix estimée"
+                }
+              },
+              required: ["category", "description", "reason", "priority", "estimatedPrice"]
+            }
+          }
+        },
+        required: ["summary", "strengths", "gaps", "suggestions"]
+      }
+    }
+  });
 
   try {
-    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    
-    // Nettoyer le JSON
-    let cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    
-    const analysis: WardrobeAnalysis = JSON.parse(cleanedText);
+    const analysis: WardrobeAnalysis = JSON.parse(response.text);
     return analysis;
   } catch (error) {
     console.error('Erreur lors de l\'analyse de la garde-robe:', error);
+    console.error('Réponse reçue:', response.text);
     throw error;
   }
-}
-
-export async function generateVacationPlan(
-    clothingList: ClothingItem[],
-    sets: ClothingSet[],
-    days: number,
-    context: string,
-): Promise<VacationPlan> {
-    const itemIdsInSets = new Set(sets.flatMap(s => s.itemIds));
-    const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
-
-    const individualItemsFormatted = individualItems.map(item => `- ${item.analysis} (Catégorie: ${item.category}, Couleur: ${item.color}, Matière: ${item.material})`).join('\n');
-    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble)`).join('\n');
-
-    const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
-
-    const prompt = `
-    Tu es un styliste de voyage et un expert en organisation. Ta mission est de créer une valise optimisée pour un voyage.
-
-    Détails du voyage :
-    - Durée : ${days} jour(s)
-    - Contexte / Météo : "${context}"
-
-    Vêtements et Ensembles disponibles dans la garde-robe :
-    ${availableClothes}
-    
-    RÈGLES :
-    1. Crée une liste de vêtements à emporter qui soit polyvalente et minimale. Les articles doivent pouvoir être combinés pour créer plusieurs tenues différentes.
-    2. Ne sélectionne QUE des articles de la liste fournie.
-    3. Les articles marqués comme "(Ensemble)" sont inséparables. Si tu utilises un ensemble, liste-le par son nom (ex: "Costume bleu marine").
-    4. Assure-toi que la quantité de vêtements est appropriée pour la durée du voyage de ${days} jour(s). Pense à la réutilisation des pièces (comme les pantalons ou les vestes).
-
-    Fournis le résultat en français sous la forme suivante :
-    1. Un "titre" accrocheur pour le plan de valise.
-    2. Un "resume" court qui explique la stratégie de la valise (ex: "Une sélection capsule pour un weekend ensoleillé...").
-    3. Une "valise" qui est une liste des descriptions exactes des vêtements ou des noms d'ensembles de la liste fournie à emporter.
-    `;
-
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-pro",
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                    titre: { type: Type.STRING, description: "Le nom du plan de valise." },
-                    resume: { type: Type.STRING, description: "Un bref résumé de la stratégie de la valise." },
-                    valise: {
-                        type: Type.ARRAY,
-                        items: { type: Type.STRING, description: "Description d'un vêtement ou nom d'un ensemble de la liste fournie." },
-                        description: "La liste des descriptions des vêtements ou ensembles à emporter.",
-                    }
-                },
-                required: ["titre", "resume", "valise"],
-            }
-        }
-    });
-
-    try {
-        const jsonResponse = JSON.parse(response.text);
-        return jsonResponse as VacationPlan;
-    } catch (e) {
-        console.error("Erreur de parsing JSON de la réponse Gemini pour la valise:", e);
-        console.error("Réponse reçue:", response.text);
-        throw new Error("L'IA a renvoyé une réponse malformée pour le plan de valise.");
-    }
 }
