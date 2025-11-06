@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import MobileFAB from './components/MobileFAB.tsx';
 import WardrobeSuggestions from './components/WardrobeSuggestions.tsx';
 import { analyzeWardrobeGaps } from './services/geminiService.ts';
 import type { WardrobeAnalysis } from './types.ts';
@@ -334,7 +335,10 @@ const handleAnalyzeItems = useCallback(async (files: File[]) => {
       </button>
     </div>
   )}
-            <ClothingUpload onAnalyze={handleAnalyzeItems} isAnalyzing={isAnalyzing} />
+            {/* Desktop only - caché sur mobile */}
+<div className="hidden md:block">
+  <ClothingUpload onAnalyze={handleAnalyzeItems} isAnalyzing={isAnalyzing} />
+</div>
             <ClothingGallery 
               clothingItems={clothingItems}
               clothingSets={clothingSets} 
@@ -385,6 +389,22 @@ const handleAnalyzeItems = useCallback(async (files: File[]) => {
                 />
               )}
       </main>
+      {wardrobeAnalysis && (
+          <WardrobeSuggestions
+            analysis={wardrobeAnalysis}
+            onClose={() => setWardrobeAnalysis(null)}
+          />
+        )}
+        
+        {/* FAB Mobile */}
+        <MobileFAB 
+          onFilesSelected={handleAnalyzeItems}
+          isAnalyzing={isAnalyzing}
+        />
+      </main>
+    </div>
+  );
+};
     </div>
   );
 };
