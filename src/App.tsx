@@ -9,11 +9,11 @@ import Header from './components/Header.tsx';
 import Auth from './components/Auth.tsx';
 import ClothingUpload from './components/ClothingUpload.tsx';
 import ClothingGallery from './components/ClothingGallery.tsx';
-import OutfitCreator from './components/OutfitCreator.tsx';
+import OutfitGenerator from './components/OutfitGenerator.tsx';
 import OutfitDisplay from './components/OutfitDisplay.tsx';
 import ClothingDetailModal from './components/ClothingDetailModal.tsx';
 import VacationPlanner from './components/VacationPlanner.tsx';
-import VacationPlanDisplay from './components/VacationPlanDisplay.tsx';
+import VacationResultDisplay from './components/VacationResultDisplay.tsx';
 import MobileFAB from './components/MobileFAB.tsx';
 import MobileHome from './components/MobileHome.tsx';
 import MobileBottomNav from './components/MobileBottomNav.tsx';
@@ -206,7 +206,7 @@ const App: React.FC = () => {
   }, [clothingItems, clothingSets]);
 
   const handleScrollToOutfits = useCallback(() => {
-    const element = document.getElementById('outfit-creator');
+    const element = document.getElementById('outfit-generator');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -399,8 +399,8 @@ const App: React.FC = () => {
           </div>
 
           <div className="space-y-10">
-            <div id="outfit-creator">
-              <OutfitCreator 
+            <div id="outfit-generator">
+              <OutfitGenerator 
                 clothingItems={clothingItems}
                 clothingSets={clothingSets}
                 onGenerate={handleGenerateOutfits}
@@ -417,7 +417,7 @@ const App: React.FC = () => {
               />
             </div>
             {vacationPlan && (
-              <VacationPlanDisplay 
+              <VacationResultDisplay 
                 plan={vacationPlan} 
                 allClothingItems={clothingItems}
                 onCreateSet={handleCreateSet}
