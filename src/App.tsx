@@ -19,6 +19,8 @@ import ClothingDetailModal from './components/ClothingDetailModal.tsx';
 import { LoadingSpinner } from './components/icons.tsx';
 import VacationPlanner from './components/VacationPlanner.tsx';
 import VacationResultDisplay from './components/VacationResultDisplay.tsx';
+import MobileHome from './components/MobileHome.tsx';
+import MobileBottomNav from './components/MobileBottomNav.tsx';
 
 
 const App: React.FC = () => {
@@ -37,6 +39,8 @@ const App: React.FC = () => {
   const [outfitContext, setOutfitContext] = useState('');
   const [vacationPlan, setVacationPlan] = useState<VacationPlan | null>(null);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+  type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
+  const [activeTab, setActiveTab] = useState<MobileTab>('home');
 
   // Écouter les changements d'authentification
   useEffect(() => {
@@ -205,6 +209,20 @@ const handleAnalyzeItems = useCallback(async (files: File[]) => {
         return newSets.filter(set => set.itemIds.length > 1);
     });
   };
+
+  const handleScrollToOutfits = useCallback(() => {
+  const element = document.getElementById('outfit-creator');
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}, []);
+
+const handleScrollToVacation = useCallback(() => {
+  const element = document.getElementById('vacation-planner');
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}, []);
   
   const handleRemoveSet = (id: string) => {
     setClothingSets(prev => prev.filter(set => set.id !== id));
@@ -266,6 +284,25 @@ const handleAnalyzeItems = useCallback(async (files: File[]) => {
     setIsAnalyzingWardrobe(false);
   }
 }, [clothingItems, clothingSets]);
+
+  // Compteurs pour la bottom nav
+const categoryCounts = {
+  hauts: clothingItems.filter(item => item.category === 'Hauts').length,
+  bas: clothingItems.filter(item => item.category === 'Bas').length,
+  chaussures: clothingItems.filter(item => item.category === 'Chaussures').length,
+  accessoires: clothingItems.filter(item => item.category === 'Accessoires').length,
+};
+
+// Filtrage des items selon le tab actif
+const filteredItems = activeTab === 'home' 
+  ? [] 
+  : clothingItems.filter(item => {
+      if (activeTab === 'hauts') return item.category === 'Hauts';
+      if (activeTab === 'bas') return item.category === 'Bas';
+      if (activeTab === 'chaussures') return item.category === 'Chaussures';
+      if (activeTab === 'accessoires') return item.category === 'Accessoires';
+      return false;
+    });
 
   if (loading) {
     return (
