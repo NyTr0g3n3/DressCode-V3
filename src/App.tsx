@@ -409,7 +409,7 @@ useEffect(() => {
             <div id="outfit-generator">
               <OutfitGenerator 
                 clothingItems={clothingItems}
-                clothingSets={clothingSets}
+                clothingSets={clothingSets || []}
                 onGenerate={handleGenerateOutfits}
                 isGenerating={isGenerating}
               />
@@ -418,7 +418,7 @@ useEffect(() => {
             <div id="vacation-planner">
               <VacationPlanner
                 clothingItems={clothingItems}
-                clothingSets={clothingSets}
+                clothingSets={clothingSets || []}
                 onGeneratePlan={handleGenerateVacationPlan}
                 isGenerating={isGeneratingPlan}
               />
@@ -436,7 +436,7 @@ useEffect(() => {
         {selectedItem && (
             <ClothingDetailModal 
                 item={selectedItem} 
-                clothingSets={clothingSets}
+                clothingSets={clothingSets || []}
                 onClose={handleCloseModal} 
                 onUpdate={handleUpdateItem}
                 onGenerateFrom={handleGenerateFromModal}
