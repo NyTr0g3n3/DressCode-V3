@@ -26,6 +26,13 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [clothingItems, setClothingItems] = useState<ClothingItem[]>([]);
   const [clothingSets, setClothingSets] = useState<ClothingSet[]>([]);
+
+// FORCE la valeur si undefined
+useEffect(() => {
+  if (clothingSets === undefined) {
+    setClothingSets([]);
+  }
+}, [clothingSets]);
   const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
