@@ -157,7 +157,7 @@ const App: React.FC = () => {
     setIsGenerating(true);
     setError(null);
     try {
-      const outfits = await generateOutfits(clothingItems, clothingSets, context, anchorItem);
+      const outfits = await generateOutfits(clothingItems, clothingSets || [], context, anchorItem);
       setSuggestedOutfits(outfits);
     } catch (err) {
       console.error("Erreur lors de la génération des tenues:", err);
@@ -175,7 +175,7 @@ const App: React.FC = () => {
     setIsGeneratingPlan(true);
     setError(null);
     try {
-      const plan = await generateVacationPlan(clothingItems, clothingSets, days, context);
+      const plan = await generateVacationPlan(clothingItems, clothingSets || [], days, context);
       setVacationPlan(plan);
     } catch (err) {
       console.error("Erreur lors de la génération du plan de valise:", err);
@@ -195,7 +195,7 @@ const App: React.FC = () => {
     setError(null);
     
     try {
-      const analysis = await analyzeWardrobeGaps(clothingItems, clothingSets);
+      const analysis = await analyzeWardrobeGaps(clothingItems, clothingSets || []);
       setWardrobeAnalysis(analysis);
     } catch (err) {
       console.error("Erreur lors de l'analyse de la garde-robe:", err);
