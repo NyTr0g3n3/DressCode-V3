@@ -251,7 +251,7 @@ export async function generateVacationPlan(
     days: number,
     context: string,
 ): Promise<VacationPlan> {
-    const itemIdsInSets = new Set(sets.flatMap(s => s.itemIds));
+    const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
 
     const individualItemsFormatted = individualItems.map(item => `- ${item.analysis} (Catégorie: ${item.category}, Couleur: ${item.color}, Matière: ${item.material})`).join('\n');
