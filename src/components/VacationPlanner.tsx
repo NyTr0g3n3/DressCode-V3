@@ -2,18 +2,22 @@ import React, { useState } from 'react';
 import { SuitcaseIcon } from './icons.tsx';
 
 interface VacationPlannerProps {
-  onGenerate: (days: number, context: string) => void;
+  clothingItems: any[];
+  clothingSets: any[];
+  onGeneratePlan: (days: number, context: string) => void;
   isGenerating: boolean;
 }
 
-const VacationPlanner: React.FC<VacationPlannerProps> = ({ onGenerate, isGenerating }) => {
+const VacationPlanner: React.FC<VacationPlannerProps> = ({ clothingItems, clothingSets, onGeneratePlan, isGenerating }) => {
   const [days, setDays] = useState<number>(3);
   const [context, setContext] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (context.trim() && days > 0) {
-      onGenerate(days, context);
+    // 🛡️ PROTECTION: Vérifier que context existe avant d'appeler trim()
+    const safeContext = context || '';
+    if (safeContext.trim() && days > 0) {
+      onGeneratePlan(days, safeContext);
     }
   };
 
@@ -56,7 +60,7 @@ const VacationPlanner: React.FC<VacationPlannerProps> = ({ onGenerate, isGenerat
         </div>
         <button
           type="submit"
-          disabled={isGenerating || !context.trim() || days <= 0}
+          disabled={isGenerating || !(context || '').trim() || days <= 0}
           className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gold text-onyx font-bold rounded-lg hover:bg-gold-dark transition-all duration-300 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transform hover:scale-105"
         >
           <SuitcaseIcon />
