@@ -3,7 +3,7 @@ export type Category = 'Hauts' | 'Bas' | 'Chaussures' | 'Accessoires';
 
 export interface ClothingItem {
   id: string;
-  imageSrc: string; // base64 data URL
+  imageSrc: string; // Doit être une URL Firebase Storage (pas de base64)
   analysis: string; // AI-generated description
   category: Category;
   color: string; // e.g., "Bleu", "Noir", "Blanc"
