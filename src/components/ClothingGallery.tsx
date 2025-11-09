@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import type { ClothingItem as ClothingItemType, ClothingSet, Category } from '../types';
-import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, UnlinkIcon } from './icons.tsx';
+import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon } from './icons.tsx';
 
+// Le composant Card n'a pas besoin de changer
 interface CardProps {
   imageSrc: string;
   analysis: string;
@@ -14,6 +15,7 @@ interface CardProps {
 const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onRemove, isSelected, isSet }) => (
   <div onClick={onClick} className="group relative aspect-square bg-raisin-black rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer">
     <img src={imageSrc} alt={analysis} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+    {/* Logique d'affichage de la sélection/set mise à jour */}
     <div className={`absolute inset-0 transition-all duration-300 ${isSelected ? 'ring-4 ring-gold' : 'ring-2 ring-transparent'} rounded-lg`}></div>
     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
     {isSet && !isSelected && <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white"><LinkIcon /></span>}
@@ -31,11 +33,13 @@ const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onRemove, isSe
   </div>
 );
 
+// Interface des props mise à jour
 interface ClothingGalleryProps {
   clothingItems: ClothingItemType[];
   clothingSets?: ClothingSet[];
   onItemClick: (item: ClothingItemType) => void;
   onDeleteItem: (id: string) => void;
+  onCreateSet: (name: string, itemIds: string[]) => void; // Ajout de la prop
 }
 
 const initialFilters: Record<Category, { color: string; material: string }> = {
@@ -45,11 +49,16 @@ const initialFilters: Record<Category, { color: string; material: string }> = {
   Accessoires: { color: 'Toutes', material: 'Toutes' },
 };
 
-const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothingSets = [], onItemClick, onDeleteItem }) => {
+// Composant principal mis à jour
+const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothingSets = [], onItemClick, onDeleteItem, onCreateSet }) => {
   const [openCategory, setOpenCategory] = useState<Category | null>('Hauts');
   const [filters, setFilters] = useState(initialFilters);
   
-  // 🛡️ CORRECTION: Garantir que clothingSets est toujours un tableau
+  // --- NOUVEL ÉTAT POUR LA CRÉATION D'ENSEMBLES ---
+  const [isSetCreationMode, setIsSetCreationMode] = useState(false);
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
+  // ---
+
   const safeClothingSets = useMemo(() => clothingSets || [], [clothingSets]);
   const itemIdsInSets = useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
   const totalItemsCount = clothingItems.length;
@@ -61,12 +70,36 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothi
     { name: 'Accessoires', icon: AccessoryIcon },
   ];
 
+  // --- NOUVELLE LOGIQUE DE CLIC SUR CARTE ---
   const handleCardClick = (item: ClothingItemType) => {
-    onItemClick(item);
+    if (isSetCreationMode) {
+      // Mode création d'ensemble : on sélectionne/désélectionne
+      setSelectedItemIds(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(item.id)) {
+          newSet.delete(item.id);
+        } else {
+          newSet.add(item.id);
+        }
+        return newSet;
+      });
+    } else {
+      // Mode normal : on ouvre la modale
+      onItemClick(item);
+    }
   };
+  // ---
 
   const handleRemoveItem = (e: React.MouseEvent, itemId: string) => {
     e.stopPropagation();
+    // Si on supprime un item en mode création, on le retire aussi de la sélection
+    if (selectedItemIds.has(itemId)) {
+      setSelectedItemIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(itemId);
+        return newSet;
+      });
+    }
     onDeleteItem(itemId);
   };
 
@@ -113,6 +146,25 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothi
     setOpenCategory(openCategory === categoryName ? null : categoryName);
   };
 
+  // --- NOUVELLES FONCTIONS DE GESTION D'ENSEMBLE ---
+  const handleToggleSetMode = () => {
+    setIsSetCreationMode(!isSetCreationMode);
+    setSelectedItemIds(new Set()); // On réinitialise la sélection à chaque changement de mode
+  };
+
+  const handleConfirmSetCreation = () => {
+    if (selectedItemIds.size < 2) {
+      alert("Veuillez sélectionner au moins 2 articles pour créer un ensemble.");
+      return;
+    }
+    const setName = window.prompt("Donnez un nom à cet ensemble :");
+    if (setName) {
+      onCreateSet(setName, Array.from(selectedItemIds));
+      handleToggleSetMode(); // Quitter le mode création
+    }
+  };
+  // ---
+
   if (totalItemsCount === 0) {
     return (
       <div className="bg-white dark:bg-raisin-black rounded-xl shadow-2xl shadow-black/10 dark:shadow-black/20 ring-1 ring-black/5 dark:ring-white/10 p-8 text-center">
@@ -125,15 +177,53 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothi
 
   return (
     <div className="bg-white dark:bg-raisin-black rounded-xl shadow-2xl shadow-black/10 dark:shadow-black/20 ring-1 ring-black/5 dark:ring-white/10 p-6 lg:p-8">
-      <div className="flex items-center gap-3 mb-8">
-        <WardrobeIcon className="w-8 h-8 text-gold" />
-        <div>
-          <h2 className="text-3xl font-serif font-bold tracking-tight">
-            <span className="text-gold">Ma</span> Garde-Robe
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{totalItemsCount} vêtement{totalItemsCount > 1 ? 's' : ''}</p>
+      {/* --- HEADER MIS À JOUR AVEC LE BOUTON DE CRÉATION --- */}
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
+        <div className="flex items-center gap-3">
+          <WardrobeIcon className="w-8 h-8 text-gold" />
+          <div>
+            <h2 className="text-3xl font-serif font-bold tracking-tight">
+              <span className="text-gold">Ma</span> Garde-Robe
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{totalItemsCount} vêtement{totalItemsCount > 1 ? 's' : ''}</p>
+          </div>
         </div>
+        
+        {/* Logique d'affichage des boutons de création */}
+        {!isSetCreationMode ? (
+          <button
+            onClick={handleToggleSetMode}
+            className="flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 bg-onyx dark:bg-snow border-2 border-gold text-gold dark:text-onyx font-bold rounded-lg hover:bg-gold/10 dark:hover:bg-onyx/10 transition-all duration-300 text-sm"
+          >
+            <LinkIcon />
+            Créer un ensemble
+          </button>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              onClick={handleToggleSetMode}
+              className="flex-shrink-0 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-sm font-medium"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handleConfirmSetCreation}
+              disabled={selectedItemIds.size < 2}
+              className="flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 bg-gold text-onyx font-bold rounded-lg hover:bg-gold-dark transition-all duration-300 text-sm disabled:opacity-50"
+            >
+              Valider ({selectedItemIds.size})
+            </button>
+          </div>
+        )}
       </div>
+      {/* --- FIN DU HEADER MIS À JOUR --- */}
+
+      {isSetCreationMode && (
+        <div className="bg-gold/10 border border-gold/30 text-gold-dark dark:text-gold p-4 rounded-lg mb-6 text-center">
+          <p className="font-semibold">Mode Création d'Ensemble</p>
+          <p className="text-sm">Sélectionnez les articles que vous souhaitez lier.</p>
+        </div>
+      )}
 
       <div className="space-y-6">
         {categories.map(({ name, icon: Icon }) => {
@@ -156,7 +246,7 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothi
 
               {isOpen && (
                 <div className="p-6 space-y-6">
-                  {/* Filters */}
+                  {/* ... (Les filtres ne changent pas) ... */}
                   <div className="flex flex-wrap gap-4">
                     <div className="flex-1 min-w-[200px]">
                       <label className="block text-sm font-medium mb-2">Couleur</label>
@@ -185,7 +275,7 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothi
                     </div>
                   </div>
 
-                  {/* Items Grid */}
+                  {/* --- GRID MIS À JOUR POUR LA SÉLECTION --- */}
                   {filteredItems.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                       {filteredItems.map(item => (
@@ -193,10 +283,10 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothi
                           key={item.id}
                           imageSrc={item.imageSrc}
                           analysis={item.analysis}
-                          onClick={() => handleCardClick(item)}
+                          onClick={() => handleCardClick(item)} // Utilise la nouvelle logique de clic
                           onRemove={(e) => handleRemoveItem(e, item.id)}
-                          isSelected={false}
-                          isSet={itemIdsInSets.has(item.id)}
+                          isSelected={selectedItemIds.has(item.id)} // L'état de sélection vient du nouvel état
+                          isSet={itemIdsInSets.has(item.id) && !selectedItemIds.has(item.id)} // Un item ne peut pas être "set" et "sélectionné" en même temps visuellement
                         />
                       ))}
                     </div>
@@ -205,6 +295,7 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothi
                       Aucun vêtement ne correspond aux filtres sélectionnés.
                     </p>
                   )}
+                  {/* --- FIN DE LA GRID MISE À JOUR --- */}
                 </div>
               )}
             </div>
