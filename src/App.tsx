@@ -130,21 +130,34 @@ const App: React.FC = () => {
       for (let i = 0; i < itemsCount; i++) {
         const itemId = `${Date.now()}-${files[i].name}-${Math.random()}`;
         
-        let imageUrl = imageDataUrls[i];
+        // On ne stocke plus la base64 par défaut
+        let imageUrl = ''; 
+        
         if (user) {
           try {
+            // L'upload est maintenant la seule source pour imageUrl
             imageUrl = await uploadClothingImage(user.uid, imageDataUrls[i], itemId);
             console.log('✅ Image uploaded to Storage:', imageUrl);
+
+            // On ajoute l'item SEULEMENT SI l'upload a réussi
+            newItems.push({
+              id: itemId,
+              imageSrc: imageUrl, // imageUrl est maintenant l'URL de Firebase Storage
+              ...analysisResults[i],
+            });
+
           } catch (uploadError) {
-            console.error('⚠️ Failed to upload image, using base64:', uploadError);
+            console.error(`❌ Échec de l'upload pour ${files[i].name}. L'article ne sera pas ajouté.`, uploadError);
+            // On informe l'utilisateur de l'échec de cet upload spécifique
+            setError(`Erreur d'upload pour ${files[i].name}. L'article n'a pas été ajouté.`);
+            // Important: on ne fait PAS newItems.push() ici, donc l'item n'est pas créé
           }
+        } else {
+            // Gérer le cas où l'utilisateur n'est pas connecté
+            console.warn("Upload impossible: utilisateur non connecté.");
+            setError("Vous devez être connecté pour ajouter des articles.");
+            break; // On sort de la boucle 'for', on arrête les uploads
         }
-        
-        newItems.push({
-          id: itemId,
-          imageSrc: imageUrl,
-          ...analysisResults[i],
-        });
       }
 
       if (analysisResults.length !== files.length) {
