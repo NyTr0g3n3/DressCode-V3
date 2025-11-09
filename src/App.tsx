@@ -265,10 +265,12 @@ const handleScrollToVacation = useCallback(() => {
     setSelectedItem(updatedItem);
   };
 
-  const handleGenerateFromModal = (item: ClothingItem) => {
-    handleGenerateOutfits(`Créer des tenues avec ce vêtement: ${item.analysis}`, item);
-    setSelectedItem(null);
-  };
+ const handleGenerateFromModal = (item: ClothingItem) => {
+  const context = `Créer des tenues variées autour de cet article : ${item.analysis}`;
+  handleGenerateOutfits(context, item); // L'important est que 'item' soit le 2ème argument
+  setSelectedItem(null);
+  setShowOutfitModal(true); // Bonus : ouvrir la modale mobile
+};
 
   const handleCreateSet = useCallback((name: string, itemIds: string[]) => {
     const newSet: ClothingSet = {
