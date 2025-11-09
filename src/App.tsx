@@ -457,6 +457,20 @@ const handleScrollToVacation = useCallback(() => {
           onTabChange={setActiveTab}
           counts={categoryCounts}
         />
+
+        {showOutfitModal && (
+  <OutfitModal 
+    onClose={() => setShowOutfitModal(false)}
+    // ... props nécessaires
+  />
+)}
+
+{showVacationModal && (
+  <VacationModal 
+    onClose={() => setShowVacationModal(false)}
+    // ... props nécessaires  
+  />
+)}
       </main>
     </div>
   );
