@@ -390,7 +390,7 @@ return (
                             <div
                               key={item.id}
                               onClick={() => handleItemClick(item)}
-                              className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform"
+                              className="relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform"
                             >
                               {itemIdsInSets.has(item.id) && (
                         <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white z-10">
