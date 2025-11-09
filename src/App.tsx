@@ -20,7 +20,7 @@ import MobileBottomNav from './components/MobileBottomNav.tsx';
 import WardrobeSuggestions from './components/WardrobeSuggestions.tsx';
 import OutfitModal from './components/OutfitModal.tsx';  
 import VacationModal from './components/VacationModal.tsx'; 
-import SetCreatorModal from './components/SetCreatorModal';
+import SetCreatorModal from './components/SetCreatorModal.tsx';
 
 type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
 
