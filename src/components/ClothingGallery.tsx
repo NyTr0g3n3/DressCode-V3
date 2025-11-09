@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { ClothingItem as ClothingItemType, ClothingSet, Category } from '../types.ts';
+import type { ClothingItem as ClothingItemType, ClothingSet, Category } from '../types';
 import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, UnlinkIcon } from './icons.tsx';
 
 interface CardProps {
@@ -7,7 +7,7 @@ interface CardProps {
   analysis: string;
   onClick: () => void;
   onRemove: (e: React.MouseEvent) => void;
-  isSelected?: boolean;
+  isSelected: boolean;
   isSet?: boolean;
 }
 
@@ -33,11 +33,9 @@ const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onRemove, isSe
 
 interface ClothingGalleryProps {
   clothingItems: ClothingItemType[];
-  clothingSets: ClothingSet[];
-  onRemoveItem: (id: string) => void;
-  onRemoveSet: (id: string) => void;
-  onSelectItem: (item: ClothingItemType) => void;
-  onCreateSet: (itemIds: string[], name: string) => void;
+  clothingSets?: ClothingSet[];
+  onItemClick: (item: ClothingItemType) => void;
+  onDeleteItem: (id: string) => void;
 }
 
 const initialFilters: Record<Category, { color: string; material: string }> = {
@@ -47,14 +45,13 @@ const initialFilters: Record<Category, { color: string; material: string }> = {
   Accessoires: { color: 'Toutes', material: 'Toutes' },
 };
 
-const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothingSets, onRemoveItem, onRemoveSet, onSelectItem, onCreateSet }) => {
+const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothingSets = [], onItemClick, onDeleteItem }) => {
   const [openCategory, setOpenCategory] = useState<Category | null>('Hauts');
   const [filters, setFilters] = useState(initialFilters);
-  const [selectMode, setSelectMode] = useState(false);
-  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
-  const [isNamingSet, setIsNamingSet] = useState(false);
   
-  const itemIdsInSets = useMemo(() => new Set(clothingSets.flatMap(s => s.itemIds)), [clothingSets]);
+  // 🛡️ CORRECTION: Garantir que clothingSets est toujours un tableau
+  const safeClothingSets = useMemo(() => clothingSets || [], [clothingSets]);
+  const itemIdsInSets = useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
   const totalItemsCount = clothingItems.length;
 
   const categories: { name: Category; icon: React.FC }[] = [
@@ -63,189 +60,157 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothi
     { name: 'Chaussures', icon: ShoeIcon },
     { name: 'Accessoires', icon: AccessoryIcon },
   ];
-  
-  const handleToggleSelectMode = () => {
-    setSelectMode(!selectMode);
-    setSelectedItemIds([]);
-    setIsNamingSet(false);
-  };
 
   const handleCardClick = (item: ClothingItemType) => {
-    if (selectMode) {
-      setSelectedItemIds(prev =>
-        prev.includes(item.id)
-          ? prev.filter(id => id !== item.id)
-          : [...prev, item.id]
-      );
-    } else {
-      onSelectItem(item);
-    }
+    onItemClick(item);
   };
 
-  const matchingSet = useMemo(() => {
-    if (selectedItemIds.length < 2) return null;
-    return clothingSets.find(set => 
-        set.itemIds.length === selectedItemIds.length &&
-        set.itemIds.every(id => selectedItemIds.includes(id))
-    );
-  }, [selectedItemIds, clothingSets]);
+  const handleRemoveItem = (e: React.MouseEvent, itemId: string) => {
+    e.stopPropagation();
+    onDeleteItem(itemId);
+  };
+
+  const filteredItems = useMemo(() => {
+    return clothingItems.filter(item => {
+      const categoryMatch = item.category === openCategory;
+      if (!categoryMatch) return false;
+
+      const categoryFilters = openCategory ? filters[openCategory] : { color: 'Toutes', material: 'Toutes' };
+      const colorMatch = categoryFilters.color === 'Toutes' || item.color === categoryFilters.color;
+      const materialMatch = categoryFilters.material === 'Toutes' || item.material === categoryFilters.material;
+
+      return colorMatch && materialMatch;
+    });
+  }, [clothingItems, openCategory, filters]);
+
+  const availableColors = useMemo(() => {
+    if (!openCategory) return [];
+    const colorsInCategory = clothingItems
+      .filter(item => item.category === openCategory)
+      .map(item => item.color);
+    return ['Toutes', ...Array.from(new Set(colorsInCategory))];
+  }, [clothingItems, openCategory]);
+
+  const availableMaterials = useMemo(() => {
+    if (!openCategory) return [];
+    const materialsInCategory = clothingItems
+      .filter(item => item.category === openCategory)
+      .map(item => item.material);
+    return ['Toutes', ...Array.from(new Set(materialsInCategory))];
+  }, [clothingItems, openCategory]);
+
+  const handleColorChange = (color: string) => {
+    if (!openCategory) return;
+    setFilters(prev => ({ ...prev, [openCategory]: { ...prev[openCategory], color } }));
+  };
+
+  const handleMaterialChange = (material: string) => {
+    if (!openCategory) return;
+    setFilters(prev => ({ ...prev, [openCategory]: { ...prev[openCategory], material } }));
+  };
+
+  const handleToggleCategory = (categoryName: Category) => {
+    setOpenCategory(openCategory === categoryName ? null : categoryName);
+  };
 
   if (totalItemsCount === 0) {
     return (
-      <div className="text-center py-20 px-6 bg-white dark:bg-raisin-black rounded-xl border border-dashed border-gray-300/50 dark:border-gray-700/50 flex flex-col items-center">
-        <div className="text-gray-400 dark:text-gray-600 mb-4"><WardrobeIcon /></div>
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Votre garde-robe est vide.</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Ajoutez des vêtements pour commencer à créer.</p>
+      <div className="bg-white dark:bg-raisin-black rounded-xl shadow-2xl shadow-black/10 dark:shadow-black/20 ring-1 ring-black/5 dark:ring-white/10 p-8 text-center">
+        <WardrobeIcon className="w-20 h-20 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
+        <h2 className="text-2xl font-bold mb-3 text-gray-700 dark:text-gray-300">Votre garde-robe est vide</h2>
+        <p className="text-gray-500 dark:text-gray-400">Ajoutez vos premiers vêtements pour commencer à créer vos tenues !</p>
       </div>
     );
   }
-  
-  const toggleCategory = (category: Category) => setOpenCategory(prev => (prev === category ? null : category));
-
-  const handleFilterChange = (category: Category, filterType: 'color' | 'material', value: string) => {
-    setFilters(prev => ({ ...prev, [category]: { ...prev[category], [filterType]: value } }));
-  };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-serif font-bold">Ma Garde-Robe <span className="text-gray-500">({totalItemsCount})</span></h2>
-        <button onClick={handleToggleSelectMode} className={`px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${selectMode ? 'bg-gold/20 text-gold' : 'bg-snow dark:bg-onyx border border-gray-300 dark:border-gray-700'}`}>
-          {selectMode ? 'Annuler la sélection' : 'Créer un ensemble'}
-        </button>
+    <div className="bg-white dark:bg-raisin-black rounded-xl shadow-2xl shadow-black/10 dark:shadow-black/20 ring-1 ring-black/5 dark:ring-white/10 p-6 lg:p-8">
+      <div className="flex items-center gap-3 mb-8">
+        <WardrobeIcon className="w-8 h-8 text-gold" />
+        <div>
+          <h2 className="text-3xl font-serif font-bold tracking-tight">
+            <span className="text-gold">Ma</span> Garde-Robe
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{totalItemsCount} vêtement{totalItemsCount > 1 ? 's' : ''}</p>
+        </div>
       </div>
-      
-      <div className="space-y-4">
+
+      <div className="space-y-6">
         {categories.map(({ name, icon: Icon }) => {
           const itemsInCategory = clothingItems.filter(item => item.category === name);
-          if (itemsInCategory.length === 0) return null;
-
           const isOpen = openCategory === name;
-          const isFilterable = ['Hauts', 'Bas', 'Chaussures'].includes(name);
-          const uniqueColors = [...new Set(itemsInCategory.map(item => item.color))].sort();
-          const uniqueMaterials = [...new Set(itemsInCategory.map(item => item.material))].sort();
-          
-          const filteredItems = itemsInCategory.filter(item => {
-            const { color, material } = filters[name];
-            return (color === 'Toutes' || item.color === color) && (material === 'Toutes' || item.material === material);
-          });
 
           return (
-            <div key={name} className="bg-white dark:bg-raisin-black rounded-xl shadow-lg shadow-black/5 dark:shadow-black/10 ring-1 ring-black/5 dark:ring-white/10 overflow-hidden transition-all duration-300">
-              <button onClick={() => toggleCategory(name)} className="w-full flex justify-between items-center p-4 lg:p-5 text-left" aria-expanded={isOpen}>
-                <div className="flex items-center gap-4">
-                  <span className="text-gold"><Icon /></span>
-                  <span className="font-serif font-bold text-xl text-raisin-black dark:text-snow">{name}</span>
-                  <span className="text-sm font-medium bg-snow dark:bg-onyx px-2 py-0.5 rounded-full text-gray-500 dark:text-gray-400">{itemsInCategory.length}</span>
+            <div key={name} className="border border-black/10 dark:border-white/10 rounded-lg overflow-hidden">
+              <button
+                onClick={() => handleToggleCategory(name)}
+                className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Icon className="w-5 h-5 text-gold" />
+                  <span className="font-semibold text-lg">{name}</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">({itemsInCategory.length})</span>
                 </div>
-                <ChevronDownIcon className={`w-6 h-6 text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDownIcon className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
               </button>
-              <div className={`grid transition-all duration-500 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-                <div className="overflow-hidden">
-                  <div className="p-4 lg:p-5 border-t border-black/5 dark:border-white/10">
-                    {isFilterable && (
-                      <div className="grid grid-cols-2 gap-4 mb-6">
-                        <div>
-                          <label htmlFor={`${name}-color-filter`} className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Couleur</label>
-                          <select
-                            id={`${name}-color-filter`}
-                            value={filters[name].color}
-                            onChange={(e) => handleFilterChange(name, 'color', e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-full appearance-none text-sm px-3 py-1.5 bg-snow dark:bg-onyx border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gold focus:border-gold transition-colors"
-                          >
-                            <option value="Toutes">Toutes</option>
-                            {uniqueColors.map(color => <option key={color} value={color}>{color}</option>)}
-                          </select>
-                        </div>
-                        <div>
-                          <label htmlFor={`${name}-material-filter`} className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Matière</label>
-                          <select
-                            id={`${name}-material-filter`}
-                            value={filters[name].material}
-                            onChange={(e) => handleFilterChange(name, 'material', e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-full appearance-none text-sm px-3 py-1.5 bg-snow dark:bg-onyx border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gold focus:border-gold transition-colors"
-                          >
-                            <option value="Toutes">Toutes</option>
-                            {uniqueMaterials.map(material => <option key={material} value={material}>{material}</option>)}
-                          </select>
-                        </div>
-                      </div>
-                    )}
-                    <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                      {filteredItems.map((item) => (
-                        <Card 
-                          key={item.id} 
+
+              {isOpen && (
+                <div className="p-6 space-y-6">
+                  {/* Filters */}
+                  <div className="flex flex-wrap gap-4">
+                    <div className="flex-1 min-w-[200px]">
+                      <label className="block text-sm font-medium mb-2">Couleur</label>
+                      <select
+                        value={filters[name].color}
+                        onChange={(e) => handleColorChange(e.target.value)}
+                        className="w-full px-4 py-2 border border-black/10 dark:border-white/10 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-gold focus:border-transparent"
+                      >
+                        {availableColors.map(color => (
+                          <option key={color} value={color}>{color}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex-1 min-w-[200px]">
+                      <label className="block text-sm font-medium mb-2">Matière</label>
+                      <select
+                        value={filters[name].material}
+                        onChange={(e) => handleMaterialChange(e.target.value)}
+                        className="w-full px-4 py-2 border border-black/10 dark:border-white/10 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-gold focus:border-transparent"
+                      >
+                        {availableMaterials.map(material => (
+                          <option key={material} value={material}>{material}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Items Grid */}
+                  {filteredItems.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                      {filteredItems.map(item => (
+                        <Card
+                          key={item.id}
                           imageSrc={item.imageSrc}
                           analysis={item.analysis}
-                          onClick={() => handleCardClick(item)} 
-                          onRemove={(e) => { e.stopPropagation(); onRemoveItem(item.id); }}
-                          isSelected={selectMode && selectedItemIds.includes(item.id)}
+                          onClick={() => handleCardClick(item)}
+                          onRemove={(e) => handleRemoveItem(e, item.id)}
+                          isSelected={false}
                           isSet={itemIdsInSets.has(item.id)}
                         />
                       ))}
                     </div>
-                  </div>
+                  ) : (
+                    <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                      Aucun vêtement ne correspond aux filtres sélectionnés.
+                    </p>
+                  )}
                 </div>
-              </div>
+              )}
             </div>
           );
         })}
       </div>
-      
-      {selectMode && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] w-full max-w-md px-4">
-          {isNamingSet ? (
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                const setName = formData.get('setName') as string;
-                if (setName && setName.trim()) {
-                  onCreateSet(selectedItemIds, setName.trim());
-                  handleToggleSelectMode();
-                }
-              }} 
-              className="flex items-center gap-2 bg-white dark:bg-raisin-black p-2 rounded-full shadow-2xl ring-1 ring-gold/50"
-            >
-              <input
-                type="text"
-                name="setName"
-                placeholder="Nom de l'ensemble..."
-                className="flex-grow bg-transparent px-4 py-1 text-onyx dark:text-snow focus:outline-none"
-                autoFocus
-              />
-              <button type="submit" className="bg-gold text-onyx font-bold px-4 py-1.5 rounded-full hover:bg-gold-dark transition-colors">
-                Créer
-              </button>
-              <button type="button" onClick={() => setIsNamingSet(false)} className="text-gray-500 dark:text-gray-400 p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                <RemoveIcon />
-              </button>
-            </form>
-          ) : matchingSet ? (
-            <button
-              onClick={() => {
-                onRemoveSet(matchingSet.id);
-                handleToggleSelectMode();
-              }}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-rose-500 text-white font-bold rounded-full shadow-2xl hover:bg-rose-600 transition-all duration-300 transform hover:scale-105"
-            >
-              <UnlinkIcon />
-              Dissocier l'ensemble
-            </button>
-          ) : selectedItemIds.length > 1 && (
-            <button
-              onClick={() => setIsNamingSet(true)}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-gold text-onyx font-bold rounded-full shadow-2xl hover:bg-gold-dark transition-all duration-300 transform hover:scale-105"
-            >
-              <LinkIcon />
-              Créer un ensemble avec {selectedItemIds.length} articles
-            </button>
-          )}
-        </div>
-      )}
-
     </div>
   );
 };
