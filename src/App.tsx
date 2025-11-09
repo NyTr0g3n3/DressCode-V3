@@ -212,8 +212,6 @@ const App: React.FC = () => {
     }
   }, [user]);
 
-  // --- MODIFICATION ICI ---
-  // handleGenerateOutfits prend 'occasion' et utilise 'weatherInfo'
   const handleGenerateOutfits = useCallback(async (occasion: string, anchorItem?: ClothingItem | ClothingSet) => {
     if (safeClothingItems.length === 0) {
       setError("Veuillez d'abord ajouter des vêtements à votre garde-robe.");
@@ -238,7 +236,7 @@ const App: React.FC = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [safeClothingItems, safeClothingSets, weatherInfo]); // <-- 'weatherInfo' ajouté aux dépendances
+  }, [safeClothingItems, safeClothingSets, weatherInfo]);
 
   // handleGenerateVacationPlan (inchangé)
   const handleGenerateVacationPlan = useCallback(async (days: number, context: string) => {
@@ -489,16 +487,14 @@ return (
               </div>
 
               {/* Colonne de droite (desktop) */}
-              <div className="space-y-10 hidden md:block">
-                <div id="outfit-generator">
-                  {/* --- MODIFICATION ICI --- */}
+              <div id="outfit-generator">
                   <OutfitGenerator
                     clothingItems={safeClothingItems}
                     clothingSets={safeClothingSets}
                     onGenerate={handleGenerateOutfits}
                     isGenerating={isGenerating}
-                    weatherInfo={weatherInfo} // <-- PROP AJOUTÉE
-                    weatherError={weatherError} // <-- PROP AJOUTÉE
+                    weatherInfo={weatherInfo} 
+                    weatherError={weatherError}
                   />
                 </div>
                 {suggestedOutfits.length > 0 && <OutfitDisplay outfits={suggestedOutfits} allClothingItems={safeClothingItems} />}
@@ -559,8 +555,8 @@ return (
                 isGenerating={isGenerating}
                 suggestedOutfits={suggestedOutfits}
                 onClose={() => setShowOutfitModal(false)}
-                weatherInfo={weatherInfo} // <-- PROP AJOUTÉE
-                weatherError={weatherError} // <-- PROP AJOUTÉE
+                weatherInfo={weatherInfo}
+                weatherError={weatherError}
               />
             )}
 
