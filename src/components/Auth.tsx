@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // 1. Importer useEffect et useRef
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 
@@ -11,6 +11,29 @@ const Auth: React.FC<AuthProps> = ({ user }) => {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+
+  // 2. Créer une référence pour le conteneur de la modale
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 3. Ajouter cet effet pour gérer les clics en dehors
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Si le menu est affiché et que l'utilisateur clique en dehors de la modale (menuRef.current)
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    // Ajouter l'écouteur d'événements si le menu est ouvert
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    // Nettoyer l'écouteur d'événements
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]); // Cet effet se redéclenche chaque fois que showMenu change
 
   const handleGoogleSignIn = async () => {
     try {
@@ -43,9 +66,10 @@ const Auth: React.FC<AuthProps> = ({ user }) => {
 
   if (user) {
     return (
-      <div className="relative">
+      // 4. Lier la référence "menuRef" au conteneur parent du bouton ET de la modale
+      <div className="relative" ref={menuRef}>
         <button
-          onClick={() => setShowMenu(!showMenu)}
+          onClick={() => setShowMenu(!showMenu)} // Le clic ici est géré car il est DANS le ref
           className="flex items-center gap-3 px-4 py-2 rounded-full bg-gold/10 hover:bg-gold/20 transition-all border border-gold/30"
         >
           <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center text-onyx font-bold">
@@ -77,6 +101,7 @@ const Auth: React.FC<AuthProps> = ({ user }) => {
     );
   }
 
+  // ... (le reste du composant pour les utilisateurs non connectés reste inchangé)
   return (
     <div className="bg-white dark:bg-raisin-black rounded-2xl shadow-2xl p-8 max-w-md mx-auto border border-black/5 dark:border-white/10">
       <div className="text-center mb-8">
@@ -85,7 +110,7 @@ const Auth: React.FC<AuthProps> = ({ user }) => {
         </h2>
         <p className="text-gray-500 dark:text-gray-400">
           {isSignUp ? 'Créez votre compte' : 'Bienvenue'}
-        </p>
+        </Gérer le clic en dehors>
       </div>
 
       <button
