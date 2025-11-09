@@ -41,6 +41,9 @@ const App: React.FC = () => {
   const safeClothingItems = React.useMemo(() => clothingItems || [], [clothingItems]);
   const safeClothingSets = React.useMemo(() => clothingSets || [], [clothingSets]);
 
+  const [showOutfitModal, setShowOutfitModal] = useState(false);
+  const [showVacationModal, setShowVacationModal] = useState(false);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -210,18 +213,12 @@ const App: React.FC = () => {
   }, [safeClothingItems, safeClothingSets]);
 
   const handleScrollToOutfits = useCallback(() => {
-    const element = document.getElementById('outfit-generator');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, []);
+  setShowOutfitModal(true);
+}, []);
 
-  const handleScrollToVacation = useCallback(() => {
-    const element = document.getElementById('vacation-planner');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, []);
+const handleScrollToVacation = useCallback(() => {
+  setShowVacationModal(true);
+}, []);
 
   const handleItemClick = (item: ClothingItem) => {
     setSelectedItem(item);
