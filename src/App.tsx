@@ -401,7 +401,7 @@ const handleScrollToVacation = useCallback(() => {
             </div>
           </div>
 
-          <div className="space-y-10">
+          <div className="space-y-10 hidden md:block">
             <div id="outfit-generator">
               <OutfitGenerator 
                 clothingItems={safeClothingItems}
