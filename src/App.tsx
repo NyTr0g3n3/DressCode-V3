@@ -348,13 +348,15 @@ return (
                   <ClothingUpload onAnalyze={handleAnalyzeItems} isAnalyzing={isAnalyzing} />
                 </div>
 
-                <div className="hidden md:block">
-                  <ClothingGallery
-                    clothingItems={safeClothingItems}
-                    onItemClick={handleItemClick}
-                    onDeleteItem={handleDeleteItem}
-                  />
-                </div>
+               <div className="hidden md:block">
+              <ClothingGallery 
+                clothingItems={safeClothingItems} 
+                clothingSets={safeClothingSets}
+                onItemClick={handleItemClick}
+                onDeleteItem={handleDeleteItem}
+                onCreateSet={handleCreateSet}
+              />
+            </div>
 
                 {/* Mobile: Navigation par tabs */}
                 <div className="md:hidden">
