@@ -18,6 +18,8 @@ import MobileFAB from './components/MobileFAB.tsx';
 import MobileHome from './components/MobileHome.tsx';
 import MobileBottomNav from './components/MobileBottomNav.tsx';
 import WardrobeSuggestions from './components/WardrobeSuggestions.tsx';
+import OutfitModal from './components/OutfitModal.tsx';  
+import VacationModal from './components/VacationModal.tsx'; 
 
 type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
 
@@ -460,15 +462,24 @@ const handleScrollToVacation = useCallback(() => {
 
         {showOutfitModal && (
   <OutfitModal 
+    clothingItems={safeClothingItems}
+    clothingSets={safeClothingSets}
+    onGenerate={handleGenerateOutfits}
+    isGenerating={isGenerating}
+    suggestedOutfits={suggestedOutfits}
     onClose={() => setShowOutfitModal(false)}
-    // ... props nécessaires
   />
 )}
 
 {showVacationModal && (
   <VacationModal 
+    clothingItems={safeClothingItems}
+    clothingSets={safeClothingSets}
+    onGeneratePlan={handleGenerateVacationPlan}
+    isGenerating={isGeneratingPlan}
+    vacationPlan={vacationPlan}
+    onCreateSet={handleCreateSet}
     onClose={() => setShowVacationModal(false)}
-    // ... props nécessaires  
   />
 )}
       </main>
