@@ -287,8 +287,21 @@ const handleScrollToVacation = useCallback(() => {
 
   return (
     <div className="min-h-screen bg-snow dark:bg-onyx text-raisin-black dark:text-snow transition-colors duration-300">
-      <Header theme={theme} toggleTheme={toggleTheme}>
-        <Auth user={user} />
+      {/* ICI COMMENCE LA NOUVELLE LOGIQUE */}
+      {!user ? (
+        // S'il n'y a PAS d'utilisateur, on affiche le formulaire centré
+        <div className="flex items-center justify-center min-h-screen p-4">
+          <Auth user={user} />
+        </div>
+      ) : (
+        // SINON (l'utilisateur est connecté), on affiche l'application
+        <>
+          <Header theme={theme} toggleTheme={toggleTheme}>
+            <Auth user={user} />
+          </Header>
+
+          {/* Le <main> commence juste ici */}
+          <main className="container mx-auto px-4 lg:px-8 py-10">
       </Header>
 
       <main className="container mx-auto px-4 lg:px-8 py-10">
@@ -483,6 +496,8 @@ const handleScrollToVacation = useCallback(() => {
   />
 )}
       </main>
+          </>
+    )}
     </div>
   );
 };
