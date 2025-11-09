@@ -6,10 +6,12 @@ import type { ClothingItem, ClothingSet, OutfitSuggestion } from '../types';
 interface OutfitModalProps {
   clothingItems: ClothingItem[];
   clothingSets: ClothingSet[];
-  onGenerate: (context: string) => void;
+  onGenerate: (occasion: string) => void; // 'context' devient 'occasion'
   isGenerating: boolean;
   suggestedOutfits: OutfitSuggestion[];
   onClose: () => void;
+  weatherInfo: string | null; // <-- AJOUTER
+  weatherError: string | null; // <-- AJOUTER
 }
 
 const OutfitModal: React.FC<OutfitModalProps> = ({ 
@@ -18,7 +20,9 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
   onGenerate, 
   isGenerating,
   suggestedOutfits,
-  onClose 
+  onClose,
+  weatherInfo, // <-- RÉCUPÉRER
+  weatherError // <-- RÉCUPÉRER
 }) => {
   return (
     <div 
@@ -29,7 +33,7 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
         className="bg-white dark:bg-raisin-black w-full max-h-[85vh] rounded-t-3xl overflow-hidden animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header avec handle bar */}
+        {/* Header (inchangé) */}
         <div className="sticky top-0 bg-white dark:bg-raisin-black border-b border-black/10 dark:border-white/10 p-4 pb-3">
           <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-3"></div>
           <div className="flex items-center justify-between">
@@ -52,6 +56,8 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
             clothingSets={clothingSets}
             onGenerate={onGenerate}
             isGenerating={isGenerating}
+            weatherInfo={weatherInfo} // <-- PASSER LA PROP
+            weatherError={weatherError} // <-- PASSER LA PROP
           />
 
           {isGenerating && (
