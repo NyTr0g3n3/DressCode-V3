@@ -19,10 +19,11 @@ const MobileFAB: React.FC<MobileFABProps> = ({ onFilesSelected, isAnalyzing }) =
   return (
     <>
       {/* FAB Button - Visible uniquement sur mobile */}
+      {/* 🔧 CORRECTION: bottom-24 au lieu de bottom-6 pour être au-dessus de la bottom nav (64px + marge) */}
       <button
         onClick={() => setShowModal(true)}
         disabled={isAnalyzing}
-        className="md:hidden fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-gold to-gold-dark text-onyx rounded-full shadow-2xl hover:shadow-gold/50 transition-all duration-300 flex items-center justify-center z-40 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+        className="md:hidden fixed bottom-24 right-6 w-16 h-16 bg-gradient-to-r from-gold to-gold-dark text-onyx rounded-full shadow-2xl hover:shadow-gold/50 transition-all duration-300 flex items-center justify-center z-40 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
         aria-label="Ajouter un vêtement"
       >
         {isAnalyzing ? (
@@ -64,7 +65,7 @@ const MobileFAB: React.FC<MobileFABProps> = ({ onFilesSelected, isAnalyzing }) =
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                <div className="flex items-center gap-4 p-4 bg-gold/10 hover:bg-gold/20 border-2 border-gold/30 rounded-xl transition-all cursor-pointer active:scale-98">
+                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gold/10 to-gold-dark/10 hover:from-gold/20 hover:to-gold-dark/20 border-2 border-gold/30 rounded-xl transition-all cursor-pointer active:scale-98">
                   <div className="w-12 h-12 bg-gold rounded-full flex items-center justify-center flex-shrink-0">
                     <svg className="w-6 h-6 text-onyx" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -72,8 +73,8 @@ const MobileFAB: React.FC<MobileFABProps> = ({ onFilesSelected, isAnalyzing }) =
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold">Prendre une photo</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Utiliser l'appareil photo</p>
+                    <p className="font-semibold">Appareil Photo</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Prendre une photo</p>
                   </div>
                 </div>
               </label>
