@@ -285,219 +285,214 @@ const handleScrollToVacation = useCallback(() => {
         return false;
       });
 
-  return (
+return (
     <div className="min-h-screen bg-snow dark:bg-onyx text-raisin-black dark:text-snow transition-colors duration-300">
-      {/* ICI COMMENCE LA NOUVELLE LOGIQUE */}
       {!user ? (
-        // S'il n'y a PAS d'utilisateur, on affiche le formulaire centré
+        // PAS CONNECTÉ : Affiche le formulaire de connexion centré
         <div className="flex items-center justify-center min-h-screen p-4">
           <Auth user={user} />
         </div>
       ) : (
-        // SINON (l'utilisateur est connecté), on affiche l'application
+        // CONNECTÉ : Affiche l'application
         <>
           <Header theme={theme} toggleTheme={toggleTheme}>
             <Auth user={user} />
           </Header>
 
-          {/* Le <main> commence juste ici */}
           <main className="container mx-auto px-4 lg:px-8 py-10">
-      </Header>
-
-      <main className="container mx-auto px-4 lg:px-8 py-10">
-        {error && (
-          <div className="bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-lg relative mb-8" role="alert">
-            <strong className="font-bold">Erreur: </strong>
-            <span className="block sm:inline">{error}</span>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2 space-y-10">
-            {/* Bouton d'analyse de garde-robe - Desktop only */}
-            {safeClothingItems.length >= 3 && (
-              <div className="hidden md:block bg-gradient-to-r from-gold/10 to-gold-dark/10 border-2 border-gold/30 rounded-xl p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4 md:justify-between">
-                <div>
-                  <h3 className="text-xl font-bold mb-2">💡 Besoin d'inspiration ?</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Découvrez quelles pièces acheter pour rendre votre garde-robe plus polyvalente
-                  </p>
-                </div>
-                <button
-                  onClick={handleAnalyzeWardrobe}
-                  disabled={isAnalyzingWardrobe}
-                  className="px-4 md:px-6 py-3 bg-gradient-to-r from-gold to-gold-dark text-onyx rounded-xl hover:shadow-lg hover:shadow-gold/30 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm md:text-base flex-shrink-0"
-                >
-                  {isAnalyzingWardrobe ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Analyse...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                      </svg>
-                      Analyser ma garde-robe
-                    </>
-                  )}
-                </button>
+            {error && (
+              <div className="bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-lg relative mb-8" role="alert">
+                <strong className="font-bold">Erreur: </strong>
+                <span className="block sm:inline">{error}</span>
               </div>
             )}
-            
-            {/* Desktop: Upload + Gallery classique */}
-            <div className="hidden md:block">
-              <ClothingUpload onAnalyze={handleAnalyzeItems} isAnalyzing={isAnalyzing} />
-            </div>
-            
-            <div className="hidden md:block">
-              <ClothingGallery 
-                clothingItems={safeClothingItems} 
-                onItemClick={handleItemClick}
-                onDeleteItem={handleDeleteItem}
-              />
-            </div>
 
-            {/* Mobile: Navigation par tabs */}
-            <div className="md:hidden">
-              {activeTab === 'home' && (
-                <MobileHome
-                  onAnalyzeWardrobe={handleAnalyzeWardrobe}
-                  onScrollToOutfits={handleScrollToOutfits}
-                  onScrollToVacation={handleScrollToVacation}
-                  isAnalyzingWardrobe={isAnalyzingWardrobe}
-                  clothingCount={safeClothingItems.length}
-                />
-              )}
-              
-              {activeTab !== 'home' && (
-                <div className="pb-24">
-                  <div className="text-center py-6 px-4">
-                    <h2 className="text-2xl font-bold mb-2 capitalize">{activeTab}</h2>
-                    <p className="text-sm text-gray-500">
-                      {filteredItems.length} vêtement{filteredItems.length > 1 ? 's' : ''}
-                    </p>
-                  </div>
-                  
-                  {filteredItems.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-3 px-4">
-                      {filteredItems.map(item => (
-                        <div 
-                          key={item.id}
-                          onClick={() => handleItemClick(item)}
-                          className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform"
-                        >
-                          <div className="aspect-square">
-                            <img 
-                              src={item.imageSrc} 
-                              alt={item.analysis} 
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="p-3">
-                            <p className="text-sm font-medium line-clamp-2">{item.analysis}</p>
-                            <p className="text-xs text-gray-500 mt-1">{item.color}</p>
-                          </div>
-                        </div>
-                      ))}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+              <div className="lg:col-span-2 space-y-10">
+                {/* Bouton d'analyse de garde-robe - Desktop only */}
+                {safeClothingItems.length >= 3 && (
+                  <div className="hidden md:block bg-gradient-to-r from-gold/10 to-gold-dark/10 border-2 border-gold/30 rounded-xl p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4 md:justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold mb-2">💡 Besoin d'inspiration ?</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Découvrez quelles pièces acheter pour rendre votre garde-robe plus polyvalente
+                      </p>
                     </div>
-                  ) : (
-                    <div className="text-center py-12 px-4">
-                      <p className="text-gray-500">Aucun vêtement dans cette catégorie</p>
+                    <button
+                      onClick={handleAnalyzeWardrobe}
+                      disabled={isAnalyzingWardrobe}
+                      className="px-4 md:px-6 py-3 bg-gradient-to-r from-gold to-gold-dark text-onyx rounded-xl hover:shadow-lg hover:shadow-gold/30 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm md:text-base flex-shrink-0"
+                    >
+                      {isAnalyzingWardrobe ? (
+                        <>
+                          <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Analyse...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          </svg>
+                          Analyser ma garde-robe
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {/* Desktop: Upload + Gallery classique */}
+                <div className="hidden md:block">
+                  <ClothingUpload onAnalyze={handleAnalyzeItems} isAnalyzing={isAnalyzing} />
+                </div>
+
+                <div className="hidden md:block">
+                  <ClothingGallery
+                    clothingItems={safeClothingItems}
+                    onItemClick={handleItemClick}
+                    onDeleteItem={handleDeleteItem}
+                  />
+                </div>
+
+                {/* Mobile: Navigation par tabs */}
+                <div className="md:hidden">
+                  {activeTab === 'home' && (
+                    <MobileHome
+                      onAnalyzeWardrobe={handleAnalyzeWardrobe}
+                      onScrollToOutfits={handleScrollToOutfits}
+                      onScrollToVacation={handleScrollToVacation}
+                      isAnalyzingWardrobe={isAnalyzingWardrobe}
+                      clothingCount={safeClothingItems.length}
+                    />
+                  )}
+
+                  {activeTab !== 'home' && (
+                    <div className="pb-24">
+                      <div className="text-center py-6 px-4">
+                        <h2 className="text-2xl font-bold mb-2 capitalize">{activeTab}</h2>
+                        <p className="text-sm text-gray-500">
+                          {filteredItems.length} vêtement{filteredItems.length > 1 ? 's' : ''}
+                        </p>
+                      </div>
+
+                      {filteredItems.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-3 px-4">
+                          {filteredItems.map(item => (
+                            <div
+                              key={item.id}
+                              onClick={() => handleItemClick(item)}
+                              className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform"
+                            >
+                              <div className="aspect-square">
+                                <img
+                                  src={item.imageSrc}
+                                  alt={item.analysis}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="p-3">
+                                <p className="text-sm font-medium line-clamp-2">{item.analysis}</p>
+                                <p className="text-xs text-gray-500 mt-1">{item.color}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12 px-4">
+                          <p className="text-gray-500">Aucun vêtement dans cette catégorie</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
 
-          <div className="space-y-10 hidden md:block">
-            <div id="outfit-generator">
-              <OutfitGenerator 
+              {/* Colonne de droite (cachée sur mobile) */}
+              <div className="space-y-10 hidden md:block">
+                <div id="outfit-generator">
+                  <OutfitGenerator
+                    clothingItems={safeClothingItems}
+                    clothingSets={safeClothingSets}
+                    onGenerate={handleGenerateOutfits}
+                    isGenerating={isGenerating}
+                  />
+                </div>
+                {suggestedOutfits.length > 0 && <OutfitDisplay outfits={suggestedOutfits} allClothingItems={safeClothingItems} />}
+                <div id="vacation-planner">
+                  <VacationPlanner
+                    clothingItems={safeClothingItems}
+                    clothingSets={safeClothingSets}
+                    onGeneratePlan={handleGenerateVacationPlan}
+                    isGenerating={isGeneratingPlan}
+                  />
+                </div>
+                {vacationPlan && (
+                  <VacationResultDisplay
+                    plan={vacationPlan}
+                    allClothingItems={safeClothingItems}
+                  />
+                )}
+              </div>
+            </div>
+
+            {selectedItem && (
+              <ClothingDetailModal
+                item={selectedItem}
+                clothingSets={safeClothingSets}
+                onClose={handleCloseModal}
+                onUpdate={handleUpdateItem}
+                onGenerateFrom={handleGenerateFromModal}
+                onRemoveSet={handleRemoveSet}
+              />
+            )}
+
+            {wardrobeAnalysis && (
+              <WardrobeSuggestions
+                analysis={wardrobeAnalysis}
+                onClose={() => setWardrobeAnalysis(null)}
+              />
+            )}
+
+            {/* FAB Mobile */}
+            <MobileFAB
+              onFilesSelected={handleAnalyzeItems}
+              isAnalyzing={isAnalyzing}
+            />
+
+            {/* Bottom Navigation Mobile */}
+            <MobileBottomNav
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              counts={categoryCounts}
+            />
+
+            {showOutfitModal && (
+              <OutfitModal
                 clothingItems={safeClothingItems}
                 clothingSets={safeClothingSets}
                 onGenerate={handleGenerateOutfits}
                 isGenerating={isGenerating}
+                suggestedOutfits={suggestedOutfits}
+                onClose={() => setShowOutfitModal(false)}
               />
-            </div>
-            {suggestedOutfits.length > 0 && <OutfitDisplay outfits={suggestedOutfits} allClothingItems={safeClothingItems} />}
-            <div id="vacation-planner">
-              <VacationPlanner
+            )}
+
+            {showVacationModal && (
+              <VacationModal
                 clothingItems={safeClothingItems}
                 clothingSets={safeClothingSets}
                 onGeneratePlan={handleGenerateVacationPlan}
                 isGenerating={isGeneratingPlan}
-              />
-            </div>
-            {vacationPlan && (
-              <VacationResultDisplay 
-                plan={vacationPlan} 
-                allClothingItems={safeClothingItems}
+                vacationPlan={vacationPlan}
                 onCreateSet={handleCreateSet}
+                onClose={() => setShowVacationModal(false)}
               />
             )}
-          </div>
-        </div>
-
-        {selectedItem && (
-            <ClothingDetailModal 
-                item={selectedItem} 
-                clothingSets={safeClothingSets}
-                onClose={handleCloseModal} 
-                onUpdate={handleUpdateItem}
-                onGenerateFrom={handleGenerateFromModal}
-                onRemoveSet={handleRemoveSet}
-            />
-        )}
-        
-        {wardrobeAnalysis && (
-          <WardrobeSuggestions
-            analysis={wardrobeAnalysis}
-            onClose={() => setWardrobeAnalysis(null)}
-          />
-        )}
-        
-        {/* FAB Mobile */}
-        <MobileFAB 
-          onFilesSelected={handleAnalyzeItems}
-          isAnalyzing={isAnalyzing}
-        />
-        
-        {/* Bottom Navigation Mobile */}
-        <MobileBottomNav
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          counts={categoryCounts}
-        />
-
-        {showOutfitModal && (
-  <OutfitModal 
-    clothingItems={safeClothingItems}
-    clothingSets={safeClothingSets}
-    onGenerate={handleGenerateOutfits}
-    isGenerating={isGenerating}
-    suggestedOutfits={suggestedOutfits}
-    onClose={() => setShowOutfitModal(false)}
-  />
-)}
-
-{showVacationModal && (
-  <VacationModal 
-    clothingItems={safeClothingItems}
-    clothingSets={safeClothingSets}
-    onGeneratePlan={handleGenerateVacationPlan}
-    isGenerating={isGeneratingPlan}
-    vacationPlan={vacationPlan}
-    onCreateSet={handleCreateSet}
-    onClose={() => setShowVacationModal(false)}
-  />
-)}
-      </main>
-          </>
-    )}
+          </main>
+        </>
+      )}
     </div>
   );
 };
