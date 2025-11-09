@@ -45,6 +45,7 @@ const App: React.FC = () => {
 
   const [showOutfitModal, setShowOutfitModal] = useState(false);
   const [showVacationModal, setShowVacationModal] = useState(false);
+  const [showSetModal, setShowSetModal] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -365,6 +366,7 @@ return (
                       onAnalyzeWardrobe={handleAnalyzeWardrobe}
                       onScrollToOutfits={handleScrollToOutfits}
                       onScrollToVacation={handleScrollToVacation}
+                      onStartSetCreation={() => setShowSetModal(true)}
                       isAnalyzingWardrobe={isAnalyzingWardrobe}
                       clothingCount={safeClothingItems.length}
                     />
@@ -490,6 +492,17 @@ return (
                 vacationPlan={vacationPlan}
                 onCreateSet={handleCreateSet}
                 onClose={() => setShowVacationModal(false)}
+              />
+            )}
+            {showSetModal && (
+              <SetCreatorModal 
+                clothingItems={safeClothingItems}
+                clothingSets={safeClothingSets}
+                onClose={() => setShowSetModal(false)}
+                onCreateSet={(name, itemIds) => {
+                  handleCreateSet(name, itemIds);
+                  setShowSetModal(false);
+                }}
               />
             )}
           </main>
