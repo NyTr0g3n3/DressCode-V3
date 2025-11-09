@@ -21,6 +21,7 @@ import WardrobeSuggestions from './components/WardrobeSuggestions.tsx';
 import OutfitModal from './components/OutfitModal.tsx';  
 import VacationModal from './components/VacationModal.tsx'; 
 import SetCreatorModal from './components/SetCreatorModal.tsx';
+import { LinkIcon } from './components/icons.tsx';
 
 type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
 
@@ -43,6 +44,7 @@ const App: React.FC = () => {
   // 🛡️ Protection: garantir que les données sont toujours des tableaux
   const safeClothingItems = React.useMemo(() => clothingItems || [], [clothingItems]);
   const safeClothingSets = React.useMemo(() => clothingSets || [], [clothingSets]);
+  const itemIdsInSets = React.useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
 
   const [showOutfitModal, setShowOutfitModal] = useState(false);
   const [showVacationModal, setShowVacationModal] = useState(false);
@@ -390,6 +392,11 @@ return (
                               onClick={() => handleItemClick(item)}
                               className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform"
                             >
+                              {itemIdsInSets.has(item.id) && (
+                        <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white z-10">
+                          <LinkIcon />
+                        </span>
+                      )}
                               <div className="aspect-square">
                                 <img
                                   src={item.imageSrc}
