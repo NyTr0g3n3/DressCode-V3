@@ -1,19 +1,23 @@
 import React from 'react';
 import { SparklesIcon } from './icons.tsx';
+import type { ClothingItem, ClothingSet } from '../types';
 
 interface OutfitGeneratorProps {
+  clothingItems: ClothingItem[];
+  clothingSets: ClothingSet[];
   onGenerate: (context: string) => void;
   isGenerating: boolean;
-  context: string;
-  setContext: (value: string) => void;
 }
 
-const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({ onGenerate, isGenerating, context, setContext }) => {
+const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({ clothingItems, clothingSets, onGenerate, isGenerating }) => {
+  const [context, setContext] = React.useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (context.trim()) {
-      onGenerate(context);
+    // 🛡️ PROTECTION: Vérifier que context existe avant d'appeler trim()
+    const safeContext = context || '';
+    if (safeContext.trim()) {
+      onGenerate(safeContext);
     }
   };
   
@@ -59,7 +63,7 @@ const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({ onGenerate, isGenerat
           </div>
           <button
             type="submit"
-            disabled={isGenerating || !context.trim()}
+            disabled={isGenerating || !(context || '').trim()}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gold text-onyx font-bold rounded-lg hover:bg-gold-dark transition-all duration-300 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transform hover:scale-105"
           >
             <SparklesIcon />
