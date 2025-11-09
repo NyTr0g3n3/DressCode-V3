@@ -98,7 +98,7 @@ const App: React.FC = () => {
     }
   }, [theme]);
 
-  // UseEffect pour la météo (que vous avez déjà)
+  // UseEffect pour la météo
   useEffect(() => {
     const fetchWeather = async (position: GeolocationPosition) => {
       const lat = position.coords.latitude;
@@ -146,7 +146,6 @@ const App: React.FC = () => {
     setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
   };
 
-  // handleAnalyzeItems (inchangé)
   const handleAnalyzeItems = useCallback(async (files: File[]) => {
     if (files.length === 0) return;
     setIsAnalyzing(true);
@@ -220,7 +219,6 @@ const App: React.FC = () => {
     setIsGenerating(true);
     setError(null);
     
-    // Combine la météo et l'occasion
     const fullContext = weatherInfo 
       ? `Météo actuelle : ${weatherInfo}. Occasion : ${occasion}`
       : `Occasion : ${occasion}`;
@@ -238,7 +236,6 @@ const App: React.FC = () => {
     }
   }, [safeClothingItems, safeClothingSets, weatherInfo]);
 
-  // handleGenerateVacationPlan (inchangé)
   const handleGenerateVacationPlan = useCallback(async (days: number, context: string) => {
     if (safeClothingItems.length === 0) {
       setError("Veuillez d'abord ajouter des vêtements à votre garde-robe.");
@@ -257,7 +254,6 @@ const App: React.FC = () => {
     }
   }, [safeClothingItems, safeClothingSets]);
 
-  // handleAnalyzeWardrobe (inchangé)
   const handleAnalyzeWardrobe = useCallback(async () => {
     if (safeClothingItems.length < 3) {
       setError("Ajoutez au moins 3 vêtements pour une analyse pertinente.");
@@ -278,7 +274,7 @@ const App: React.FC = () => {
     }
   }, [safeClothingItems, safeClothingSets]);
 
-  // ... (handleScrollTo... et handleItemClick... inchangés)
+  
   const handleScrollToOutfits = useCallback(() => {
     setShowOutfitModal(true);
   }, []);
@@ -313,25 +309,24 @@ const App: React.FC = () => {
     setSelectedItem(updatedItem);
   };
 
-  // --- MODIFICATION ICI ---
-  // handleGenerateFromModal utilise 'occasion'
   const handleGenerateFromModal = (item: ClothingItem) => {
     const occasion = `Focus sur l'article : ${item.analysis}`;
     handleGenerateOutfits(occasion, item);
     setSelectedItem(null);
-    // Ouvre la modale sur mobile
     if (window.innerWidth < 768) {
         setShowOutfitModal(true);
     }
   };
-
-  // ... (handleCreateSet et handleRemoveSet inchangés)
+  
   const handleCreateSet = useCallback((name: string, itemIds: string[]) => {
+    // Trouve la première image pour la vignette de l'ensemble
+    const firstItemImage = clothingItems.find(item => item.id === itemIds[0])?.imageSrc || '';
+    
     const newSet: ClothingSet = {
       id: `set-${Date.now()}-${Math.random()}`,
       name,
       itemIds,
-      imageSrc: clothingItems.find(item => item.id === itemIds[0])?.imageSrc || '' // Ajout d'une image par défaut
+      imageSrc: firstItemImage // Ajout de l'imageSrc
     };
     setClothingSets((prev) => [...prev, newSet]);
   }, [clothingItems]); // Ajout de 'clothingItems' en dépendance
@@ -340,7 +335,7 @@ const App: React.FC = () => {
     setClothingSets((prev) => prev.filter((set) => set.id !== setId));
   }, []);
 
-  // ... (categoryCounts et filteredItems inchangés)
+  
   const categoryCounts = {
     hauts: safeClothingItems.filter(item => item.category === 'Hauts').length,
     bas: safeClothingItems.filter(item => item.category === 'Bas').length,
@@ -380,7 +375,7 @@ return (
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
               <div className="lg:col-span-2 space-y-10">
-                {/* ... (Bouton d'analyse inchangé) ... */}
+                
                 {safeClothingItems.length >= 3 && (
                   <div className="hidden md:block bg-gradient-to-r from-gold/10 to-gold-dark/10 border-2 border-gold/30 rounded-xl p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4 md:justify-between">
                     <div>
@@ -414,7 +409,6 @@ return (
                   </div>
                 )}
                 
-                {/* ... (Upload + Gallery desktop inchangés) ... */}
                 <div className="hidden md:block">
                   <ClothingUpload onAnalyze={handleAnalyzeItems} isAnalyzing={isAnalyzing} />
                 </div>
@@ -428,7 +422,6 @@ return (
                   />
                 </div>
 
-                {/* Mobile (inchangé) */}
                 <div className="md:hidden">
                   {activeTab === 'home' && (
                     <MobileHome
@@ -442,7 +435,6 @@ return (
                   )}
                   {activeTab !== 'home' && (
                     <div className="pb-24">
-                      {/* ... (Affichage des articles par onglet, déjà corrigé avec l'icône) ... */}
                       <div className="text-center py-6 px-4">
                         <h2 className="text-2xl font-bold mb-2 capitalize">{activeTab}</h2>
                         <p className="text-sm text-gray-500">
@@ -486,8 +478,8 @@ return (
                 </div>
               </div>
 
-              {/* Colonne de droite (desktop) */}
-              <div id="outfit-generator">
+              <div className="space-y-10 hidden md:block">
+                <div id="outfit-generator">
                   <OutfitGenerator
                     clothingItems={safeClothingItems}
                     clothingSets={safeClothingSets}
@@ -499,7 +491,6 @@ return (
                 </div>
                 {suggestedOutfits.length > 0 && <OutfitDisplay outfits={suggestedOutfits} allClothingItems={safeClothingItems} />}
                 
-                {/* VacationPlanner (inchangé) */}
                 <div id="vacation-planner">
                   <VacationPlanner
                     clothingItems={safeClothingItems}
@@ -517,7 +508,6 @@ return (
               </div>
             </div>
 
-            {/* Modales (inchangées) */}
             {selectedItem && (
               <ClothingDetailModal
                 item={selectedItem}
@@ -535,7 +525,6 @@ return (
               />
             )}
 
-            {/* Navigation (inchangée) */}
             <MobileFAB
               onFilesSelected={handleAnalyzeItems}
               isAnalyzing={isAnalyzing}
@@ -546,7 +535,6 @@ return (
               counts={categoryCounts}
             />
 
-            {/* --- MODIFICATION ICI --- */}
             {showOutfitModal && (
               <OutfitModal
                 clothingItems={safeClothingItems}
@@ -560,7 +548,6 @@ return (
               />
             )}
 
-            {/* ... (Autres modales inchangées) ... */}
             {showVacationModal && (
               <VacationModal
                 clothingItems={safeClothingItems}
