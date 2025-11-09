@@ -1,9 +1,11 @@
 import React from 'react';
+import { LinkIcon } from './icons.tsx'; // <-- 1. Importer l'icône
 
 interface MobileHomeProps {
   onAnalyzeWardrobe: () => void;
   onScrollToOutfits: () => void;
   onScrollToVacation: () => void;
+  onStartSetCreation: () => void; // <-- 2. Ajouter la nouvelle prop
   isAnalyzingWardrobe: boolean;
   clothingCount: number;
 }
@@ -12,12 +14,13 @@ const MobileHome: React.FC<MobileHomeProps> = ({
   onAnalyzeWardrobe, 
   onScrollToOutfits, 
   onScrollToVacation,
+  onStartSetCreation, // <-- 3. Récupérer la prop
   isAnalyzingWardrobe,
   clothingCount
 }) => {
   return (
     <div className="space-y-4 pb-24">
-      {/* Header */}
+      {/* Header (inchangé) */}
       <div className="text-center py-6">
         <h2 className="text-3xl font-serif font-bold mb-2">
           <span className="text-gold">Ma</span> Garde-Robe
@@ -27,9 +30,9 @@ const MobileHome: React.FC<MobileHomeProps> = ({
         </p>
       </div>
 
-      {/* Feature Cards */}
+      {/* Feature Cards (inchangé) */}
       <div className="space-y-3 px-4">
-        {/* Analyser la garde-robe */}
+        {/* ... (Les cartes Analyser, Créateur de tenues, Planificateur restent ici) ... */}
         {clothingCount >= 3 && (
           <button
             onClick={onAnalyzeWardrobe}
@@ -100,21 +103,34 @@ const MobileHome: React.FC<MobileHomeProps> = ({
         </button>
       </div>
 
-      {/* Quick Stats */}
+
+      {/* 4. MODIFIER LA CARTE "APERÇU RAPIDE" */}
       <div className="px-4 pt-6">
         <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4">
           <h4 className="font-semibold mb-3 text-sm text-gray-600 dark:text-gray-400">
             Aperçu rapide
           </h4>
           <div className="grid grid-cols-2 gap-3">
+            {/* Carte Vêtements (inchangée) */}
             <div className="bg-white dark:bg-raisin-black rounded-xl p-3 text-center">
               <p className="text-2xl font-bold text-gold">{clothingCount}</p>
               <p className="text-xs text-gray-500">Vêtements</p>
             </div>
-            <div className="bg-white dark:bg-raisin-black rounded-xl p-3 text-center">
-              <p className="text-2xl font-bold text-purple-500">∞</p>
-              <p className="text-xs text-gray-500">Tenues possibles</p>
-            </div>
+            
+            {/* Carte "Tenues possibles" REMPLACÉE par "Créer un ensemble" */}
+            <button
+              onClick={onStartSetCreation}
+              className="bg-white dark:bg-raisin-black rounded-xl p-3 text-center flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-raisin-black/50 transition-colors active:scale-95"
+            >
+              <div className="text-green-500">
+                {/* Utilisation de l'icône importée */}
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.536a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+              </div>
+              <p className="text-xs text-gray-500 mt-1.5 font-medium">Créer un ensemble</p>
+            </button>
+
           </div>
         </div>
       </div>
