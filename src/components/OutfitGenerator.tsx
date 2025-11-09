@@ -5,32 +5,56 @@ import type { ClothingItem, ClothingSet } from '../types';
 interface OutfitGeneratorProps {
   clothingItems: ClothingItem[];
   clothingSets: ClothingSet[];
-  onGenerate: (context: string) => void;
+  onGenerate: (occasion: string) => void; // 'context' devient 'occasion'
   isGenerating: boolean;
+  weatherInfo: string | null; // Nouvelle prop
+  weatherError: string | null; // Nouvelle prop
 }
 
-const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({ clothingItems, clothingSets, onGenerate, isGenerating }) => {
-  const [context, setContext] = React.useState('');
+const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({ 
+  clothingItems, 
+  clothingSets, 
+  onGenerate, 
+  isGenerating, 
+  weatherInfo, 
+  weatherError 
+}) => {
+  const [occasion, setOccasion] = React.useState(''); // 'context' renommé en 'occasion'
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // 🛡️ PROTECTION: Vérifier que context existe avant d'appeler trim()
-    const safeContext = context || '';
-    if (safeContext.trim()) {
-      onGenerate(safeContext);
-    }
+    const safeOccasion = occasion || 'Casual'; // Mettre "Casual" par défaut si vide
+    onGenerate(safeOccasion);
   };
   
-  const presets = ["Casual", "Chic", "Formel"];
+  const presets = ["Casual", "Soirée chic", "Travail (formel)"];
 
   return (
     <div>
       <h2 className="text-2xl font-serif font-bold text-center mb-6 text-gold">Créateur de Tenues</h2>
+      
+      {/* AFFICHAGE DE LA MÉTÉO */}
+      <div className="text-center mb-6 p-3 rounded-lg bg-snow dark:bg-onyx border border-black/10 dark:border-white/10">
+        {weatherInfo && (
+          <p className="text-sm font-medium text-blue-500 dark:text-blue-400">
+            Météo : {weatherInfo} 📍
+          </p>
+        )}
+        {weatherError && (
+          <p className="text-sm font-medium text-red-500">{weatherError}</p>
+        )}
+        {!weatherInfo && !weatherError && (
+          <p className="text-sm font-medium text-gray-400 animate-pulse">
+            Récupération de la météo...
+          </p>
+        )}
+      </div>
+
       <form onSubmit={handleSubmit}>
         <div className="space-y-6">
           <div>
-            <label htmlFor="context" className="block text-sm font-medium text-center text-gray-500 dark:text-gray-400 mb-3">
-              Pour quelle occasion ou météo ?
+            <label htmlFor="occasion" className="block text-sm font-medium text-center text-gray-500 dark:text-gray-400 mb-3">
+              Pour quelle occasion ?
             </label>
 
             <div className="flex justify-center gap-2 mb-4">
@@ -38,9 +62,9 @@ const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({ clothingItems, clothi
                   <button
                       key={preset}
                       type="button"
-                      onClick={() => setContext(preset)}
+                      onClick={() => setOccasion(preset)}
                       className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors duration-200 ${
-                          context === preset
+                          occasion === preset
                               ? 'bg-gold text-onyx'
                               : 'bg-snow dark:bg-onyx border border-gray-300 dark:border-gray-700 hover:border-gold dark:hover:border-gold text-gray-700 dark:text-gray-300'
                       }`}
@@ -52,18 +76,18 @@ const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({ clothingItems, clothi
             </div>
 
             <input
-              id="context"
+              id="occasion"
               type="text"
-              value={context}
-              onChange={(e) => setContext(e.target.value)}
-              placeholder="Ou décrivez... Ex: un brunch ensoleillé"
+              value={occasion}
+              onChange={(e) => setOccasion(e.target.value)}
+              placeholder="Ou décrivez... (ex: Brunch décontracté)"
               className="w-full px-4 py-3 bg-snow dark:bg-onyx border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-colors text-center"
               disabled={isGenerating}
             />
           </div>
           <button
             type="submit"
-            disabled={isGenerating || !(context || '').trim()}
+            disabled={isGenerating} // On ne désactive que si la génération est en cours
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gold text-onyx font-bold rounded-lg hover:bg-gold-dark transition-all duration-300 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transform hover:scale-105"
           >
             <SparklesIcon />
