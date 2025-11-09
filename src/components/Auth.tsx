@@ -110,7 +110,7 @@ const Auth: React.FC<AuthProps> = ({ user }) => {
         </h2>
         <p className="text-gray-500 dark:text-gray-400">
           {isSignUp ? 'Créez votre compte' : 'Bienvenue'}
-        </Gérer le clic en dehors>
+          </p>
       </div>
 
       <button
