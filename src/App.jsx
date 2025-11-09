@@ -82,7 +82,7 @@ const App = () => {
   }, []);
 
   const handleGenerateOutfits = useCallback(async (context, anchorItemOrSet) => {
-    const totalItems = clothingItems.length - clothingSets.flatMap(s => s.itemIds).length + clothingSets.length;
+    const totalItems = clothingItems.length - (clothingSets || []).flatMap(s => s.itemIds || []).length + (clothingSets || []).length;
     if (totalItems < 2) {
       setError("Veuillez avoir au moins deux articles ou ensembles pour générer des tenues.");
       return;
