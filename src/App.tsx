@@ -22,6 +22,7 @@ import OutfitModal from './components/OutfitModal.tsx';
 import VacationModal from './components/VacationModal.tsx'; 
 import SetCreatorModal from './components/SetCreatorModal.tsx';
 import { LinkIcon } from './components/icons.tsx';
+import { config } from './config.ts';
 
 type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
 
@@ -49,6 +50,8 @@ const App: React.FC = () => {
   const [showOutfitModal, setShowOutfitModal] = useState(false);
   const [showVacationModal, setShowVacationModal] = useState(false);
   const [showSetModal, setShowSetModal] = useState(false);
+  const [weatherInfo, setWeatherInfo] = useState<string | null>(null);
+  const [weatherError, setWeatherError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -99,6 +102,51 @@ const App: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
+
+  useEffect(() => {
+    const fetchWeather = async (position: GeolocationPosition) => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      
+      const API_KEY = config.openWeatherApiKey;
+      if (!API_KEY) {
+        console.error("Clé API OpenWeather manquante.");
+        setWeatherError("Service météo non configuré.");
+        return; 
+      }
+      const API_URL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=fr`;
+
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) {
+          throw new Error("Impossible de récupérer la météo.");
+        }
+        const data = await response.json();
+        
+        // On crée la chaîne de météo
+        const weatherString = `${Math.round(data.main.temp)}°C, ${data.weather[0].description}, à ${data.name}`;
+        setWeatherInfo(weatherString);
+        setWeatherError(null);
+
+      } catch (err) {
+        console.error(err);
+        setWeatherError("Météo indisponible.");
+      }
+    };
+
+    // Demander la permission GPS
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        fetchWeather, // Succès
+        (error) => { // Erreur
+          console.error("Erreur de géolocalisation:", error.message);
+          setWeatherError("Activez la géolocalisation pour la météo.");
+        }
+      );
+    } else {
+      setWeatherError("Géolocalisation non supportée.");
+    }
+  }, []); // Se lance une seule fois au chargement
 
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
