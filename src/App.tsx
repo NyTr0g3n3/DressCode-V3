@@ -42,7 +42,6 @@ const App: React.FC = () => {
   const [isAnalyzingWardrobe, setIsAnalyzingWardrobe] = useState(false);
   const [activeTab, setActiveTab] = useState<MobileTab>('home');
 
-  // 🛡️ Protection: garantir que les données sont toujours des tableaux
   const safeClothingItems = React.useMemo(() => clothingItems || [], [clothingItems]);
   const safeClothingSets = React.useMemo(() => clothingSets || [], [clothingSets]);
   const itemIdsInSets = React.useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
@@ -80,12 +79,8 @@ const App: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    console.log('🔄 Save Effect:', { user: !!user, itemsLength: clothingItems.length });
     if (user && clothingItems.length > 0) {
-      console.log('💾 SAVING ITEMS...');
-      saveClothingItems(user.uid, clothingItems)
-        .then(() => console.log('✅ SAVE SUCCESS!'))
-        .catch(error => console.error('❌ SAVE ERROR:', error));
+      saveClothingItems(user.uid, clothingItems).catch(console.error);
     }
   }, [clothingItems, user]);
 
@@ -103,6 +98,7 @@ const App: React.FC = () => {
     }
   }, [theme]);
 
+  // UseEffect pour la météo (que vous avez déjà)
   useEffect(() => {
     const fetchWeather = async (position: GeolocationPosition) => {
       const lat = position.coords.latitude;
@@ -123,7 +119,6 @@ const App: React.FC = () => {
         }
         const data = await response.json();
         
-        // On crée la chaîne de météo
         const weatherString = `${Math.round(data.main.temp)}°C, ${data.weather[0].description}, à ${data.name}`;
         setWeatherInfo(weatherString);
         setWeatherError(null);
@@ -134,11 +129,10 @@ const App: React.FC = () => {
       }
     };
 
-    // Demander la permission GPS
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        fetchWeather, // Succès
-        (error) => { // Erreur
+        fetchWeather,
+        (error) => {
           console.error("Erreur de géolocalisation:", error.message);
           setWeatherError("Activez la géolocalisation pour la météo.");
         }
@@ -146,12 +140,13 @@ const App: React.FC = () => {
     } else {
       setWeatherError("Géolocalisation non supportée.");
     }
-  }, []); // Se lance une seule fois au chargement
+  }, []);
 
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
   };
 
+  // handleAnalyzeItems (inchangé)
   const handleAnalyzeItems = useCallback(async (files: File[]) => {
     if (files.length === 0) return;
     setIsAnalyzing(true);
@@ -178,33 +173,27 @@ const App: React.FC = () => {
       for (let i = 0; i < itemsCount; i++) {
         const itemId = `${Date.now()}-${files[i].name}-${Math.random()}`;
         
-        // On ne stocke plus la base64 par défaut
         let imageUrl = ''; 
         
         if (user) {
           try {
-            // L'upload est maintenant la seule source pour imageUrl
             imageUrl = await uploadClothingImage(user.uid, imageDataUrls[i], itemId);
             console.log('✅ Image uploaded to Storage:', imageUrl);
 
-            // On ajoute l'item SEULEMENT SI l'upload a réussi
             newItems.push({
               id: itemId,
-              imageSrc: imageUrl, // imageUrl est maintenant l'URL de Firebase Storage
+              imageSrc: imageUrl,
               ...analysisResults[i],
             });
 
           } catch (uploadError) {
             console.error(`❌ Échec de l'upload pour ${files[i].name}. L'article ne sera pas ajouté.`, uploadError);
-            // On informe l'utilisateur de l'échec de cet upload spécifique
             setError(`Erreur d'upload pour ${files[i].name}. L'article n'a pas été ajouté.`);
-            // Important: on ne fait PAS newItems.push() ici, donc l'item n'est pas créé
           }
         } else {
-            // Gérer le cas où l'utilisateur n'est pas connecté
             console.warn("Upload impossible: utilisateur non connecté.");
             setError("Vous devez être connecté pour ajouter des articles.");
-            break; // On sort de la boucle 'for', on arrête les uploads
+            break; 
         }
       }
 
@@ -223,15 +212,25 @@ const App: React.FC = () => {
     }
   }, [user]);
 
-  const handleGenerateOutfits = useCallback(async (context: string, anchorItem?: ClothingItem | ClothingSet) => {
+  // --- MODIFICATION ICI ---
+  // handleGenerateOutfits prend 'occasion' et utilise 'weatherInfo'
+  const handleGenerateOutfits = useCallback(async (occasion: string, anchorItem?: ClothingItem | ClothingSet) => {
     if (safeClothingItems.length === 0) {
       setError("Veuillez d'abord ajouter des vêtements à votre garde-robe.");
       return;
     }
     setIsGenerating(true);
     setError(null);
+    
+    // Combine la météo et l'occasion
+    const fullContext = weatherInfo 
+      ? `Météo actuelle : ${weatherInfo}. Occasion : ${occasion}`
+      : `Occasion : ${occasion}`;
+
+    console.log("Contexte complet envoyé à l'IA:", fullContext);
+
     try {
-      const outfits = await generateOutfits(safeClothingItems, safeClothingSets, context, anchorItem);
+      const outfits = await generateOutfits(safeClothingItems, safeClothingSets, fullContext, anchorItem);
       setSuggestedOutfits(outfits);
     } catch (err) {
       console.error("Erreur lors de la génération des tenues:", err);
@@ -239,8 +238,9 @@ const App: React.FC = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [safeClothingItems, safeClothingSets]);
+  }, [safeClothingItems, safeClothingSets, weatherInfo]); // <-- 'weatherInfo' ajouté aux dépendances
 
+  // handleGenerateVacationPlan (inchangé)
   const handleGenerateVacationPlan = useCallback(async (days: number, context: string) => {
     if (safeClothingItems.length === 0) {
       setError("Veuillez d'abord ajouter des vêtements à votre garde-robe.");
@@ -259,6 +259,7 @@ const App: React.FC = () => {
     }
   }, [safeClothingItems, safeClothingSets]);
 
+  // handleAnalyzeWardrobe (inchangé)
   const handleAnalyzeWardrobe = useCallback(async () => {
     if (safeClothingItems.length < 3) {
       setError("Ajoutez au moins 3 vêtements pour une analyse pertinente.");
@@ -279,13 +280,14 @@ const App: React.FC = () => {
     }
   }, [safeClothingItems, safeClothingSets]);
 
+  // ... (handleScrollTo... et handleItemClick... inchangés)
   const handleScrollToOutfits = useCallback(() => {
-  setShowOutfitModal(true);
-}, []);
+    setShowOutfitModal(true);
+  }, []);
 
-const handleScrollToVacation = useCallback(() => {
-  setShowVacationModal(true);
-}, []);
+  const handleScrollToVacation = useCallback(() => {
+    setShowVacationModal(true);
+  }, []);
 
   const handleItemClick = (item: ClothingItem) => {
     setSelectedItem(item);
@@ -313,27 +315,34 @@ const handleScrollToVacation = useCallback(() => {
     setSelectedItem(updatedItem);
   };
 
- const handleGenerateFromModal = (item: ClothingItem) => {
-  const context = `Créer des tenues variées autour de cet article : ${item.analysis}`;
-  handleGenerateOutfits(context, item); // L'important est que 'item' soit le 2ème argument
-  setSelectedItem(null);
-  setShowOutfitModal(true); // Bonus : ouvrir la modale mobile
-};
+  // --- MODIFICATION ICI ---
+  // handleGenerateFromModal utilise 'occasion'
+  const handleGenerateFromModal = (item: ClothingItem) => {
+    const occasion = `Focus sur l'article : ${item.analysis}`;
+    handleGenerateOutfits(occasion, item);
+    setSelectedItem(null);
+    // Ouvre la modale sur mobile
+    if (window.innerWidth < 768) {
+        setShowOutfitModal(true);
+    }
+  };
 
+  // ... (handleCreateSet et handleRemoveSet inchangés)
   const handleCreateSet = useCallback((name: string, itemIds: string[]) => {
     const newSet: ClothingSet = {
       id: `set-${Date.now()}-${Math.random()}`,
       name,
       itemIds,
+      imageSrc: clothingItems.find(item => item.id === itemIds[0])?.imageSrc || '' // Ajout d'une image par défaut
     };
     setClothingSets((prev) => [...prev, newSet]);
-  }, []);
+  }, [clothingItems]); // Ajout de 'clothingItems' en dépendance
 
   const handleRemoveSet = useCallback((setId: string) => {
     setClothingSets((prev) => prev.filter((set) => set.id !== setId));
   }, []);
 
-  // Compteurs pour la bottom nav
+  // ... (categoryCounts et filteredItems inchangés)
   const categoryCounts = {
     hauts: safeClothingItems.filter(item => item.category === 'Hauts').length,
     bas: safeClothingItems.filter(item => item.category === 'Bas').length,
@@ -341,7 +350,6 @@ const handleScrollToVacation = useCallback(() => {
     accessoires: safeClothingItems.filter(item => item.category === 'Accessoires').length,
   };
 
-  // Filtrage des items selon le tab actif
   const filteredItems = activeTab === 'home' 
     ? [] 
     : safeClothingItems.filter(item => {
@@ -355,12 +363,10 @@ const handleScrollToVacation = useCallback(() => {
 return (
     <div className="min-h-screen bg-snow dark:bg-onyx text-raisin-black dark:text-snow transition-colors duration-300">
       {!user ? (
-        // PAS CONNECTÉ : Affiche le formulaire de connexion centré
         <div className="flex items-center justify-center min-h-screen p-4">
           <Auth user={user} />
         </div>
       ) : (
-        // CONNECTÉ : Affiche l'application
         <>
           <Header theme={theme} toggleTheme={toggleTheme}>
             <Auth user={user} />
@@ -376,7 +382,7 @@ return (
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
               <div className="lg:col-span-2 space-y-10">
-                {/* Bouton d'analyse de garde-robe - Desktop only */}
+                {/* ... (Bouton d'analyse inchangé) ... */}
                 {safeClothingItems.length >= 3 && (
                   <div className="hidden md:block bg-gradient-to-r from-gold/10 to-gold-dark/10 border-2 border-gold/30 rounded-xl p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4 md:justify-between">
                     <div>
@@ -409,23 +415,22 @@ return (
                     </button>
                   </div>
                 )}
-
-                {/* Desktop: Upload + Gallery classique */}
+                
+                {/* ... (Upload + Gallery desktop inchangés) ... */}
                 <div className="hidden md:block">
                   <ClothingUpload onAnalyze={handleAnalyzeItems} isAnalyzing={isAnalyzing} />
                 </div>
+                <div className="hidden md:block">
+                  <ClothingGallery 
+                    clothingItems={safeClothingItems} 
+                    clothingSets={safeClothingSets}
+                    onItemClick={handleItemClick}
+                    onDeleteItem={handleDeleteItem}
+                    onCreateSet={handleCreateSet}
+                  />
+                </div>
 
-               <div className="hidden md:block">
-              <ClothingGallery 
-                clothingItems={safeClothingItems} 
-                clothingSets={safeClothingSets}
-                onItemClick={handleItemClick}
-                onDeleteItem={handleDeleteItem}
-                onCreateSet={handleCreateSet}
-              />
-            </div>
-
-                {/* Mobile: Navigation par tabs */}
+                {/* Mobile (inchangé) */}
                 <div className="md:hidden">
                   {activeTab === 'home' && (
                     <MobileHome
@@ -437,16 +442,15 @@ return (
                       clothingCount={safeClothingItems.length}
                     />
                   )}
-
                   {activeTab !== 'home' && (
                     <div className="pb-24">
+                      {/* ... (Affichage des articles par onglet, déjà corrigé avec l'icône) ... */}
                       <div className="text-center py-6 px-4">
                         <h2 className="text-2xl font-bold mb-2 capitalize">{activeTab}</h2>
                         <p className="text-sm text-gray-500">
                           {filteredItems.length} vêtement{filteredItems.length > 1 ? 's' : ''}
                         </p>
                       </div>
-
                       {filteredItems.length > 0 ? (
                         <div className="grid grid-cols-2 gap-3 px-4">
                           {filteredItems.map(item => (
@@ -456,10 +460,10 @@ return (
                               className="relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform"
                             >
                               {itemIdsInSets.has(item.id) && (
-                        <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white z-10">
-                          <LinkIcon />
-                        </span>
-                      )}
+                                <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white z-10">
+                                  <LinkIcon />
+                                </span>
+                              )}
                               <div className="aspect-square">
                                 <img
                                   src={item.imageSrc}
@@ -484,17 +488,22 @@ return (
                 </div>
               </div>
 
-              {/* Colonne de droite (cachée sur mobile) */}
+              {/* Colonne de droite (desktop) */}
               <div className="space-y-10 hidden md:block">
                 <div id="outfit-generator">
+                  {/* --- MODIFICATION ICI --- */}
                   <OutfitGenerator
                     clothingItems={safeClothingItems}
                     clothingSets={safeClothingSets}
                     onGenerate={handleGenerateOutfits}
                     isGenerating={isGenerating}
+                    weatherInfo={weatherInfo} // <-- PROP AJOUTÉE
+                    weatherError={weatherError} // <-- PROP AJOUTÉE
                   />
                 </div>
                 {suggestedOutfits.length > 0 && <OutfitDisplay outfits={suggestedOutfits} allClothingItems={safeClothingItems} />}
+                
+                {/* VacationPlanner (inchangé) */}
                 <div id="vacation-planner">
                   <VacationPlanner
                     clothingItems={safeClothingItems}
@@ -512,6 +521,7 @@ return (
               </div>
             </div>
 
+            {/* Modales (inchangées) */}
             {selectedItem && (
               <ClothingDetailModal
                 item={selectedItem}
@@ -522,7 +532,6 @@ return (
                 onRemoveSet={handleRemoveSet}
               />
             )}
-
             {wardrobeAnalysis && (
               <WardrobeSuggestions
                 analysis={wardrobeAnalysis}
@@ -530,19 +539,18 @@ return (
               />
             )}
 
-            {/* FAB Mobile */}
+            {/* Navigation (inchangée) */}
             <MobileFAB
               onFilesSelected={handleAnalyzeItems}
               isAnalyzing={isAnalyzing}
             />
-
-            {/* Bottom Navigation Mobile */}
             <MobileBottomNav
               activeTab={activeTab}
               onTabChange={setActiveTab}
               counts={categoryCounts}
             />
 
+            {/* --- MODIFICATION ICI --- */}
             {showOutfitModal && (
               <OutfitModal
                 clothingItems={safeClothingItems}
@@ -551,9 +559,12 @@ return (
                 isGenerating={isGenerating}
                 suggestedOutfits={suggestedOutfits}
                 onClose={() => setShowOutfitModal(false)}
+                weatherInfo={weatherInfo} // <-- PROP AJOUTÉE
+                weatherError={weatherError} // <-- PROP AJOUTÉE
               />
             )}
 
+            {/* ... (Autres modales inchangées) ... */}
             {showVacationModal && (
               <VacationModal
                 clothingItems={safeClothingItems}
