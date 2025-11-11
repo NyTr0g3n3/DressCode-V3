@@ -230,7 +230,17 @@ const App: React.FC = () => {
       setSuggestedOutfits(outfits);
     } catch (err) {
       console.error("Erreur lors de la génération des tenues:", err);
-      setError("Impossible de générer des tenues. L'IA est peut-être surchargée. Veuillez réessayer.");
+      if (err instanceof Error) {
+        if (err.message.includes("malformée")) { // L'IA a renvoyé un JSON cassé
+          setError("L'IA a renvoyé une réponse inattendue. Veuillez réessayer.");
+        } else if (err.message.toLowerCase().includes("failed to fetch")) { // Erreur de réseau
+          setError("Erreur de réseau. Vérifiez votre connexion et réessayez.");
+        } else { // Autre erreur (surcharge, clé API, etc.)
+          setError("L'IA est peut-être surchargée. Veuillez réessayer dans un moment.");
+        }
+      } else { // Erreur inconnue
+        setError("Une erreur inconnue est survenue. Veuillez réessayer.");
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -243,12 +253,23 @@ const App: React.FC = () => {
     }
     setIsGeneratingPlan(true);
     setError(null);
+    
     try {
       const plan = await generateVacationPlan(safeClothingItems, safeClothingSets, days, context);
       setVacationPlan(plan);
     } catch (err) {
       console.error("Erreur lors de la génération du plan de valise:", err);
-      setError("Impossible de générer un plan de valise. L'IA est peut-être surchargée. Veuillez réessayer.");
+      if (err instanceof Error) {
+        if (err.message.includes("malformée")) {
+          setError("L'IA a renvoyé une réponse inattendue. Veuillez réessayer.");
+        } else if (err.message.toLowerCase().includes("failed to fetch")) {
+          setError("Erreur de réseau. Vérifiez votre connexion et réessayez.");
+        } else {
+          setError("L'IA est peut-être surchargée. Veuillez réessayer dans un moment.");
+        }
+      } else {
+        setError("Une erreur inconnue est survenue. Veuillez réessayer.");
+      }
     } finally {
       setIsGeneratingPlan(false);
     }
@@ -268,7 +289,17 @@ const App: React.FC = () => {
       setWardrobeAnalysis(analysis);
     } catch (err) {
       console.error("Erreur lors de l'analyse de la garde-robe:", err);
-      setError("Impossible d'analyser la garde-robe. L'IA est peut-être surchargée. Veuillez réessayer.");
+      if (err instanceof Error) {
+        if (err.message.includes("malformée")) {
+          setError("L'IA a renvoyé une réponse inattendue. Veuillez réessayer.");
+        } else if (err.message.toLowerCase().includes("failed to fetch")) {
+          setError("Erreur de réseau. Vérifiez votre connexion et réessayez.");
+        } else {
+          setError("L'IA est peut-être surchargée. Veuillez réessayer dans un moment.");
+        }
+      } else {
+        setError("Une erreur inconnue est survenue. Veuillez réessayer.");
+      }
     } finally {
       setIsAnalyzingWardrobe(false);
     }
