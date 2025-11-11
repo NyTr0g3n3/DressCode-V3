@@ -1,5 +1,5 @@
 {
-  "name": "Dresscode AI",
+  "name": "Dress Me Up!",
   "description": "An intelligent virtual closet that uses AI to analyze your clothes and suggest outfits based on the weather or any occasion. Built with React, TypeScript, and the Gemini API.",
   "requestFramePermissions": [
     "camera"
