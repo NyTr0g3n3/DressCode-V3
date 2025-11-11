@@ -9,10 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react-dom": "^19.2.0",
-    "react": "^19.2.0",
     "@google/genai": "^1.27.0",
-    "firebase": "^11.0.0"
+    "firebase": "^11.0.0",
+    "framer-motion": "^11.2.12",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-spring-bottom-sheet": "^3.4.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
