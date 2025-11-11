@@ -106,7 +106,8 @@ const Auth: React.FC<AuthProps> = ({ user }) => {
     <div className="bg-white dark:bg-raisin-black rounded-2xl shadow-2xl p-8 max-w-md mx-auto border border-black/5 dark:border-white/10">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-serif font-bold mb-2">
-          <span className="text-gold">Dress</span>Code AI
+  Dress <span className="text-gold">Me</span> Up!
+</h2>
         </h2>
         <p className="text-gray-500 dark:text-gray-400">
           {isSignUp ? 'Créez votre compte' : 'Bienvenue'}
