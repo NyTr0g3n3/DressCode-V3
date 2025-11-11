@@ -142,12 +142,15 @@ const App: React.FC = () => {
     setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
   };
 
+  // REMPLACEZ VOTRE 'handleAnalyzeItems' PAR CECI :
+
   const handleAnalyzeItems = useCallback(async (files: File[]) => {
-    if (files.length === 0) return;
+    if (files.length === 0 || !user) return; // Ajout d'une garde pour 'user'
     setIsAnalyzing(true);
     setError(null);
 
     try {
+      // 1. Convertir les fichiers en base64 (identique à avant)
       const imagePromises = files.map(file => {
         return new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
@@ -156,56 +159,58 @@ const App: React.FC = () => {
           reader.readAsDataURL(file);
         });
       });
-
       const imageDataUrls = await Promise.all(imagePromises);
       const base64Images = imageDataUrls.map(url => url.split(',')[1]);
       
+      // 2. Obtenir les analyses de l'IA (identique à avant)
       const analysisResults = await analyzeClothingImages(base64Images);
       
       const itemsCount = Math.min(analysisResults.length, files.length);
       const newItems: ClothingItem[] = [];
 
+      // 3. Boucler sur chaque nouvel item pour le créer
       for (let i = 0; i < itemsCount; i++) {
-        const itemId = `${Date.now()}-${files[i].name}-${Math.random()}`;
+        const itemAnalysis = analysisResults[i];
         
-        let imageUrl = ''; 
-        
-        if (user) {
-          try {
-            imageUrl = await uploadClothingImage(user.uid, imageDataUrls[i], itemId);
-            console.log('✅ Image uploaded to Storage:', imageUrl);
+        try {
+          // 4. CRÉER le document dans Firestore (sans ID ni imageSrc)
+          // L'ID est généré par Firestore
+          const newItemId = await addClothingItem(user.uid, itemAnalysis);
 
-            newItems.push({
-              id: itemId,
-              imageSrc: imageUrl,
-              ...analysisResults[i],
-            });
+          // 5. UPLOADER l'image en utilisant ce nouvel ID
+          const imageUrl = await uploadClothingImage(user.uid, imageDataUrls[i], newItemId);
+          console.log('✅ Image uploaded to Storage:', imageUrl);
 
-          } catch (uploadError) {
-            console.error(`❌ Échec de l'upload pour ${files[i].name}. L'article ne sera pas ajouté.`, uploadError);
-            setError(`Erreur d'upload pour ${files[i].name}. L'article n'a pas été ajouté.`);
-          }
-        } else {
-            console.warn("Upload impossible: utilisateur non connecté.");
-            setError("Vous devez être connecté pour ajouter des articles.");
-            break; 
+          // 6. METTRE À JOUR le document Firestore avec l'URL de l'image
+          await updateClothingItem(user.uid, newItemId, { imageSrc: imageUrl });
+          
+          // 7. Préparer l'item complet pour l'état React
+          newItems.push({
+            ...itemAnalysis,
+            id: newItemId,
+            imageSrc: imageUrl,
+          });
+
+        } catch (uploadError) {
+          console.error(`❌ Échec de création/upload pour ${files[i].name}.`, uploadError);
+          setError(`Erreur d'upload pour ${files[i].name}. L'article n'a pas été ajouté.`);
         }
       }
 
       if (analysisResults.length !== files.length) {
-        console.warn(`Le nombre de résultats d'analyse (${analysisResults.length}) ne correspond pas au nombre de fichiers (${files.length}).`);
-        setError(`L'IA a analysé ${newItems.length} sur ${files.length} image(s). Certaines ont peut-être été ignorées.`);
+        setError(`L'IA a analysé ${newItems.length} sur ${files.length} image(s).`);
       }
 
+      // 8. Mettre à jour l'état React (identique à avant)
       setClothingItems(prev => [...prev, ...newItems]);
 
     } catch (err) {
       console.error("Erreur lors de l'analyse par lot des images:", err);
-      setError("Une erreur est survenue lors de l'analyse des images. L'IA a peut-être rencontré un problème. Veuillez réessayer.");
+      setError("Une erreur est survenue lors de l'analyse des images. Veuillez réessayer.");
     } finally {
       setIsAnalyzing(false);
     }
-  }, [user]);
+  }, [user]); 
 
   const handleGenerateOutfits = useCallback(async (occasion: string, anchorItem?: ClothingItem | ClothingSet) => {
     if (safeClothingItems.length === 0) {
@@ -318,22 +323,44 @@ const App: React.FC = () => {
     setSelectedItem(null);
   };
 
-  const handleDeleteItem = (itemId: string) => {
-    setClothingItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
-    setClothingSets((prevSets) =>
-      prevSets.map((set) => ({
-        ...set,
-        itemIds: set.itemIds.filter((id) => id !== itemId),
-      }))
-    );
-    setSelectedItem(null);
+  const handleDeleteItem = async (itemId: string) => { // 'async' ajouté
+    if (!user) return; // Garde de sécurité
+
+    try {
+      // 1. Supprimer de Firestore
+      await deleteClothingItem(user.uid, itemId);
+      
+      // 2. Mettre à jour l'état React
+      setClothingItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+      setClothingSets((prevSets) =>
+        prevSets.map((set) => ({
+          ...set,
+          itemIds: set.itemIds.filter((id) => id !== itemId),
+        }))
+      );
+      setSelectedItem(null);
+    } catch (err) {
+      console.error("Erreur lors de la suppression:", err);
+      setError("Impossible de supprimer l'article. Veuillez réessayer.");
+    }
   };
 
-  const handleUpdateItem = (updatedItem: ClothingItem) => {
-    setClothingItems((prevItems) =>
-      prevItems.map((item) => (item.id === updatedItem.id ? updatedItem : item))
-    );
-    setSelectedItem(updatedItem);
+  const handleUpdateItem = async (updatedItem: ClothingItem) => { // 'async' ajouté
+    if (!user) return; // Garde de sécurité
+
+    try {
+      // 1. Mettre à jour dans Firestore
+      await updateClothingItem(user.uid, updatedItem.id, updatedItem);
+
+      // 2. Mettre à jour l'état React
+      setClothingItems((prevItems) =>
+        prevItems.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+      );
+      setSelectedItem(updatedItem);
+    } catch (err) {
+      console.error("Erreur lors de la mise à jour:", err);
+      setError("Impossible de mettre à jour l'article. Veuillez réessayer.");
+    }
   };
 
   const handleGenerateFromModal = (item: ClothingItem) => {
@@ -345,22 +372,47 @@ const App: React.FC = () => {
     }
   };
   
-  const handleCreateSet = useCallback((name: string, itemIds: string[]) => {
-    // Trouve la première image pour la vignette de l'ensemble
+  const handleCreateSet = useCallback(async (name: string, itemIds: string[]) => { // 'async' ajouté
+    if (!user) return; // Garde de sécurité
+
     const firstItemImage = clothingItems.find(item => item.id === itemIds[0])?.imageSrc || '';
     
-    const newSet: ClothingSet = {
-      id: `set-${Date.now()}-${Math.random()}`,
+    // 1. Préparer les données (sans l'ID)
+    const newSetData = {
       name,
       itemIds,
-      imageSrc: firstItemImage // Ajout de l'imageSrc
+      imageSrc: firstItemImage
     };
-    setClothingSets((prev) => [...prev, newSet]);
-  }, [clothingItems]); // Ajout de 'clothingItems' en dépendance
 
-  const handleRemoveSet = useCallback((setId: string) => {
-    setClothingSets((prev) => prev.filter((set) => set.id !== setId));
-  }, []);
+    try {
+      // 2. Ajouter à Firestore, qui génère et retourne l'ID
+      const newSetId = await addClothingSet(user.uid, newSetData);
+
+      // 3. Mettre à jour l'état React avec l'objet complet (incluant le nouvel ID)
+      setClothingSets((prev) => [...prev, { ...newSetData, id: newSetId }]);
+    
+    } catch (err) {
+      console.error("Erreur lors de la création de l'ensemble:", err);
+      setError("Impossible de créer l'ensemble. Veuillez réessayer.");
+    }
+
+  }, [clothingItems, user]);
+
+  const handleRemoveSet = useCallback(async (setId: string) => { // 'async' ajouté
+    if (!user) return; // Garde de sécurité
+
+    try {
+      // 1. Supprimer de Firestore
+      await deleteClothingSet(user.uid, setId);
+
+      // 2. Mettre à jour l'état React
+      setClothingSets((prev) => prev.filter((set) => set.id !== setId));
+
+    } catch (err) {
+      console.error("Erreur lors de la suppression de l'ensemble:", err);
+      setError("Impossible de supprimer l'ensemble. Veuillez réessayer.");
+    }
+  }, [user]);
 
   
   const categoryCounts = {
