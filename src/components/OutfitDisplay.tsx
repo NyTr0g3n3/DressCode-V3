@@ -32,20 +32,46 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems
 
   const findItemImage = (itemDescription: string): string | null => {
     const normalizedDescription = itemDescription.toLowerCase();
-    
-    const bestMatch = allClothingItems.find(ci => {
-      // Priorité à la correspondance exacte
-      if (ci.analysis.toLowerCase() === normalizedDescription) {
-        return true;
-      }
-      // Vérification simple de la superposition des mots
+    const descWords = new Set(normalizedDescription.split(/\s+/));
+
+    if (allClothingItems.length === 0) {
+      return null;
+    }
+
+    // 1. Essayer de trouver une correspondance exacte en premier
+    const exactMatch = allClothingItems.find(ci => ci.analysis.toLowerCase() === normalizedDescription);
+    if (exactMatch) {
+      return exactMatch.imageSrc;
+    }
+
+    // 2. Si pas de match exact, calculer le meilleur score de similarité (Jaccard Index)
+    // On ne veut pas le PREMIER match, on veut le MEILLEUR.
+    const scoredItems = allClothingItems.map(ci => {
       const itemWords = new Set(ci.analysis.toLowerCase().split(/\s+/));
-      const descWords = normalizedDescription.split(/\s+/);
-      const overlap = descWords.filter(word => itemWords.has(word));
-      return overlap.length / descWords.length > 0.5; // au moins 50% de mots en commun
+      
+      // Calculer l'intersection (mots en commun)
+      const intersection = new Set([...itemWords].filter(word => descWords.has(word)));
+      
+      // Calculer l'union
+      const union = new Set([...itemWords, ...descWords]);
+      
+      // Calculer le score
+      const score = intersection.size / union.size;
+      
+      return { item: ci, score };
     });
 
-    return bestMatch ? bestMatch.imageSrc : null;
+    // 3. Trier pour trouver le meilleur score
+    scoredItems.sort((a, b) => b.score - a.score);
+
+    const bestMatch = scoredItems[0];
+
+    // 4. Seuil de confiance : si le meilleur score est 0, c'est qu'il n'y a aucun mot en commun
+    if (bestMatch.score === 0) {
+      return null;
+    }
+
+    return bestMatch.item.imageSrc;
   };
 
   return (
