@@ -10,7 +10,8 @@ import {
   updateClothingItem,
   deleteClothingItem,
   addClothingSet,
-  deleteClothingSet 
+  deleteClothingSet,
+  setClothingItemWithId
 } from './services/firestoreService.ts';
 import { uploadClothingImage } from './services/storageService.ts';
 import Header from './components/Header.tsx';
@@ -31,6 +32,8 @@ import VacationModal from './components/VacationModal.tsx';
 import SetCreatorModal from './components/SetCreatorModal.tsx';
 import { LinkIcon } from './components/icons.tsx';
 import { config } from './config.ts';
+import { getDoc, doc } from 'firebase/firestore'; 
+import { db } from './firebase'; 
 
 type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
 
@@ -414,6 +417,75 @@ const App: React.FC = () => {
     }
   }, [user]);
 
+  const handleMigrateData = async () => {
+  if (!user) {
+    alert("Veuillez vous connecter d'abord.");
+    return;
+  }
+
+  alert("Début de la migration. Cela peut prendre un moment. Ne fermez pas la page.");
+  console.log("Démarrage de la migration...");
+
+  try {
+    // 1. Lire L'ANCIEN document ("le gros carton")
+    const oldDocRef = doc(db, 'users', user.uid, 'wardrobe', 'items');
+    const docSnap = await getDoc(oldDocRef);
+
+    if (!docSnap.exists()) {
+      alert("Aucune ancienne donnée à migrer. C'est peut-être déjà fait !");
+      return;
+    }
+
+    const oldData = docSnap.data();
+    const oldItems: ClothingItem[] = oldData.items || [];
+
+    if (oldItems.length === 0) {
+       alert("L'ancien document est vide. Aucune migration nécessaire.");
+       return;
+    }
+
+    console.log(`Trouvé ${oldItems.length} anciens articles à migrer.`);
+
+    // 2. Boucler et créer les NOUVEAUX documents ("les petites boîtes")
+    let migratedCount = 0;
+    for (const item of oldItems) {
+      // 'item' contient { id, analysis, category, color, material, imageSrc }
+      // On utilise notre nouvelle fonction pour le créer dans la nouvelle collection
+      await setClothingItemWithId(user.uid, item);
+      migratedCount++;
+      console.log(`Migré ${migratedCount}/${oldItems.length} : ${item.analysis}`);
+    }
+
+    // 3. (Optionnel mais recommandé) On migre aussi les ensembles
+    const oldSetsRef = doc(db, 'users', user.uid, 'wardrobe', 'sets');
+    const setsSnap = await getDoc(oldSetsRef);
+    if (setsSnap.exists() && setsSnap.data().sets) {
+        const oldSets: ClothingSet[] = setsSnap.data().sets;
+        for (const set of oldSets) {
+            // On suppose que la structure des 'sets' n'a pas besoin de 'setDoc'
+            // et qu'on peut juste les recréer (car `addClothingSet` est plus simple)
+            await addClothingSet(user.uid, {
+                name: set.name,
+                itemIds: set.itemIds,
+                imageSrc: set.imageSrc
+            });
+        }
+        console.log(`Migré ${oldSets.length} ensembles.`);
+    }
+
+    alert(`Migration terminée ! ${migratedCount} articles et leurs ensembles ont été déplacés. Vous pouvez recharger la page.`);
+    // Recharger les données pour voir le résultat
+    const items = await loadClothingItems(user.uid);
+    setClothingItems(items);
+    const sets = await loadClothingSets(user.uid);
+    setClothingSets(sets);
+
+  } catch (err) {
+    console.error("ERREUR DE MIGRATION:", err);
+    alert("Une erreur est survenue pendant la migration. Vérifiez la console.");
+  }
+};
+
   
   const categoryCounts = {
     hauts: safeClothingItems.filter(item => item.category === 'Hauts').length,
@@ -443,6 +515,23 @@ return (
           <Header theme={theme} toggleTheme={toggleTheme}>
             <Auth user={user} />
           </Header>
+
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+          <button 
+            onClick={handleMigrateData} 
+            style={{ 
+              backgroundColor: 'red', 
+              color: 'white', 
+              padding: '10px 20px', 
+              fontSize: '16px', 
+              border: 'none', 
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            !!! CLIQUEZ ICI UNE SEULE FOIS POUR MIGRER VOS ANCIENS VÊTEMENTS !!!
+          </button>
+        </div>
 
           <main className="container mx-auto px-4 lg:px-8 py-10">
             {error && (
