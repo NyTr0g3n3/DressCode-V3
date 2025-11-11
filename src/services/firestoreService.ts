@@ -4,7 +4,8 @@ import {
   updateDoc, 
   deleteDoc, 
   getDocs, 
-  addDoc 
+  addDoc,
+  setDoc
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { ClothingItem, ClothingSet } from '../types';
@@ -138,5 +139,18 @@ export const deleteClothingSet = async (userId: string, setId: string) => {
   } catch (error) {
     console.error("Erreur lors de la suppression d'un ensemble:", error);
     throw error;
+  }
+};
+
+export const setClothingItemWithId = async (userId: string, item: ClothingItem) => {
+  try {
+    // On utilise l'ID de l'item existant
+    const itemDoc = doc(db, 'users', userId, 'items', item.id);
+    // On sépare l'ID du reste des données
+    const { id, ...itemData } = item;
+    // On crée le document avec setDoc
+    await setDoc(itemDoc, itemData);
+  } catch (error) {
+    console.error("Erreur lors de la migration de l'item:", item.id, error);
   }
 };
