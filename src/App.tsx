@@ -467,7 +467,7 @@ const App: React.FC = () => {
             await addClothingSet(user.uid, {
                 name: set.name,
                 itemIds: set.itemIds,
-                imageSrc: set.imageSrc
+                imageSrc: set.imageSrc || ''
             });
         }
         console.log(`Migré ${oldSets.length} ensembles.`);
