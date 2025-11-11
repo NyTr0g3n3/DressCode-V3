@@ -3,7 +3,15 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
 import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis } from './types.ts';
 import { analyzeClothingImages, generateOutfits, generateVacationPlan, analyzeWardrobeGaps } from './services/geminiService.ts';
-import { loadClothingItems, saveClothingItems, loadClothingSets, saveClothingSets } from './services/firestoreService.ts';
+import { 
+  loadClothingItems, 
+  loadClothingSets, 
+  addClothingItem,
+  updateClothingItem,
+  deleteClothingItem,
+  addClothingSet,
+  deleteClothingSet 
+} from './services/firestoreService.ts';
 import { uploadClothingImage } from './services/storageService.ts';
 import Header from './components/Header.tsx';
 import Auth from './components/Auth.tsx';
@@ -77,18 +85,6 @@ const App: React.FC = () => {
     };
     loadUserData();
   }, [user]);
-
-  useEffect(() => {
-    if (user && clothingItems.length > 0) {
-      saveClothingItems(user.uid, clothingItems).catch(console.error);
-    }
-  }, [clothingItems, user]);
-
-  useEffect(() => {
-    if (user && clothingSets.length > 0) {
-      saveClothingSets(user.uid, clothingSets).catch(console.error);
-    }
-  }, [clothingSets, user]);
 
   useEffect(() => {
     if (theme === 'dark') {
