@@ -49,7 +49,7 @@ const VacationModal: React.FC<VacationModalProps> = ({
       
       defaultSnap={({ maxHeight }) => maxHeight * 0.6}
       snapPoints={({ minHeight, maxHeight }) => [
-        maxHeight * 0.6, 
+        maxHeight * 0.55, 
         maxHeight * 0.85
       ]}
     >
