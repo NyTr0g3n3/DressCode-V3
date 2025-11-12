@@ -18,7 +18,6 @@ const SetCreatorModal: React.FC<SetCreatorModalProps> = ({
   onClose, 
   onCreateSet 
 }) => {
-  // --- Toute votre logique existante reste inchangée ---
   const [selectedIds, setSelectedIds] = useState(new Set<string>());
 
   const itemIdsInSets = new Set(clothingSets.flatMap(s => s.itemIds));
@@ -54,9 +53,7 @@ const SetCreatorModal: React.FC<SetCreatorModalProps> = ({
       onCreateSet(name, Array.from(selectedIds));
     }
   };
-  // --- Fin de la logique existante ---
 
-  // On applique les styles dark mode au composant
   const isDarkMode = document.documentElement.classList.contains('dark');
 
   return (
@@ -65,8 +62,6 @@ const SetCreatorModal: React.FC<SetCreatorModalProps> = ({
       onDismiss={onClose}
       className={isDarkMode ? 'dark' : ''} // Assure le thème
       
-      // On place votre ancien header dans la prop 'header'
-      // La poignée est maintenant gérée par la bibliothèque
       header={
         <div className="flex items-center justify-between w-full">
           <h2 className="text-xl font-bold text-raisin-black dark:text-snow">🔗 Créer un ensemble</h2>
@@ -81,7 +76,6 @@ const SetCreatorModal: React.FC<SetCreatorModalProps> = ({
         </div>
       }
       
-      // On place votre ancien footer dans la prop 'footer'
       footer={
         selectedIds.size > 0 && (
           <div className="p-4 border-t border-black/10 dark:border-white/10 bg-white dark:bg-raisin-black">
@@ -97,9 +91,10 @@ const SetCreatorModal: React.FC<SetCreatorModalProps> = ({
         )
       }
       
-      // Snap points pour correspondre à votre max-h-[85vh]
-      defaultSnap={({ maxHeight }) => maxHeight * 0.85}
-      snapPoints={({ maxHeight }) => [maxHeight * 0.85, maxHeight * 0.5]}
+      {/* FIX: Le commentaire est maintenant dans le bon format {/**/}.
+      */}
+      defaultSnap={({ minHeight }) => minHeight}
+      snapPoints={({ minHeight, maxHeight }) => [minHeight, maxHeight * 0.85]}
     >
       {/* Le contenu (enfant) est automatiquement scrollable */}
       <div className="p-4 bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
