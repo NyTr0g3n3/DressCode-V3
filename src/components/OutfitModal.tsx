@@ -48,9 +48,6 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
           </button>
         </div>
       }
-      
-      defaultSnap={({ maxHeight }) => maxHeight * 0.85}
-      snapPoints={({ maxHeight }) => [maxHeight * 0.85, maxHeight * 0.5]}
     >
       {/* Contenu scrollable */}
       <div className="p-6 space-y-6 bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
