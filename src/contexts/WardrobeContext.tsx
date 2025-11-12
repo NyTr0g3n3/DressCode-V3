@@ -1,148 +1,189 @@
-import React, { useState } from 'react';
-import { BottomSheet } from 'react-spring-bottom-sheet';
-import type { ClothingItem, ClothingSet, Category } from '../types';
-import { CheckCircleIcon, LinkIcon } from '../icons';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { User } from 'firebase/auth';
+import type { ClothingItem, ClothingSet } from '../types';
+import { 
+  loadClothingItems, 
+  loadClothingSets, 
+  addClothingItem,
+  updateClothingItem,
+  deleteClothingItem,
+  addClothingSet,
+  deleteClothingSet 
+} from '../services/firestoreService';
+import { analyzeClothingImages } from '../services/geminiService';
+import { uploadClothingImage } from '../services/storageService';
 
-interface SetCreatorModalProps {
+interface WardrobeContextType {
   clothingItems: ClothingItem[];
   clothingSets: ClothingSet[];
-  open: boolean;
-  onClose: () => void;
-  onCreateSet: (name: string, itemIds: string[]) => void;
+  isAnalyzing: boolean;
+  analyzeClothingItems: (files: File[]) => Promise<void>;
+  deleteClothingItem: (itemId: string) => Promise<void>;
+  updateClothingItem: (item: ClothingItem) => Promise<void>;
+  createClothingSet: (name: string, itemIds: string[]) => Promise<void>;
+  deleteClothingSet: (setId: string) => Promise<void>;
 }
 
-const SetCreatorModal: React.FC<SetCreatorModalProps> = ({ 
-  open,
-  clothingItems,
-  clothingSets,
-  onClose, 
-  onCreateSet 
-}) => {
-  const [selectedIds, setSelectedIds] = useState(new Set<string>());
+const WardrobeContext = createContext<WardrobeContextType | undefined>(undefined);
 
-  const itemIdsInSets = new Set(clothingSets.flatMap(s => s.itemIds));
-  const availableItems = clothingItems.filter(item => !itemIdsInSets.has(item.id));
-  
-  const itemsByCategory = availableItems.reduce((acc, item) => {
-    if (!acc[item.category]) {
-      acc[item.category] = [];
-    }
-    acc[item.category].push(item);
-    return acc;
-  }, {} as Record<Category, ClothingItem[]>);
+interface WardrobeProviderProps {
+  children: ReactNode;
+  user: User | null;
+}
 
-  const toggleItem = (id: string) => {
-    setSelectedIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
+export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, user }) => {
+  const [clothingItems, setClothingItems] = useState<ClothingItem[]>([]);
+  const [clothingSets, setClothingSets] = useState<ClothingSet[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (user) {
+        try {
+          const items = await loadClothingItems(user.uid);
+          setClothingItems(items);
+          const sets = await loadClothingSets(user.uid);
+          setClothingSets(sets);
+        } catch (err) {
+          console.error('Erreur lors du chargement des données:', err);
+        }
       } else {
-        newSet.add(id);
+        setClothingItems([]);
+        setClothingSets([]);
       }
-      return newSet;
-    });
-  };
+    };
+    loadUserData();
+  }, [user]);
 
-  const handleCreate = () => {
-    if (selectedIds.size < 2) {
-      alert("Veuillez sélectionner au moins 2 articles.");
-      return;
-    }
-    const name = window.prompt("Donnez un nom à cet ensemble :");
-    if (name) {
-      onCreateSet(name, Array.from(selectedIds));
-    }
-  };
+  const analyzeClothingItems = useCallback(async (files: File[]) => {
+    if (files.length === 0 || !user) return;
+    setIsAnalyzing(true);
+    
+    try {
+      const imagePromises = files.map(file => {
+        return new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      });
+      const imageDataUrls = await Promise.all(imagePromises);
+      const base64Images = imageDataUrls.map(url => url.split(',')[1]);
+      
+      const analysisResults = await analyzeClothingImages(base64Images);
+      
+      const itemsCount = Math.min(analysisResults.length, files.length);
+      const newItems: ClothingItem[] = [];
 
-  const isDarkMode = document.documentElement.classList.contains('dark');
+      for (let i = 0; i < itemsCount; i++) {
+        const itemAnalysis = analysisResults[i];
+        let newItemId = '';
+        
+        try {
+          newItemId = await addClothingItem(user.uid, itemAnalysis);
+          const imageUrl = await uploadClothingImage(user.uid, imageDataUrls[i], newItemId);
+          await updateClothingItem(user.uid, newItemId, { imageSrc: imageUrl });
+          
+          newItems.push({
+            ...itemAnalysis,
+            id: newItemId,
+            imageSrc: imageUrl,
+          });
+        } catch (uploadError) {
+          console.error(`Échec de création/upload pour ${files[i].name}.`, uploadError);
+          
+          if (newItemId) {
+            console.log(`Tentative de suppression de l'article orphelin: ${newItemId}`);
+            try {
+              await deleteClothingItem(user.uid, newItemId);
+              console.log(`Article orphelin ${newItemId} supprimé avec succès.`);
+            } catch (deleteError) {
+              console.error(`Échec de la suppression de l'article orphelin ${newItemId}:`, deleteError);
+            }
+          }
+        }
+      }
+      setClothingItems(prev => [...prev, ...newItems]);
+    } catch (err) {
+      console.error("Erreur lors de l'analyse par lot:", err);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [user]);
+
+  const deleteClothingItem = useCallback(async (itemId: string) => {
+    if (!user) return;
+    try {
+      await deleteClothingItem(user.uid, itemId);
+      setClothingItems((prev) => prev.filter((item) => item.id !== itemId));
+      setClothingSets((prev) =>
+        prev.map((set) => ({
+          ...set,
+          itemIds: set.itemIds.filter((id) => id !== itemId),
+        }))
+      );
+    } catch (err) {
+      console.error("Erreur suppression item:", err);
+    }
+  }, [user]);
+
+  const updateClothingItem = useCallback(async (updatedItem: ClothingItem) => {
+    if (!user) return;
+    try {
+      await updateClothingItem(user.uid, updatedItem.id, updatedItem);
+      setClothingItems((prev) =>
+        prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+      );
+    } catch (err) {
+      console.error("Erreur mise à jour item:", err);
+    }
+  }, [user]);
+
+  const createClothingSet = useCallback(async (name: string, itemIds: string[]) => {
+    if (!user) return;
+    const firstItemImage = clothingItems.find(item => item.id === itemIds[0])?.imageSrc || '';
+    const newSetData = { name, itemIds, imageSrc: firstItemImage };
+    try {
+      const newSetId = await addClothingSet(user.uid, newSetData);
+      setClothingSets((prev) => [...prev, { ...newSetData, id: newSetId }]);
+    } catch (err) {
+      console.error("Erreur création set:", err);
+    }
+  }, [user, clothingItems]);
+
+  const deleteClothingSet = useCallback(async (setId: string) => {
+    if (!user) return;
+    try {
+      await deleteClothingSet(user.uid, setId);
+      setClothingSets((prev) => prev.filter((set) => set.id !== setId));
+    } catch (err) {
+      console.error("Erreur suppression set:", err);
+    }
+  }, [user]);
+
+  const value = {
+    clothingItems,
+    clothingSets,
+    isAnalyzing,
+    analyzeClothingItems,
+    deleteClothingItem,
+    updateClothingItem,
+    createClothingSet,
+    deleteClothingSet
+  };
 
   return (
-    <BottomSheet
-      open={open}
-      onDismiss={onClose}
-      className={isDarkMode ? 'dark' : ''}
-      
-      header={
-        <div className="flex items-center justify-between w-full">
-          <h2 className="text-xl font-bold text-raisin-black">🔗 Créer un ensemble</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      }
-      
-      footer={
-        selectedIds.size > 0 && (
-          <div className="p-4 border-t border-black/10 dark:border-white/10 bg-white dark:bg-raisin-black">
-            <button
-              onClick={handleCreate}
-              disabled={selectedIds.size < 2}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gold text-onyx font-bold rounded-lg hover:bg-gold-dark transition-all duration-300 disabled:bg-gray-400 dark:disabled:bg-gray-600"
-            >
-              <LinkIcon />
-              Lier {selectedIds.size} article{selectedIds.size > 1 ? 's' : ''}
-            </button>
-          </div>
-        )
-      }
-      
-      defaultSnap={({ maxHeight }) => maxHeight * 0.6}
-      snapPoints={({ maxHeight }) => [
-        maxHeight * 0.6,
-        maxHeight * 0.85
-      ]}
-    >
-      <div className="p-4 bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
-        <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-4">
-          Sélectionnez les articles que vous souhaitez lier (ex: une veste et son pantalon).
-        </p>
-        <div className="space-y-4">
-          {(Object.keys(itemsByCategory) as Category[]).map(category => (
-            itemsByCategory[category].length > 0 && (
-              <div key={category}>
-                <h3 className="font-semibold text-lg mb-2">{category}</h3>
-                <div className="grid grid-cols-3 gap-3">
-                  {itemsByCategory[category].map(item => {
-                    const isSelected = selectedIds.has(item.id);
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => toggleItem(item.id)}
-                        className="relative rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform border-2"
-                        style={{ borderColor: isSelected ? '#D4AF37' : 'transparent' }}
-                      >
-                        {isSelected && (
-                          <div className="absolute top-1 right-1 p-0.5 bg-gold rounded-full text-onyx z-10">
-                            <CheckCircleIcon />
-                          </div>
-                        )}
-                        <div className="aspect-square">
-                          <img 
-                            src={item.imageSrc} 
-                            alt={item.analysis} 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                        <p className="absolute bottom-1 left-1 right-1 text-white text-xs font-medium line-clamp-2 p-1">
-                          {item.analysis}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )
-          ))}
-        </div>
-      </div>
-    </BottomSheet>
+    <WardrobeContext.Provider value={value}>
+      {children}
+    </WardrobeContext.Provider>
   );
 };
 
-export default SetCreatorModal;
+export const useWardrobe = () => {
+  const context = useContext(WardrobeContext);
+  if (context === undefined) {
+    throw new Error('useWardrobe doit être utilisé à l\'intérieur d\'un WardrobeProvider');
+  }
+  return context;
+};
