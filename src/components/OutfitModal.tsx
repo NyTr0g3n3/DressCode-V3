@@ -49,9 +49,13 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
         </div>
       }
       
-      // FIX: Suppression des props defaultSnap et snapPoints pour 
-      //      que la modale s'adapte au contenu.
-      
+      {/* FIX: On réintroduit les snapPoints.
+        - defaultSnap: S'ouvre pour s'adapter au contenu minimum (minHeight).
+        - snapPoints: Permet de basculer entre la hauteur du contenu (minHeight) et 85% de l'écran.
+        Cela corrige le problème de "l'espace blanc" ET le problème de la "modale trop basse".
+      */}
+      defaultSnap={({ minHeight }) => minHeight}
+      snapPoints={({ minHeight, maxHeight }) => [minHeight, maxHeight * 0.85]}
     >
       {/* Contenu scrollable */}
       <div className="p-6 space-y-6 bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
