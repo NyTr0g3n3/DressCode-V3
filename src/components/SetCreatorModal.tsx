@@ -90,8 +90,6 @@ const SetCreatorModal: React.FC<SetCreatorModalProps> = ({
           </div>
         )
       }
-      
-      {/* --- C'EST ICI LA CORRECTION --- */}
       <defaultSnap_fix defaultSnap={({ maxHeight }) => maxHeight * 0.6} />
       <snapPoints_fix snapPoints={({ maxHeight }) => [
         maxHeight * 0.6,
