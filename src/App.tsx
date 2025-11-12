@@ -269,11 +269,46 @@ const AppContent: React.FC = () => {
             )}
             {activeTab !== 'home' && (
               <div className="pb-24">
-                {/* ... (jsx pour les onglets mobiles) ... */}
+                <div className="text-center py-6 px-4">
+                  <h2 className="text-2xl font-bold mb-2 capitalize">{activeTab}</h2>
+                  <p className="text-sm text-gray-500">
+                    {filteredItems.length} vêtement{filteredItems.length > 1 ? 's' : ''}
+                  </p>
+                </div>
+                {filteredItems.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-3 px-4">
+                    {filteredItems.map(item => (
+                      <div
+                        key={item.id}
+                        onClick={() => handleItemClick(item)}
+                        className="relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform"
+                      >
+                        {itemIdsInSets.has(item.id) && (
+                          <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white z-10">
+                            <LinkIcon />
+                          </span>
+                        )}
+                        <div className="aspect-square">
+                          <img
+                            src={item.imageSrc}
+                            alt={item.analysis}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="p-3">
+                          <p className="text-sm font-medium line-clamp-2">{item.analysis}</p>
+                          <p className="text-xs text-gray-500 mt-1">{item.color}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 px-4">
+                    <p className="text-gray-500">Aucun vêtement dans cette catégorie</p>
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        </div>
 
         <div className="space-y-10 hidden md:block">
           <div id="outfit-generator">
