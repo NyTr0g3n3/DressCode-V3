@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 interface MobileFABProps {
   onFilesSelected: (files: File[]) => void;
   isAnalyzing: boolean;
+  isOtherModalOpen: boolean;
 }
 
-const MobileFAB: React.FC<MobileFABProps> = ({ onFilesSelected, isAnalyzing }) => {
+const MobileFAB: React.FC<MobileFABProps> = ({ onFilesSelected, isAnalyzing, isOtherModalOpen }) => {
   const [showModal, setShowModal] = useState(false);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,8 +19,22 @@ const MobileFAB: React.FC<MobileFABProps> = ({ onFilesSelected, isAnalyzing }) =
 
   return (
     <>
-      {/* FAB Button - Visible uniquement sur mobile */}
-      {/* 🔧 CORRECTION: bottom-24 au lieu de bottom-6 pour être au-dessus de la bottom nav (64px + marge) */}
+      {!isOtherModalOpen && (
+        <button
+          onClick={() => setShowModal(true)}
+          disabled={isAnalyzing}
+          className="md:hidden fixed bottom-24 right-6 w-16 h-16 bg-gradient-to-r from-gold to-gold-dark text-onyx rounded-full shadow-2xl hover:shadow-gold/50 transition-all duration-300 flex items-center justify-center z-40 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+          aria-label="Ajouter un vêtement"
+        >
+          {isAnalyzing ? (
+            <svg className="animate-spin h-8 w-8" fill="none" viewBox="0 0 24 24">
+              {/* ... (icône de chargement inchangée) ... */}
+            </svg>
+          ) : (
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* ... (icône '+' inchangée) ... */}
+            </svg>
+          )}
       <button
         onClick={() => setShowModal(true)}
         disabled={isAnalyzing}
