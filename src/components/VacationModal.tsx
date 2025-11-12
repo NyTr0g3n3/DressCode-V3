@@ -47,8 +47,6 @@ const VacationModal: React.FC<VacationModalProps> = ({
         </div>
       }
       
-      {/* FIX: Le commentaire est maintenant dans le bon format {/**/}.
-      */}
       defaultSnap={({ minHeight }) => minHeight}
       snapPoints={({ minHeight, maxHeight }) => [minHeight, maxHeight * 0.85]}
     >
