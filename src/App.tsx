@@ -309,8 +309,8 @@ const AppContent: React.FC = () => {
                 )}
               </div>
             )}
-
-        <div className="space-y-10 hidden md:block">
+      </div>
+<div className="space-y-10 hidden md:block">
           <div id="outfit-generator">
             <OutfitGenerator
               clothingItems={safeClothingItems}
@@ -339,8 +339,6 @@ const AppContent: React.FC = () => {
             />
           )}
         </div>
-      </div>
-
       {selectedItem && (
         <ClothingDetailModal
           item={selectedItem}
