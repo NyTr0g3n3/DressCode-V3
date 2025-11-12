@@ -17,16 +17,21 @@ export interface ClothingSet {
   imageSrc: string; // Utilise l'image du premier article de l'ensemble
 }
 
+export interface OutfitItem {
+  id: string; // L'ID de l'article (item) ou de l'ensemble (set)
+  description: string; // La description (ex: "T-shirt bleu")
+}
+
 export interface OutfitSuggestion {
   titre: string;
   description: string;
-  vetements: string[];
+  vetements: OutfitItem[];
 }
 
 export interface VacationPlan {
   titre: string;
   resume: string;
-  valise: string[]; // Liste des descriptions des vêtements
+  valise: OutfitItem[];
 }
 
 export interface WardrobeSuggestion {
