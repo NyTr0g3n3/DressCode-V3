@@ -26,6 +26,8 @@ import { config } from './config.ts';
 
 import { WardrobeProvider, useWardrobe } from './contexts/WardrobeContext.tsx';
 
+import 'react-spring-bottom-sheet/dist/style.css';
+
 type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
 
 
@@ -355,17 +357,16 @@ const AppContent: React.FC = () => {
           onClose={() => setShowVacationModal(false)}
         />
       )}
-      {showSetModal && (
-        <SetCreatorModal 
-          clothingItems={safeClothingItems}
-          clothingSets={safeClothingSets}
-          onClose={() => setShowSetModal(false)}
-          onCreateSet={(name, itemIds) => {
-            handleCreateSet(name, itemIds);
-            setShowSetModal(false);
-          }}
-        />
-      )}
+      <SetCreatorModal 
+              open={showSetModal}
+              clothingItems={safeClothingItems}
+              clothingSets={safeClothingSets}
+              onClose={() => setShowSetModal(false)}
+              onCreateSet={(name, itemIds) => {
+                handleCreateSet(name, itemIds);
+                setShowSetModal(false);
+              }}
+            />
     </main>
   );
 }
