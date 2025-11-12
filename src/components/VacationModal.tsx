@@ -47,9 +47,7 @@ const VacationModal: React.FC<VacationModalProps> = ({
         </div>
       }
       
-      {/* FIX: On réintroduit les snapPoints.
-        - defaultSnap: S'ouvre pour s'adapter au contenu minimum (minHeight).
-        - snapPoints: Permet de basculer entre la hauteur du contenu (minHeight) et 85% de l'écran.
+      {/* FIX: Le commentaire est maintenant dans le bon format {/**/}.
       */}
       defaultSnap={({ minHeight }) => minHeight}
       snapPoints={({ minHeight, maxHeight }) => [minHeight, maxHeight * 0.85]}
