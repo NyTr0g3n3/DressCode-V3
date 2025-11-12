@@ -144,7 +144,9 @@ export async function generateOutfits(
                 type: Type.OBJECT,
                 properties: {
                     tenues: {
-                        type: TypeType.ARRAY,
+                        // ▼▼▼ CORRECTION ICI ▼▼▼
+                        type: Type.ARRAY,
+                        // ▲▲▲ CORRECTION ICI ▲▲▲
                         description: "La liste des suggestions de tenues.",
                         items: {
                             type: Type.OBJECT,
