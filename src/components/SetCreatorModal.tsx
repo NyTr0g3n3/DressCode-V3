@@ -64,7 +64,7 @@ const SetCreatorModal: React.FC<SetCreatorModalProps> = ({
       
       header={
         <div className="flex items-center justify-between w-full">
-          <h2 className="text-xl font-bold text-raisin-black dark:text-snow">🔗 Créer un ensemble</h2>
+          <h2 className="text-xl font-bold text-raisin-black">🔗 Créer un ensemble</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
