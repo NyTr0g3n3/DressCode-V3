@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import type { ClothingItem, ClothingSet, Category } from '../types';
-import { CheckCircleIcon, LinkIcon } from './icons';
+import { CheckCircleIcon, LinkIcon } from '../icons';
 
 interface SetCreatorModalProps {
   clothingItems: ClothingItem[];
