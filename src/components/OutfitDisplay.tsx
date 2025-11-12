@@ -5,9 +5,10 @@ import { QuestionMarkIcon, XIcon } from './icons.tsx';
 interface OutfitDisplayProps {
   outfits: OutfitSuggestion[];
   allClothingItems: ClothingItem[];
+  allClothingSets: ClothingSet[];
 }
 
-const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems }) => {
+const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems, allClothingSets }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Gère la fermeture de la lightbox (vue agrandie)
@@ -29,50 +30,14 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems
     };
   }, [selectedImage]);
 
-
-  const findItemImage = (itemDescription: string): string | null => {
-    const normalizedDescription = itemDescription.toLowerCase();
-    const descWords = new Set(normalizedDescription.split(/\s+/));
-
-    if (allClothingItems.length === 0) {
-      return null;
-    }
-
-    // 1. Essayer de trouver une correspondance exacte en premier
-    const exactMatch = allClothingItems.find(ci => ci.analysis.toLowerCase() === normalizedDescription);
-    if (exactMatch) {
-      return exactMatch.imageSrc;
-    }
-
-    // 2. Si pas de match exact, calculer le meilleur score de similarité (Jaccard Index)
-    // On ne veut pas le PREMIER match, on veut le MEILLEUR.
-    const scoredItems = allClothingItems.map(ci => {
-      const itemWords = new Set(ci.analysis.toLowerCase().split(/\s+/));
-      
-      // Calculer l'intersection (mots en commun)
-      const intersection = new Set([...itemWords].filter(word => descWords.has(word)));
-      
-      // Calculer l'union
-      const union = new Set([...itemWords, ...descWords]);
-      
-      // Calculer le score
-      const score = intersection.size / union.size;
-      
-      return { item: ci, score };
-    });
-
-    // 3. Trier pour trouver le meilleur score
-    scoredItems.sort((a, b) => b.score - a.score);
-
-    const bestMatch = scoredItems[0];
-
-    // 4. Seuil de confiance : si le meilleur score est 0, c'est qu'il n'y a aucun mot en commun
-    if (bestMatch.score === 0) {
-      return null;
-    }
-
-    return bestMatch.item.imageSrc;
-  };
+const findItemById = (id: string) => {
+  // Cherche d'abord dans les articles
+  const item = allClothingItems.find(ci => ci.id === id);
+  if (item) return item;
+  // Sinon, cherche dans les ensembles
+  const set = allClothingSets.find(cs => cs.id === id);
+  return set; // Renvoie l'ensemble (qui a aussi imageSrc) ou undefined
+};
 
   return (
     <>
@@ -83,32 +48,33 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-5">{outfit.description}</p>
             
             <div className="flex flex-wrap gap-3 mb-5">
-              {outfit.vetements.map((itemDesc, itemIndex) => {
-                const imgSrc = findItemImage(itemDesc);
-                return (
-                  <button 
-                    key={itemIndex} 
-                    onClick={() => imgSrc && setSelectedImage(imgSrc)}
-                    className="w-20 h-20 bg-gray-200 dark:bg-gray-800 rounded-md shadow-md border-2 border-white dark:border-raisin-black overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold dark:focus:ring-offset-onyx disabled:cursor-default disabled:hover:scale-100"
-                    disabled={!imgSrc}
-                    aria-label={`Agrandir l'image de : ${itemDesc}`}
-                  >
-                    {imgSrc ? (
-                      <img src={imgSrc} alt={itemDesc} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center p-1 text-center">
-                        <QuestionMarkIcon />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
+              {outfit.vetements.map((item, itemIndex) => { // 'itemDesc' devient 'item'
+  const itemData = findItemById(item.id);
+  const imgSrc = itemData ? itemData.imageSrc : null;
+  return (
+    <button 
+      key={itemIndex} 
+      onClick={() => imgSrc && setSelectedImage(imgSrc)}
+      className="w-20 h-20 bg-gray-200 dark:bg-gray-800 rounded-md shadow-md border-2 border-white dark:border-raisin-black overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold dark:focus:ring-offset-onyx disabled:cursor-default disabled:hover:scale-100"
+      disabled={!imgSrc}
+      aria-label={`Agrandir l'image de : ${item.description}`} // On utilise la description de l'item
+    >
+      {imgSrc ? (
+        <img src={imgSrc} alt={item.description} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center p-1 text-center">
+          <QuestionMarkIcon />
+        </div>
+      )}
+    </button>
+  );
+})}
             </div>
 
             <ul className="list-disc list-inside space-y-1.5 text-sm pt-4 border-t border-black/5 dark:border-white/10">
-              {outfit.vetements.map((itemDesc, itemIndex) => (
-                <li key={itemIndex} className="text-gray-700 dark:text-gray-300">{itemDesc}</li>
-              ))}
+              {outfit.vetements.map((item, itemIndex) => (
+  <li key={itemIndex} className="text-gray-700 dark:text-gray-300">{item.description}</li>
+))}
             </ul>
           </div>
         ))}
