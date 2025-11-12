@@ -71,8 +71,8 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
           )}
 
           {suggestedOutfits.length > 0 && (
-            <OutfitDisplay outfits={suggestedOutfits} allClothingItems={clothingItems} />
-          )}
+  <OutfitDisplay outfits={suggestedOutfits} allClothingItems={clothingItems} allClothingSets={clothingSets} />
+)}
         </div>
       </div>
     </div>
