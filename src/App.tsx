@@ -657,7 +657,7 @@ return (
                     weatherError={weatherError}
                   />
                 </div>
-                {suggestedOutfits.length > 0 && <OutfitDisplay outfits={suggestedOutfits} allClothingItems={safeClothingItems} />}
+                {suggestedOutfits.length > 0 && <OutfitDisplay outfits={suggestedOutfits} allClothingItems={safeClothingItems} allClothingSets={safeClothingSets} />}
                 
                 <div id="vacation-planner">
                   <VacationPlanner
@@ -668,11 +668,13 @@ return (
                   />
                 </div>
                 {vacationPlan && (
-                  <VacationResultDisplay
-                    plan={vacationPlan}
-                    allClothingItems={safeClothingItems}
-                  />
-                )}
+  <VacationResultDisplay
+    plan={vacationPlan}
+    allClothingItems={safeClothingItems}
+    allClothingSets={safeClothingSets}
+    onCreateSet={handleCreateSet} // (Tant qu'on y est, passons cette prop)
+  />
+)}
               </div>
             </div>
 
