@@ -92,7 +92,7 @@ const SetCreatorModal: React.FC<SetCreatorModalProps> = ({
       }
       
       defaultSnap={({ minHeight }) => minHeight}
-      snapPoints={({ minHeight, maxHeight }) => [minHeight, maxHeight * 0.85]}
+      snapPoints={({ minHeight, maxHeight }) => [minHeight, maxHeight * 0.7]}
     >
       {/* Le contenu (enfant) est automatiquement scrollable */}
       <div className="p-4 bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
