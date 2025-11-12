@@ -209,7 +209,13 @@ const AppContent: React.FC = () => {
         return false;
       });
 
-
+const isModalOpen = 
+    showOutfitModal || 
+    showVacationModal || 
+    showSetModal || 
+    !!selectedItem ||  
+    !!wardrobeAnalysis; 
+  
   return (
     <main className="container mx-auto px-4 lg:px-8 py-10">
       {error && (
@@ -371,6 +377,7 @@ const AppContent: React.FC = () => {
       <MobileFAB
         onFilesSelected={analyzeClothingItems}
         isAnalyzing={isAnalyzing}
+        isOtherModalOpen={isModalOpen}
       />
       <MobileBottomNav
         activeTab={activeTab}
