@@ -6,7 +6,7 @@ import { CheckCircleIcon, LinkIcon } from './icons';
 interface SetCreatorModalProps {
   clothingItems: ClothingItem[];
   clothingSets: ClothingSet[];
-  open: boolean; // <-- La nouvelle prop 'open'
+  open: boolean;
   onClose: () => void;
   onCreateSet: (name: string, itemIds: string[]) => void;
 }
@@ -60,7 +60,7 @@ const SetCreatorModal: React.FC<SetCreatorModalProps> = ({
     <BottomSheet
       open={open}
       onDismiss={onClose}
-      className={isDarkMode ? 'dark' : ''} // Assure le thème
+      className={isDarkMode ? 'dark' : ''}
       
       header={
         <div className="flex items-center justify-between w-full">
@@ -94,7 +94,6 @@ const SetCreatorModal: React.FC<SetCreatorModalProps> = ({
       defaultSnap={({ minHeight }) => minHeight}
       snapPoints={({ minHeight, maxHeight }) => [minHeight, maxHeight * 0.7]}
     >
-      {/* Le contenu (enfant) est automatiquement scrollable */}
       <div className="p-4 bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
         <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-4">
           Sélectionnez les articles que vous souhaitez lier (ex: une veste et son pantalon).
