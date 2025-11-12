@@ -333,30 +333,28 @@ const AppContent: React.FC = () => {
         counts={categoryCounts}
       />
 
-      {showOutfitModal && (
-        <OutfitModal
-          clothingItems={safeClothingItems}
-          clothingSets={safeClothingSets}
-          onGenerate={handleGenerateOutfits}
-          isGenerating={isGenerating}
-          suggestedOutfits={suggestedOutfits}
-          onClose={() => setShowOutfitModal(false)}
-          weatherInfo={weatherInfo}
-          weatherError={weatherError}
-        />
-      )}
+      <OutfitModal
+        open={showOutfitModal}
+        clothingItems={safeClothingItems}
+        clothingSets={safeClothingSets}
+        onGenerate={handleGenerateOutfits}
+        isGenerating={isGenerating}
+        suggestedOutfits={suggestedOutfits}
+        onClose={() => setShowOutfitModal(false)}
+        weatherInfo={weatherInfo}
+        weatherError={weatherError}
+      />
 
-      {showVacationModal && (
-        <VacationModal
-          clothingItems={safeClothingItems}
-          clothingSets={safeClothingSets}
-          onGeneratePlan={handleGenerateVacationPlan}
-          isGenerating={isGeneratingPlan}
-          vacationPlan={vacationPlan}
-          onCreateSet={handleCreateSet}
-          onClose={() => setShowVacationModal(false)}
-        />
-      )}
+      <VacationModal
+        open={showVacationModal}
+        clothingItems={safeClothingItems}
+        clothingSets={safeClothingSets}
+        onGeneratePlan={handleGenerateVacationPlan}
+        isGenerating={isGeneratingPlan}
+        vacationPlan={vacationPlan}
+        onCreateSet={handleCreateSet}
+        onClose={() => setShowVacationModal(false)}
+      />
       <SetCreatorModal 
               open={showSetModal}
               clothingItems={safeClothingItems}
