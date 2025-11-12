@@ -2,8 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { User } from 'firebase/auth';
 import type { ClothingItem, ClothingSet } from '../types';
 import { 
-  loadClothingItems, 
-  loadClothingSets, 
+  listenToClothingItems,
+  listenToClothingSets,
   addClothingItem,
   updateClothingItem,
   deleteClothingItem,
@@ -37,24 +37,26 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
-    const loadUserData = async () => {
-      if (user) {
-        try {
-          const items = await loadClothingItems(user.uid);
-          setClothingItems(items);
-          const sets = await loadClothingSets(user.uid);
-          setClothingSets(sets);
-        } catch (err) {
-          console.error('Erreur lors du chargement des données:', err);
-        }
-      } else {
-        setClothingItems([]);
-        setClothingSets([]);
-      }
-    };
-    loadUserData();
+    if (user) {
+      const unsubscribeItems = listenToClothingItems(user.uid, (items) => {
+        setClothingItems(items);
+      });
+      
+      const unsubscribeSets = listenToClothingSets(user.uid, (sets) => {
+        setClothingSets(sets);
+      });
+
+      return () => {
+        unsubscribeItems();
+        unsubscribeSets();
+      };
+    } else {
+      setClothingItems([]);
+      setClothingSets([]);
+    }
   }, [user]);
 
+  
   const analyzeClothingItems = useCallback(async (files: File[]) => {
     if (files.length === 0 || !user) return;
     setIsAnalyzing(true);
@@ -74,7 +76,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
       const analysisResults = await analyzeClothingImages(base64Images);
       
       const itemsCount = Math.min(analysisResults.length, files.length);
-      const newItems: ClothingItem[] = [];
 
       for (let i = 0; i < itemsCount; i++) {
         const itemAnalysis = analysisResults[i];
@@ -85,11 +86,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
           const imageUrl = await uploadClothingImage(user.uid, imageDataUrls[i], newItemId);
           await updateClothingItem(user.uid, newItemId, { imageSrc: imageUrl });
           
-          newItems.push({
-            ...itemAnalysis,
-            id: newItemId,
-            imageSrc: imageUrl,
-          });
         } catch (uploadError) {
           console.error(`Échec de création/upload pour ${files[i].name}.`, uploadError);
           
@@ -104,7 +100,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
           }
         }
       }
-      setClothingItems(prev => [...prev, ...newItems]);
     } catch (err) {
       console.error("Erreur lors de l'analyse par lot:", err);
     } finally {
@@ -112,51 +107,39 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
     }
   }, [user]);
 
-  const deleteClothingItem = useCallback(async (itemId: string) => {
+  const deleteClothingItemCallback = useCallback(async (itemId: string) => {
     if (!user) return;
     try {
       await deleteClothingItem(user.uid, itemId);
-      setClothingItems((prev) => prev.filter((item) => item.id !== itemId));
-      setClothingSets((prev) =>
-        prev.map((set) => ({
-          ...set,
-          itemIds: set.itemIds.filter((id) => id !== itemId),
-        }))
-      );
     } catch (err) {
       console.error("Erreur suppression item:", err);
     }
   }, [user]);
 
-  const updateClothingItem = useCallback(async (updatedItem: ClothingItem) => {
+  const updateClothingItemCallback = useCallback(async (updatedItem: ClothingItem) => {
     if (!user) return;
     try {
       await updateClothingItem(user.uid, updatedItem.id, updatedItem);
-      setClothingItems((prev) =>
-        prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))
-      );
     } catch (err) {
       console.error("Erreur mise à jour item:", err);
     }
   }, [user]);
 
-  const createClothingSet = useCallback(async (name: string, itemIds: string[]) => {
+  const createClothingSetCallback = useCallback(async (name: string, itemIds: string[]) => {
     if (!user) return;
     const firstItemImage = clothingItems.find(item => item.id === itemIds[0])?.imageSrc || '';
     const newSetData = { name, itemIds, imageSrc: firstItemImage };
     try {
-      const newSetId = await addClothingSet(user.uid, newSetData);
-      setClothingSets((prev) => [...prev, { ...newSetData, id: newSetId }]);
+      await addClothingSet(user.uid, newSetData);
     } catch (err) {
       console.error("Erreur création set:", err);
     }
   }, [user, clothingItems]);
 
-  const deleteClothingSet = useCallback(async (setId: string) => {
+  const deleteClothingSetCallback = useCallback(async (setId: string) => {
     if (!user) return;
     try {
       await deleteClothingSet(user.uid, setId);
-      setClothingSets((prev) => prev.filter((set) => set.id !== setId));
     } catch (err) {
       console.error("Erreur suppression set:", err);
     }
@@ -167,10 +150,10 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
     clothingSets,
     isAnalyzing,
     analyzeClothingItems,
-    deleteClothingItem,
-    updateClothingItem,
-    createClothingSet,
-    deleteClothingSet
+    deleteClothingItem: deleteClothingItemCallback,
+    updateClothingItem: updateClothingItemCallback,
+    createClothingSet: createClothingSetCallback,
+    deleteClothingSet: deleteClothingSetCallback
   };
 
   return (
