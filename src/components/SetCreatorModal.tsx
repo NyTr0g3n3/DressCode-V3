@@ -90,12 +90,12 @@ const SetCreatorModal: React.FC<SetCreatorModalProps> = ({
           </div>
         )
       }
-      <defaultSnap_fix defaultSnap={({ maxHeight }) => maxHeight * 0.6} />
-      <snapPoints_fix snapPoints={({ maxHeight }) => [
+      
+      defaultSnap={({ maxHeight }) => maxHeight * 0.6}
+      snapPoints={({ maxHeight }) => [
         maxHeight * 0.6,
         maxHeight * 0.85
-      ]} />
-      
+      ]}
     >
       <div className="p-4 bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
         <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-4">
