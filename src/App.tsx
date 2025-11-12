@@ -309,36 +309,48 @@ const AppContent: React.FC = () => {
                 )}
               </div>
             )}
-      </div>
-<div className="space-y-10 hidden md:block">
-          <div id="outfit-generator">
-            <OutfitGenerator
-              clothingItems={safeClothingItems}
-              clothingSets={safeClothingSets}
-              onGenerate={handleGenerateOutfits}
-              isGenerating={isGenerating}
-              weatherInfo={weatherInfo} 
-              weatherError={weatherError}
-            />
           </div>
-          {suggestedOutfits.length > 0 && <OutfitDisplay outfits={suggestedOutfits} allClothingItems={safeClothingItems} allClothingSets={safeClothingSets} />}
           
-          <div id="vacation-planner">
-            <VacationPlanner
-              clothingItems={safeClothingItems}
-              clothingSets={safeClothingSets}
-              onGeneratePlan={handleGenerateVacationPlan}
-              isGenerating={isGeneratingPlan}
-            />
+          {/* FIX: Le bloc ci-dessous était À L'INTÉRIEUR du bloc <div className="md:hidden"> juste au-dessus.
+            Je l'ai déplacé ici, pour qu'il soit un enfant direct de <div className="lg:col-span-2 space-y-10">
+          */}
+          <div className="space-y-10 hidden md:block">
+            <div id="outfit-generator">
+              <OutfitGenerator
+                clothingItems={safeClothingItems}
+                clothingSets={safeClothingSets}
+                onGenerate={handleGenerateOutfits}
+                isGenerating={isGenerating}
+                weatherInfo={weatherInfo} 
+                weatherError={weatherError}
+              />
+            </div>
+            {suggestedOutfits.length > 0 && <OutfitDisplay outfits={suggestedOutfits} allClothingItems={safeClothingItems} allClothingSets={safeClothingSets} />}
+            
+            <div id="vacation-planner">
+              <VacationPlanner
+                clothingItems={safeClothingItems}
+                clothingSets={safeClothingSets}
+                onGeneratePlan={handleGenerateVacationPlan}
+                isGenerating={isGeneratingPlan}
+              />
+            </div>
+            {vacationPlan && (
+              <VacationResultDisplay
+                plan={vacationPlan}
+                allClothingItems={safeClothingItems}
+                allClothingSets={safeClothingSets}
+              />
+            )}
           </div>
-          {vacationPlan && (
-            <VacationResultDisplay
-              plan={vacationPlan}
-              allClothingItems={safeClothingItems}
-              allClothingSets={safeClothingSets}
-            />
-          )}
         </div>
+
+        {/* Le reste de la colonne (lg:col-span-1) était dans votre code d'origine, mais 
+            votre version la plus récente (dans App.tsx) l'a déplacé. 
+            Cette structure semble correcte.
+        */}
+      </div>
+
       {selectedItem && (
         <ClothingDetailModal
           item={selectedItem}
