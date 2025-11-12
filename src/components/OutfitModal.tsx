@@ -5,7 +5,7 @@ import OutfitDisplay from './OutfitDisplay';
 import type { ClothingItem, ClothingSet, OutfitSuggestion } from '../types';
 
 interface OutfitModalProps {
-  open: boolean; // <-- Prop 'open'
+  open: boolean;
   clothingItems: ClothingItem[];
   clothingSets: ClothingSet[];
   onGenerate: (occasion: string) => void;
@@ -49,11 +49,9 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
         </div>
       }
       
-      {/* FIX: Ouvre à 50% par défaut, et peut s'agrandir à 85% */}
       defaultSnap={({ maxHeight }) => maxHeight * 0.5}
       snapPoints={({ maxHeight }) => [maxHeight * 0.5, maxHeight * 0.85]}
     >
-      {/* Contenu scrollable */}
       <div className="p-6 space-y-6 bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
         <OutfitGenerator 
           clothingItems={clothingItems}
