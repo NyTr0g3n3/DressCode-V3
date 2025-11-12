@@ -31,7 +31,7 @@ const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({
 
   return (
     <div>
-      <h2 className="text-2xl font-serif font-bold text-center mb-6 text-gold">Créateur de Tenues</h2>
+      {/* FIX: Suppression du h2 "Créateur de Tenues" (en double avec la modale) */}
       
       {/* AFFICHAGE DE LA MÉTÉO */}
       <div className="text-center mb-6 p-3 rounded-lg bg-snow dark:bg-onyx border border-black/10 dark:border-white/10">
