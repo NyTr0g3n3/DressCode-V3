@@ -49,10 +49,9 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
         </div>
       }
       
-      {/* FIX: On réintroduit les snapPoints.
+      {/* FIX: Le commentaire est maintenant dans le bon format {/**/}.
         - defaultSnap: S'ouvre pour s'adapter au contenu minimum (minHeight).
         - snapPoints: Permet de basculer entre la hauteur du contenu (minHeight) et 85% de l'écran.
-        Cela corrige le problème de "l'espace blanc" ET le problème de la "modale trop basse".
       */}
       defaultSnap={({ minHeight }) => minHeight}
       snapPoints={({ minHeight, maxHeight }) => [minHeight, maxHeight * 0.85]}
