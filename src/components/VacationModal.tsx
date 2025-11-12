@@ -67,12 +67,13 @@ const VacationModal: React.FC<VacationModalProps> = ({
           )}
 
           {vacationPlan && (
-            <VacationResultDisplay 
-              plan={vacationPlan} 
-              allClothingItems={clothingItems}
-              onCreateSet={onCreateSet}
-            />
-          )}
+  <VacationResultDisplay 
+    plan={vacationPlan} 
+    allClothingItems={clothingItems}
+    allClothingSets={clothingSets} // ✅ AJOUTÉ
+    onCreateSet={onCreateSet}
+  />
+)}
         </div>
       </div>
     </div>
