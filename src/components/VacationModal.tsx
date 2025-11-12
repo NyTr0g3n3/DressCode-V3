@@ -46,6 +46,10 @@ const VacationModal: React.FC<VacationModalProps> = ({
           </button>
         </div>
       }
+      
+      // FIX: Suppression des props defaultSnap et snapPoints pour 
+      //      que la modale s'adapte au contenu.
+      
     >
       {/* Contenu scrollable */}
       <div className="p-6 space-y-6 bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
