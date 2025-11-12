@@ -2,18 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
 import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis } from './types.ts';
-import { analyzeClothingImages, generateOutfits, generateVacationPlan, analyzeWardrobeGaps } from './services/geminiService.ts';
-import { 
-  loadClothingItems, 
-  loadClothingSets, 
-  addClothingItem,
-  updateClothingItem,
-  deleteClothingItem,
-  addClothingSet,
-  deleteClothingSet,
-  setClothingItemWithId
-} from './services/firestoreService.ts';
-import { uploadClothingImage } from './services/storageService.ts';
+import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps } from './services/geminiService.ts';
+// Imports des composants
 import Header from './components/Header.tsx';
 import Auth from './components/Auth.tsx';
 import ClothingUpload from './components/ClothingUpload.tsx';
@@ -32,18 +22,17 @@ import VacationModal from './components/VacationModal.tsx';
 import SetCreatorModal from './components/SetCreatorModal.tsx';
 import { LinkIcon } from './components/icons.tsx';
 import { config } from './config.ts';
-import { getDoc, doc } from 'firebase/firestore'; 
-import { db } from './firebase'; 
+
+
+import { WardrobeProvider, useWardrobe } from './contexts/WardrobeContext.tsx';
 
 type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
 
-const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-  const [clothingItems, setClothingItems] = useState<ClothingItem[]>([]);
-  const [clothingSets, setClothingSets] = useState<ClothingSet[]>([]);
+
+const AppContent: React.FC = () => {
+  
+
   const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [suggestedOutfits, setSuggestedOutfits] = useState<OutfitSuggestion[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -52,52 +41,30 @@ const App: React.FC = () => {
   const [wardrobeAnalysis, setWardrobeAnalysis] = useState<WardrobeAnalysis | null>(null);
   const [isAnalyzingWardrobe, setIsAnalyzingWardrobe] = useState(false);
   const [activeTab, setActiveTab] = useState<MobileTab>('home');
-
-  const safeClothingItems = React.useMemo(() => clothingItems || [], [clothingItems]);
-  const safeClothingSets = React.useMemo(() => clothingSets || [], [clothingSets]);
-  const itemIdsInSets = React.useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
-
   const [showOutfitModal, setShowOutfitModal] = useState(false);
   const [showVacationModal, setShowVacationModal] = useState(false);
   const [showSetModal, setShowSetModal] = useState(false);
   const [weatherInfo, setWeatherInfo] = useState<string | null>(null);
   const [weatherError, setWeatherError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
+  
+  const { 
+    clothingItems, 
+    clothingSets, 
+    isAnalyzing, 
+    analyzeClothingItems, 
+    deleteClothingItem,   
+    createClothingSet,    
+    updateClothingItem,  
+    deleteClothingSet    
+  } = useWardrobe();
 
-  useEffect(() => {
-    const loadUserData = async () => {
-      if (user) {
-        try {
-          const items = await loadClothingItems(user.uid);
-          setClothingItems(items);
-          const sets = await loadClothingSets(user.uid);
-          setClothingSets(sets);
-        } catch (err) {
-          console.error('Erreur lors du chargement des données:', err);
-        }
-      } else {
-        setClothingItems([]);
-        setClothingSets([]);
-      }
-    };
-    loadUserData();
-  }, [user]);
+ 
+  const safeClothingItems = React.useMemo(() => clothingItems || [], [clothingItems]);
+  const safeClothingSets = React.useMemo(() => clothingSets || [], [clothingSets]);
+  const itemIdsInSets = React.useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
 
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
-
-  // UseEffect pour la météo
+ 
   useEffect(() => {
     const fetchWeather = async (position: GeolocationPosition) => {
       const lat = position.coords.latitude;
@@ -105,7 +72,6 @@ const App: React.FC = () => {
       
       const API_KEY = config.openWeatherApiKey;
       if (!API_KEY) {
-        console.error("Clé API OpenWeather manquante.");
         setWeatherError("Service météo non configuré.");
         return; 
       }
@@ -113,138 +79,42 @@ const App: React.FC = () => {
 
       try {
         const response = await fetch(API_URL);
-        if (!response.ok) {
-          throw new Error("Impossible de récupérer la météo.");
-        }
+        if (!response.ok) throw new Error("Impossible de récupérer la météo.");
         const data = await response.json();
-        
         const weatherString = `${Math.round(data.main.temp)}°C, ${data.weather[0].description}, à ${data.name}`;
         setWeatherInfo(weatherString);
         setWeatherError(null);
-
       } catch (err) {
-        console.error(err);
         setWeatherError("Météo indisponible.");
       }
     };
-
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         fetchWeather,
-        (error) => {
-          console.error("Erreur de géolocalisation:", error.message);
-          setWeatherError("Activez la géolocalisation pour la météo.");
-        }
+        () => setWeatherError("Activez la géolocalisation pour la météo.")
       );
     } else {
       setWeatherError("Géolocalisation non supportée.");
     }
   }, []);
 
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
-  };
-
-  // REMPLACEZ VOTRE 'handleAnalyzeItems' PAR CECI :
-
-  const handleAnalyzeItems = useCallback(async (files: File[]) => {
-    if (files.length === 0 || !user) return; // Ajout d'une garde pour 'user'
-    setIsAnalyzing(true);
-    setError(null);
-
-    try {
-      // 1. Convertir les fichiers en base64 (identique à avant)
-      const imagePromises = files.map(file => {
-        return new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      });
-      const imageDataUrls = await Promise.all(imagePromises);
-      const base64Images = imageDataUrls.map(url => url.split(',')[1]);
-      
-      // 2. Obtenir les analyses de l'IA (identique à avant)
-      const analysisResults = await analyzeClothingImages(base64Images);
-      
-      const itemsCount = Math.min(analysisResults.length, files.length);
-      const newItems: ClothingItem[] = [];
-
-      // 3. Boucler sur chaque nouvel item pour le créer
-      for (let i = 0; i < itemsCount; i++) {
-        const itemAnalysis = analysisResults[i];
-        
-        try {
-          // 4. CRÉER le document dans Firestore (sans ID ni imageSrc)
-          // L'ID est généré par Firestore
-          const newItemId = await addClothingItem(user.uid, itemAnalysis);
-
-          // 5. UPLOADER l'image en utilisant ce nouvel ID
-          const imageUrl = await uploadClothingImage(user.uid, imageDataUrls[i], newItemId);
-          console.log('✅ Image uploaded to Storage:', imageUrl);
-
-          // 6. METTRE À JOUR le document Firestore avec l'URL de l'image
-          await updateClothingItem(user.uid, newItemId, { imageSrc: imageUrl });
-          
-          // 7. Préparer l'item complet pour l'état React
-          newItems.push({
-            ...itemAnalysis,
-            id: newItemId,
-            imageSrc: imageUrl,
-          });
-
-        } catch (uploadError) {
-          console.error(`❌ Échec de création/upload pour ${files[i].name}.`, uploadError);
-          setError(`Erreur d'upload pour ${files[i].name}. L'article n'a pas été ajouté.`);
-        }
-      }
-
-      if (analysisResults.length !== files.length) {
-        setError(`L'IA a analysé ${newItems.length} sur ${files.length} image(s).`);
-      }
-
-      // 8. Mettre à jour l'état React (identique à avant)
-      setClothingItems(prev => [...prev, ...newItems]);
-
-    } catch (err) {
-      console.error("Erreur lors de l'analyse par lot des images:", err);
-      setError("Une erreur est survenue lors de l'analyse des images. Veuillez réessayer.");
-    } finally {
-      setIsAnalyzing(false);
-    }
-  }, [user]); 
-
+ 
   const handleGenerateOutfits = useCallback(async (occasion: string, anchorItem?: ClothingItem | ClothingSet) => {
     if (safeClothingItems.length === 0) {
-      setError("Veuillez d'abord ajouter des vêtements à votre garde-robe.");
+      setError("Veuillez d'abord ajouter des vêtements.");
       return;
     }
     setIsGenerating(true);
     setError(null);
-    
     const fullContext = weatherInfo 
       ? `Météo actuelle : ${weatherInfo}. Occasion : ${occasion}`
       : `Occasion : ${occasion}`;
-
-    console.log("Contexte complet envoyé à l'IA:", fullContext);
 
     try {
       const outfits = await generateOutfits(safeClothingItems, safeClothingSets, fullContext, anchorItem);
       setSuggestedOutfits(outfits);
     } catch (err) {
-      console.error("Erreur lors de la génération des tenues:", err);
-      if (err instanceof Error) {
-        if (err.message.includes("malformée")) { // L'IA a renvoyé un JSON cassé
-          setError("L'IA a renvoyé une réponse inattendue. Veuillez réessayer.");
-        } else if (err.message.toLowerCase().includes("failed to fetch")) { // Erreur de réseau
-          setError("Erreur de réseau. Vérifiez votre connexion et réessayez.");
-        } else { // Autre erreur (surcharge, clé API, etc.)
-          setError("L'IA est peut-être surchargée. Veuillez réessayer dans un moment.");
-        }
-      } else { // Erreur inconnue
-        setError("Une erreur inconnue est survenue. Veuillez réessayer.");
-      }
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setIsGenerating(false);
     }
@@ -252,28 +122,16 @@ const App: React.FC = () => {
 
   const handleGenerateVacationPlan = useCallback(async (days: number, context: string) => {
     if (safeClothingItems.length === 0) {
-      setError("Veuillez d'abord ajouter des vêtements à votre garde-robe.");
+      setError("Veuillez d'abord ajouter des vêtements.");
       return;
     }
     setIsGeneratingPlan(true);
     setError(null);
-    
     try {
       const plan = await generateVacationPlan(safeClothingItems, safeClothingSets, days, context);
       setVacationPlan(plan);
     } catch (err) {
-      console.error("Erreur lors de la génération du plan de valise:", err);
-      if (err instanceof Error) {
-        if (err.message.includes("malformée")) {
-          setError("L'IA a renvoyé une réponse inattendue. Veuillez réessayer.");
-        } else if (err.message.toLowerCase().includes("failed to fetch")) {
-          setError("Erreur de réseau. Vérifiez votre connexion et réessayez.");
-        } else {
-          setError("L'IA est peut-être surchargée. Veuillez réessayer dans un moment.");
-        }
-      } else {
-        setError("Une erreur inconnue est survenue. Veuillez réessayer.");
-      }
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setIsGeneratingPlan(false);
     }
@@ -281,212 +139,57 @@ const App: React.FC = () => {
 
   const handleAnalyzeWardrobe = useCallback(async () => {
     if (safeClothingItems.length < 3) {
-      setError("Ajoutez au moins 3 vêtements pour une analyse pertinente.");
+      setError("Ajoutez au moins 3 vêtements pour une analyse.");
       return;
     }
-
     setIsAnalyzingWardrobe(true);
     setError(null);
-    
     try {
       const analysis = await analyzeWardrobeGaps(safeClothingItems, safeClothingSets);
       setWardrobeAnalysis(analysis);
     } catch (err) {
-      console.error("Erreur lors de l'analyse de la garde-robe:", err);
-      if (err instanceof Error) {
-        if (err.message.includes("malformée")) {
-          setError("L'IA a renvoyé une réponse inattendue. Veuillez réessayer.");
-        } else if (err.message.toLowerCase().includes("failed to fetch")) {
-          setError("Erreur de réseau. Vérifiez votre connexion et réessayez.");
-        } else {
-          setError("L'IA est peut-être surchargée. Veuillez réessayer dans un moment.");
-        }
-      } else {
-        setError("Une erreur inconnue est survenue. Veuillez réessayer.");
-      }
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setIsAnalyzingWardrobe(false);
     }
   }, [safeClothingItems, safeClothingSets]);
 
   
-  const handleScrollToOutfits = useCallback(() => {
-    setShowOutfitModal(true);
-  }, []);
+ 
+  const handleScrollToOutfits = useCallback(() => setShowOutfitModal(true), []);
+  const handleScrollToVacation = useCallback(() => setShowVacationModal(true), []);
+  const handleItemClick = (item: ClothingItem) => setSelectedItem(item);
+  const handleCloseModal = () => setSelectedItem(null);
 
-  const handleScrollToVacation = useCallback(() => {
-    setShowVacationModal(true);
-  }, []);
 
-  const handleItemClick = (item: ClothingItem) => {
-    setSelectedItem(item);
+  const handleDeleteItem = (itemId: string) => {
+    deleteClothingItem(itemId).catch(setError); 
+    setSelectedItem(null); 
   };
 
-  const handleCloseModal = () => {
-    setSelectedItem(null);
+  const handleUpdateItem = (updatedItem: ClothingItem) => {
+    updateClothingItem(updatedItem).catch(setError); 
+    setSelectedItem(updatedItem); 
   };
-
-  const handleDeleteItem = async (itemId: string) => { // 'async' ajouté
-    if (!user) return; // Garde de sécurité
-
-    try {
-      // 1. Supprimer de Firestore
-      await deleteClothingItem(user.uid, itemId);
-      
-      // 2. Mettre à jour l'état React
-      setClothingItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
-      setClothingSets((prevSets) =>
-        prevSets.map((set) => ({
-          ...set,
-          itemIds: set.itemIds.filter((id) => id !== itemId),
-        }))
-      );
-      setSelectedItem(null);
-    } catch (err) {
-      console.error("Erreur lors de la suppression:", err);
-      setError("Impossible de supprimer l'article. Veuillez réessayer.");
-    }
-  };
-
-  const handleUpdateItem = async (updatedItem: ClothingItem) => { // 'async' ajouté
-    if (!user) return; // Garde de sécurité
-
-    try {
-      // 1. Mettre à jour dans Firestore
-      await updateClothingItem(user.uid, updatedItem.id, updatedItem);
-
-      // 2. Mettre à jour l'état React
-      setClothingItems((prevItems) =>
-        prevItems.map((item) => (item.id === updatedItem.id ? updatedItem : item))
-      );
-      setSelectedItem(updatedItem);
-    } catch (err) {
-      console.error("Erreur lors de la mise à jour:", err);
-      setError("Impossible de mettre à jour l'article. Veuillez réessayer.");
-    }
-  };
-
+  
   const handleGenerateFromModal = (item: ClothingItem) => {
     const occasion = `Focus sur l'article : ${item.analysis}`;
     handleGenerateOutfits(occasion, item);
     setSelectedItem(null);
-    if (window.innerWidth < 768) {
-        setShowOutfitModal(true);
-    }
+    if (window.innerWidth < 768) setShowOutfitModal(true);
   };
   
-  const handleCreateSet = useCallback(async (name: string, itemIds: string[]) => { // 'async' ajouté
-    if (!user) return; // Garde de sécurité
 
-    const firstItemImage = clothingItems.find(item => item.id === itemIds[0])?.imageSrc || '';
-    
-    // 1. Préparer les données (sans l'ID)
-    const newSetData = {
-      name,
-      itemIds,
-      imageSrc: firstItemImage
-    };
-
-    try {
-      // 2. Ajouter à Firestore, qui génère et retourne l'ID
-      const newSetId = await addClothingSet(user.uid, newSetData);
-
-      // 3. Mettre à jour l'état React avec l'objet complet (incluant le nouvel ID)
-      setClothingSets((prev) => [...prev, { ...newSetData, id: newSetId }]);
-    
-    } catch (err) {
-      console.error("Erreur lors de la création de l'ensemble:", err);
-      setError("Impossible de créer l'ensemble. Veuillez réessayer.");
-    }
-
-  }, [clothingItems, user]);
-
-  const handleRemoveSet = useCallback(async (setId: string) => { // 'async' ajouté
-    if (!user) return; // Garde de sécurité
-
-    try {
-      // 1. Supprimer de Firestore
-      await deleteClothingSet(user.uid, setId);
-
-      // 2. Mettre à jour l'état React
-      setClothingSets((prev) => prev.filter((set) => set.id !== setId));
-
-    } catch (err) {
-      console.error("Erreur lors de la suppression de l'ensemble:", err);
-      setError("Impossible de supprimer l'ensemble. Veuillez réessayer.");
-    }
-  }, [user]);
-
-  const handleMigrateData = async () => {
-  if (!user) {
-    alert("Veuillez vous connecter d'abord.");
-    return;
-  }
-
-  alert("Début de la migration. Cela peut prendre un moment. Ne fermez pas la page.");
-  console.log("Démarrage de la migration...");
-
-  try {
-    // 1. Lire L'ANCIEN document ("le gros carton")
-    const oldDocRef = doc(db, 'users', user.uid, 'wardrobe', 'items');
-    const docSnap = await getDoc(oldDocRef);
-
-    if (!docSnap.exists()) {
-      alert("Aucune ancienne donnée à migrer. C'est peut-être déjà fait !");
-      return;
-    }
-
-    const oldData = docSnap.data();
-    const oldItems: ClothingItem[] = oldData.items || [];
-
-    if (oldItems.length === 0) {
-       alert("L'ancien document est vide. Aucune migration nécessaire.");
-       return;
-    }
-
-    console.log(`Trouvé ${oldItems.length} anciens articles à migrer.`);
-
-    // 2. Boucler et créer les NOUVEAUX documents ("les petites boîtes")
-    let migratedCount = 0;
-    for (const item of oldItems) {
-      // 'item' contient { id, analysis, category, color, material, imageSrc }
-      // On utilise notre nouvelle fonction pour le créer dans la nouvelle collection
-      await setClothingItemWithId(user.uid, item);
-      migratedCount++;
-      console.log(`Migré ${migratedCount}/${oldItems.length} : ${item.analysis}`);
-    }
-
-    // 3. (Optionnel mais recommandé) On migre aussi les ensembles
-    const oldSetsRef = doc(db, 'users', user.uid, 'wardrobe', 'sets');
-    const setsSnap = await getDoc(oldSetsRef);
-    if (setsSnap.exists() && setsSnap.data().sets) {
-        const oldSets: ClothingSet[] = setsSnap.data().sets;
-        for (const set of oldSets) {
-            // On suppose que la structure des 'sets' n'a pas besoin de 'setDoc'
-            // et qu'on peut juste les recréer (car `addClothingSet` est plus simple)
-            await addClothingSet(user.uid, {
-                name: set.name,
-                itemIds: set.itemIds,
-                imageSrc: set.imageSrc || ''
-            });
-        }
-        console.log(`Migré ${oldSets.length} ensembles.`);
-    }
-
-    alert(`Migration terminée ! ${migratedCount} articles et leurs ensembles ont été déplacés. Vous pouvez recharger la page.`);
-    // Recharger les données pour voir le résultat
-    const items = await loadClothingItems(user.uid);
-    setClothingItems(items);
-    const sets = await loadClothingSets(user.uid);
-    setClothingSets(sets);
-
-  } catch (err) {
-    console.error("ERREUR DE MIGRATION:", err);
-    alert("Une erreur est survenue pendant la migration. Vérifiez la console.");
-  }
-};
+  const handleCreateSet = useCallback((name: string, itemIds: string[]) => {
+    createClothingSet(name, itemIds).catch(setError); 
+  }, [createClothingSet]);
+  
+  const handleRemoveSet = useCallback((setId: string) => {
+    deleteClothingSet(setId).catch(setError); 
+  }, [deleteClothingSet]);
 
   
+
   const categoryCounts = {
     hauts: safeClothingItems.filter(item => item.category === 'Hauts').length,
     bas: safeClothingItems.filter(item => item.category === 'Bas').length,
@@ -504,7 +207,194 @@ const App: React.FC = () => {
         return false;
       });
 
-return (
+
+  return (
+    <main className="container mx-auto px-4 lg:px-8 py-10">
+      {error && (
+        <div className="bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-lg relative mb-8" role="alert">
+          <strong className="font-bold">Erreur: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="lg:col-span-2 space-y-10">
+          
+          {safeClothingItems.length >= 3 && (
+            <div className="hidden md:block bg-gradient-to-r from-gold/10 to-gold-dark/10 border-2 border-gold/30 rounded-xl p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4 md:justify-between">
+              <div>
+                <h3 className="text-xl font-bold mb-2">💡 Besoin d'inspiration ?</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Découvrez quelles pièces acheter pour rendre votre garde-robe plus polyvalente
+                </p>
+              </div>
+              <button
+                onClick={handleAnalyzeWardrobe}
+                disabled={isAnalyzingWardrobe}
+                className="px-4 md:px-6 py-3 bg-gradient-to-r from-gold to-gold-dark text-onyx rounded-xl hover:shadow-lg hover:shadow-gold/30 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm md:text-base flex-shrink-0"
+              >
+                {/* ... (icône de chargement) ... */}
+                {isAnalyzingWardrobe ? 'Analyse...' : 'Analyser ma garde-robe'}
+              </button>
+            </div>
+          )}
+          
+          <div className="hidden md:block">
+            {/* ✅ On passe les fonctions du contexte */}
+            <ClothingUpload onAnalyze={analyzeClothingItems} isAnalyzing={isAnalyzing} />
+          </div>
+          <div className="hidden md:block">
+            {/* ✅ On passe les fonctions locales qui appellent le contexte */}
+            <ClothingGallery 
+              clothingItems={safeClothingItems} 
+              clothingSets={safeClothingSets}
+              onItemClick={handleItemClick}
+              onDeleteItem={handleDeleteItem}
+              onCreateSet={handleCreateSet}
+            />
+          </div>
+
+          <div className="md:hidden">
+            {activeTab === 'home' && (
+              <MobileHome
+                onAnalyzeWardrobe={handleAnalyzeWardrobe}
+                onScrollToOutfits={handleScrollToOutfits}
+                onScrollToVacation={handleScrollToVacation}
+                onStartSetCreation={() => setShowSetModal(true)}
+                isAnalyzingWardrobe={isAnalyzingWardrobe}
+                clothingCount={safeClothingItems.length}
+              />
+            )}
+            {activeTab !== 'home' && (
+              <div className="pb-24">
+                {/* ... (jsx pour les onglets mobiles) ... */}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-10 hidden md:block">
+          <div id="outfit-generator">
+            <OutfitGenerator
+              clothingItems={safeClothingItems}
+              clothingSets={safeClothingSets}
+              onGenerate={handleGenerateOutfits}
+              isGenerating={isGenerating}
+              weatherInfo={weatherInfo} 
+              weatherError={weatherError}
+            />
+          </div>
+          {suggestedOutfits.length > 0 && <OutfitDisplay outfits={suggestedOutfits} allClothingItems={safeClothingItems} allClothingSets={safeClothingSets} />}
+          
+          <div id="vacation-planner">
+            <VacationPlanner
+              clothingItems={safeClothingItems}
+              clothingSets={safeClothingSets}
+              onGeneratePlan={handleGenerateVacationPlan}
+              isGenerating={isGeneratingPlan}
+            />
+          </div>
+          {vacationPlan && (
+            <VacationResultDisplay
+              plan={vacationPlan}
+              allClothingItems={safeClothingItems}
+              allClothingSets={safeClothingSets}
+            />
+          )}
+        </div>
+      </div>
+
+      {selectedItem && (
+        <ClothingDetailModal
+          item={selectedItem}
+          clothingSets={safeClothingSets}
+          onClose={handleCloseModal}
+          onUpdate={handleUpdateItem}
+          onGenerateFrom={handleGenerateFromModal}
+          onRemoveSet={handleRemoveSet}
+        />
+      )}
+      {wardrobeAnalysis && (
+        <WardrobeSuggestions
+          analysis={wardrobeAnalysis}
+          onClose={() => setWardrobeAnalysis(null)}
+        />
+      )}
+
+      <MobileFAB
+        onFilesSelected={analyzeClothingItems}
+        isAnalyzing={isAnalyzing}
+      />
+      <MobileBottomNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        counts={categoryCounts}
+      />
+
+      {showOutfitModal && (
+        <OutfitModal
+          clothingItems={safeClothingItems}
+          clothingSets={safeClothingSets}
+          onGenerate={handleGenerateOutfits}
+          isGenerating={isGenerating}
+          suggestedOutfits={suggestedOutfits}
+          onClose={() => setShowOutfitModal(false)}
+          weatherInfo={weatherInfo}
+          weatherError={weatherError}
+        />
+      )}
+
+      {showVacationModal && (
+        <VacationModal
+          clothingItems={safeClothingItems}
+          clothingSets={safeClothingSets}
+          onGeneratePlan={handleGenerateVacationPlan}
+          isGenerating={isGeneratingPlan}
+          vacationPlan={vacationPlan}
+          onCreateSet={handleCreateSet}
+          onClose={() => setShowVacationModal(false)}
+        />
+      )}
+      {showSetModal && (
+        <SetCreatorModal 
+          clothingItems={safeClothingItems}
+          clothingSets={safeClothingSets}
+          onClose={() => setShowSetModal(false)}
+          onCreateSet={(name, itemIds) => {
+            handleCreateSet(name, itemIds);
+            setShowSetModal(false);
+          }}
+        />
+      )}
+    </main>
+  );
+}
+
+
+const App: React.FC = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+  
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
+
+  return (
     <div className="min-h-screen bg-snow dark:bg-onyx text-raisin-black dark:text-snow transition-colors duration-300">
       {!user ? (
         <div className="flex items-center justify-center min-h-screen p-4">
@@ -515,232 +405,9 @@ return (
           <Header theme={theme} toggleTheme={toggleTheme}>
             <Auth user={user} />
           </Header>
-
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-          <button 
-            onClick={handleMigrateData} 
-            style={{ 
-              backgroundColor: 'red', 
-              color: 'white', 
-              padding: '10px 20px', 
-              fontSize: '16px', 
-              border: 'none', 
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            !!! CLIQUEZ ICI UNE SEULE FOIS POUR MIGRER VOS ANCIENS VÊTEMENTS !!!
-          </button>
-        </div>
-
-          <main className="container mx-auto px-4 lg:px-8 py-10">
-            {error && (
-              <div className="bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-lg relative mb-8" role="alert">
-                <strong className="font-bold">Erreur: </strong>
-                <span className="block sm:inline">{error}</span>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-              <div className="lg:col-span-2 space-y-10">
-                
-                {safeClothingItems.length >= 3 && (
-                  <div className="hidden md:block bg-gradient-to-r from-gold/10 to-gold-dark/10 border-2 border-gold/30 rounded-xl p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4 md:justify-between">
-                    <div>
-                      <h3 className="text-xl font-bold mb-2">💡 Besoin d'inspiration ?</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Découvrez quelles pièces acheter pour rendre votre garde-robe plus polyvalente
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleAnalyzeWardrobe}
-                      disabled={isAnalyzingWardrobe}
-                      className="px-4 md:px-6 py-3 bg-gradient-to-r from-gold to-gold-dark text-onyx rounded-xl hover:shadow-lg hover:shadow-gold/30 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm md:text-base flex-shrink-0"
-                    >
-                      {isAnalyzingWardrobe ? (
-                        <>
-                          <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Analyse...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                          </svg>
-                          Analyser ma garde-robe
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-                
-                <div className="hidden md:block">
-                  <ClothingUpload onAnalyze={handleAnalyzeItems} isAnalyzing={isAnalyzing} />
-                </div>
-                <div className="hidden md:block">
-                  <ClothingGallery 
-                    clothingItems={safeClothingItems} 
-                    clothingSets={safeClothingSets}
-                    onItemClick={handleItemClick}
-                    onDeleteItem={handleDeleteItem}
-                    onCreateSet={handleCreateSet}
-                  />
-                </div>
-
-                <div className="md:hidden">
-                  {activeTab === 'home' && (
-                    <MobileHome
-                      onAnalyzeWardrobe={handleAnalyzeWardrobe}
-                      onScrollToOutfits={handleScrollToOutfits}
-                      onScrollToVacation={handleScrollToVacation}
-                      onStartSetCreation={() => setShowSetModal(true)}
-                      isAnalyzingWardrobe={isAnalyzingWardrobe}
-                      clothingCount={safeClothingItems.length}
-                    />
-                  )}
-                  {activeTab !== 'home' && (
-                    <div className="pb-24">
-                      <div className="text-center py-6 px-4">
-                        <h2 className="text-2xl font-bold mb-2 capitalize">{activeTab}</h2>
-                        <p className="text-sm text-gray-500">
-                          {filteredItems.length} vêtement{filteredItems.length > 1 ? 's' : ''}
-                        </p>
-                      </div>
-                      {filteredItems.length > 0 ? (
-                        <div className="grid grid-cols-2 gap-3 px-4">
-                          {filteredItems.map(item => (
-                            <div
-                              key={item.id}
-                              onClick={() => handleItemClick(item)}
-                              className="relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform"
-                            >
-                              {itemIdsInSets.has(item.id) && (
-                                <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white z-10">
-                                  <LinkIcon />
-                                </span>
-                              )}
-                              <div className="aspect-square">
-                                <img
-                                  src={item.imageSrc}
-                                  alt={item.analysis}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                              <div className="p-3">
-                                <p className="text-sm font-medium line-clamp-2">{item.analysis}</p>
-                                <p className="text-xs text-gray-500 mt-1">{item.color}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-12 px-4">
-                          <p className="text-gray-500">Aucun vêtement dans cette catégorie</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-10 hidden md:block">
-                <div id="outfit-generator">
-                  <OutfitGenerator
-                    clothingItems={safeClothingItems}
-                    clothingSets={safeClothingSets}
-                    onGenerate={handleGenerateOutfits}
-                    isGenerating={isGenerating}
-                    weatherInfo={weatherInfo} 
-                    weatherError={weatherError}
-                  />
-                </div>
-                {suggestedOutfits.length > 0 && <OutfitDisplay outfits={suggestedOutfits} allClothingItems={safeClothingItems} allClothingSets={safeClothingSets} />}
-                
-                <div id="vacation-planner">
-                  <VacationPlanner
-                    clothingItems={safeClothingItems}
-                    clothingSets={safeClothingSets}
-                    onGeneratePlan={handleGenerateVacationPlan}
-                    isGenerating={isGeneratingPlan}
-                  />
-                </div>
-                {vacationPlan && (
-  <VacationResultDisplay
-    plan={vacationPlan}
-    allClothingItems={safeClothingItems}
-    allClothingSets={safeClothingSets}
-    onCreateSet={handleCreateSet} // (Tant qu'on y est, passons cette prop)
-  />
-)}
-              </div>
-            </div>
-
-            {selectedItem && (
-              <ClothingDetailModal
-                item={selectedItem}
-                clothingSets={safeClothingSets}
-                onClose={handleCloseModal}
-                onUpdate={handleUpdateItem}
-                onGenerateFrom={handleGenerateFromModal}
-                onRemoveSet={handleRemoveSet}
-              />
-            )}
-            {wardrobeAnalysis && (
-              <WardrobeSuggestions
-                analysis={wardrobeAnalysis}
-                onClose={() => setWardrobeAnalysis(null)}
-              />
-            )}
-
-            <MobileFAB
-              onFilesSelected={handleAnalyzeItems}
-              isAnalyzing={isAnalyzing}
-            />
-            <MobileBottomNav
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              counts={categoryCounts}
-            />
-
-            {showOutfitModal && (
-              <OutfitModal
-                clothingItems={safeClothingItems}
-                clothingSets={safeClothingSets}
-                onGenerate={handleGenerateOutfits}
-                isGenerating={isGenerating}
-                suggestedOutfits={suggestedOutfits}
-                onClose={() => setShowOutfitModal(false)}
-                weatherInfo={weatherInfo}
-                weatherError={weatherError}
-              />
-            )}
-
-            {showVacationModal && (
-              <VacationModal
-                clothingItems={safeClothingItems}
-                clothingSets={safeClothingSets}
-                onGeneratePlan={handleGenerateVacationPlan}
-                isGenerating={isGeneratingPlan}
-                vacationPlan={vacationPlan}
-                onCreateSet={handleCreateSet}
-                onClose={() => setShowVacationModal(false)}
-              />
-            )}
-            {showSetModal && (
-              <SetCreatorModal 
-                clothingItems={safeClothingItems}
-                clothingSets={safeClothingSets}
-                onClose={() => setShowSetModal(false)}
-                onCreateSet={(name, itemIds) => {
-                  handleCreateSet(name, itemIds);
-                  setShowSetModal(false);
-                }}
-              />
-            )}
-          </main>
+          <WardrobeProvider user={user}>
+            <AppContent /> 
+          </WardrobeProvider>
         </>
       )}
     </div>
