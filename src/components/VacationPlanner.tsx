@@ -22,8 +22,6 @@ const VacationPlanner: React.FC<VacationPlannerProps> = ({ clothingItems, clothi
   };
 
   return (
-    <div>
-      <h2 className="text-2xl font-serif font-bold text-center mb-6 text-gold">Planificateur de Valise</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
           <div className="sm:col-span-1">
