@@ -102,13 +102,14 @@ export async function generateOutfits(
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
 
-    const individualItemsFormatted = individualItems.map(item => `- ${item.analysis} (Catégorie: ${item.category}, Couleur: ${item.color}, Matière: ${item.material})`).join('\n');
-    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble)`).join('\n');
+    // ✅ MODIFICATION : On inclut les IDs dans la liste pour l'IA
+    const individualItemsFormatted = individualItems.map(item => `- ${item.analysis} (ID: ${item.id})`).join('\n');
+    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
 
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
     const anchorInstruction = anchorItemOrSet
-        ? `\n**RÈGLE CRITIQUE : Chaque tenue DOIT impérativement inclure l'article ou l'ensemble suivant : "${isClothingSet(anchorItemOrSet) ? anchorItemOrSet.name : anchorItemOrSet.analysis}". C'est la pièce maîtresse.**\n`
+        ? `\n**RÈGLE CRITIQUE : Chaque tenue DOIT impérativement inclure l'article ou l'ensemble suivant : "${isClothingSet(anchorItemOrSet) ? anchorItemOrSet.name : anchorItemOrSet.analysis} (ID: ${anchorItemOrSet.id})". C'est la pièce maîtresse.**\n`
         : '';
 
     const prompt = `
@@ -116,17 +117,19 @@ export async function generateOutfits(
 
     Contexte de l'utilisateur : "${context}"
     
-    RÈGLE IMPORTANTE : Les articles marqués comme "(Ensemble)" sont des groupes de vêtements inséparables. Si tu utilises un ensemble, tu dois le lister par son nom (ex: "Costume bleu marine") et ne pas lister ses composants individuels.
-
-    Vêtements et Ensembles disponibles :
+    Vêtements et Ensembles disponibles (utilise leur ID) :
     ${availableClothes}
     ${anchorInstruction}
-    En te basant **uniquement** sur les vêtements et ensembles listés ci-dessus, crée 3 tenues distinctes et cohérentes qui correspondent au contexte de l'utilisateur.
 
-    Pour chaque tenue, fournis :
-    1. Un nom de titre court et accrocheur pour la tenue.
-    2. Une brève description de l'ambiance ou du style de la tenue.
-    3. La liste exacte des descriptions des vêtements ou des noms d'ensembles de la liste fournie à utiliser.
+    RÈGLES :
+    1. Base-toi **uniquement** sur les vêtements et ensembles listés ci-dessus.
+    2. Pour chaque article que tu sélectionnes, tu DOIS fournir son ID exact et sa description.
+    3. Les articles marqués comme "(Ensemble)" sont inséparables.
+
+    Crée 3 tenues distinctes. Pour chaque tenue, fournis :
+    1. Un "titre" court et accrocheur.
+    2. Une "description" brève du style.
+    3. Une liste "vetements" d'objets, où chaque objet contient "id" et "description" de l'article ou de l'ensemble utilisé.
 
     Réponds en français.
   `;
@@ -136,11 +139,12 @@ export async function generateOutfits(
         contents: prompt,
         config: {
             responseMimeType: "application/json",
+            // ✅ MODIFICATION : Le schéma de réponse est mis à jour
             responseSchema: {
                 type: Type.OBJECT,
                 properties: {
                     tenues: {
-                        type: Type.ARRAY,
+                        type: TypeType.ARRAY,
                         description: "La liste des suggestions de tenues.",
                         items: {
                             type: Type.OBJECT,
@@ -149,8 +153,15 @@ export async function generateOutfits(
                                 description: { type: Type.STRING, description: "Une brève description du style de la tenue." },
                                 vetements: {
                                     type: Type.ARRAY,
-                                    items: { type: Type.STRING, description: "Description d'un vêtement ou nom d'un ensemble de la liste fournie." },
-                                    description: "La liste des descriptions des vêtements ou ensembles composant la tenue.",
+                                    description: "La liste des objets vêtements composant la tenue.",
+                                    items: {
+                                        type: Type.OBJECT,
+                                        properties: {
+                                            id: { type: Type.STRING, description: "L'ID de l'article ou de l'ensemble." },
+                                            description: { type: Type.STRING, description: "La description de l'article." }
+                                        },
+                                        required: ["id", "description"]
+                                    }
                                 }
                             },
                             required: ["titre", "description", "vetements"],
@@ -245,6 +256,7 @@ Suggère 3-5 pièces maximum en priorisant les basiques polyvalents.`;
     throw error;
   }
 }
+
 export async function generateVacationPlan(
     clothingList: ClothingItem[],
     sets: ClothingSet[],
@@ -254,26 +266,30 @@ export async function generateVacationPlan(
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
 
-    const individualItemsFormatted = individualItems.map(item => `- ${item.analysis} (Catégorie: ${item.category}, Couleur: ${item.color}, Matière: ${item.material})`).join('\n');
-    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble)`).join('\n');
+    // ✅ MODIFICATION : On inclut les IDs dans la liste pour l'IA
+    const individualItemsFormatted = individualItems.map(item => `- ${item.analysis} (ID: ${item.id})`).join('\n');
+    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
 
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
     const prompt = `
-    Tu es un styliste de voyage et un expert en organisation. Ta mission est de créer une valise optimisée pour un voyage.
+    Tu es un styliste de voyage. Ta mission est de créer une valise optimisée.
 
     Détails du voyage :
     - Durée : ${days} jour(s)
     - Contexte / Météo : "${context}"
 
-    Vêtements et Ensembles disponibles dans la garde-robe :
+    Vêtements et Ensembles disponibles (utilise leur ID) :
     ${availableClothes}
     
     RÈGLES :
-    1. Crée une liste de vêtements à emporter qui soit polyvalente et minimale.
+    1. Crée une liste "valise" polyvalente et minimale.
     2. Ne sélectionne QUE des articles de la liste fournie.
-    3. Les articles marqués comme "(Ensemble)" sont inséparables.
-    4. Assure-toi que la quantité de vêtements est appropriée pour ${days} jour(s).
+    3. Pour chaque article que tu sélectionnes, tu DOIS fournir son ID exact et sa description.
+    4. Les articles marqués comme "(Ensemble)" sont inséparables.
+
+    Réponds avec un "titre", un "resume", et la liste "valise".
+    La liste "valise" doit contenir des objets, où chaque objet contient "id" et "description".
     `;
 
     const response = await ai.models.generateContent({
@@ -281,6 +297,7 @@ export async function generateVacationPlan(
         contents: prompt,
         config: {
             responseMimeType: "application/json",
+            // ✅ MODIFICATION : Le schéma de réponse est mis à jour
             responseSchema: {
                 type: Type.OBJECT,
                 properties: {
@@ -288,8 +305,15 @@ export async function generateVacationPlan(
                     resume: { type: Type.STRING, description: "Un bref résumé de la stratégie de la valise." },
                     valise: {
                         type: Type.ARRAY,
-                        items: { type: Type.STRING },
-                        description: "La liste des vêtements à emporter.",
+                        description: "La liste des objets vêtements à emporter.",
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                id: { type: Type.STRING, description: "L'ID de l'article ou de l'ensemble." },
+                                description: { type: Type.STRING, description: "La description de l'article." }
+                            },
+                            required: ["id", "description"]
+                        }
                     }
                 },
                 required: ["titre", "resume", "valise"],
