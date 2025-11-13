@@ -20,7 +20,7 @@ import WardrobeSuggestions from './components/WardrobeSuggestions.tsx';
 import OutfitModal from './components/OutfitModal.tsx';  
 import VacationModal from './components/VacationModal.tsx'; 
 import SetCreatorModal from './components/SetCreatorModal.tsx';
-import { LinkIcon } from './components/icons.tsx';
+import { LinkIcon, HeartIconSolid } from './components/icons.tsx';
 import { config } from './config.ts';
 
 
@@ -61,7 +61,12 @@ const AppContent: React.FC = () => {
   } = useWardrobe();
 
  
-  const safeClothingItems = React.useMemo(() => clothingItems || [], [clothingItems]);
+  const safeClothingItems = React.useMemo(() => {
+    const items = clothingItems || [];
+    return items.sort((a, b) => 
+      (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0)
+    );
+  }, [clothingItems]);
   const safeClothingSets = React.useMemo(() => clothingSets || [], [clothingSets]);
   const itemIdsInSets = React.useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
 
