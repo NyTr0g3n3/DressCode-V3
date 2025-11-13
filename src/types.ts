@@ -8,6 +8,7 @@ export interface ClothingItem {
   category: Category;
   color: string; // e.g., "Bleu", "Noir", "Blanc"
   material: string; // e.g., "Coton", "Cuir", "Jean"
+  isFavorite?: boolean;
 }
 
 export interface ClothingSet {
