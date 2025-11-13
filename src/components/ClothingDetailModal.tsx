@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { ClothingItem, ClothingSet, Category } from '../types.ts';
-import { XIcon, SparklesIcon, UnlinkIcon } from './icons.tsx';
+import { XIcon, SparklesIcon, UnlinkIcon, CheckCircleIcon } from './icons.tsx';
 
 interface ClothingDetailModalProps {
   item: ClothingItem;
@@ -18,6 +18,8 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({ item, clothin
         color: item.color,
         material: item.material
     });
+
+    const [isSaved, setIsSaved] = useState(false);
     
     const belongingSet = clothingSets.find(set => set.itemIds.includes(item.id));
 
@@ -50,6 +52,10 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({ item, clothin
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onUpdate({ ...item, ...formData });
+        setIsSaved(true);
+        setTimeout(() => {
+          setIsSaved(false);
+        }, 2000);
     };
 
     return (
@@ -119,18 +125,22 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({ item, clothin
                     </div>
                     <div className="mt-6 pt-4 border-t border-black/10 dark:border-white/10 flex flex-col sm:flex-row gap-3">
                          <button
-                            type="button"
-                            onClick={() => onGenerateFrom(item)}
-                            className="w-full flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-onyx dark:bg-snow border-2 border-gold text-gold dark:text-onyx font-bold rounded-lg hover:bg-gold/10 dark:hover:bg-onyx/10 transition-all duration-300"
-                        >
-                            <SparklesIcon />
-                            Créer une tenue avec cet article
-                        </button>
-                        <button
                             type="submit"
-                            className="w-full sm:w-auto px-6 py-2.5 bg-gold text-onyx font-bold rounded-lg hover:bg-gold-dark transition-all duration-300"
+                            disabled={isSaved} // Désactive le bouton pendant la confirmation
+                            className={`w-full sm:w-auto px-6 py-2.5 font-bold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                                isSaved
+                                    ? 'bg-green-600 text-white cursor-not-allowed'
+                                    : 'bg-gold text-onyx hover:bg-gold-dark'
+                            }`}
                         >
-                            Enregistrer
+                            {isSaved ? (
+                                <>
+                                    <CheckCircleIcon />
+                                    Enregistré !
+                                </>
+                            ) : (
+                                'Enregistrer'
+                            )}
                         </button>
                     </div>
                 </form>
