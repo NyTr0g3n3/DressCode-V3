@@ -30,7 +30,6 @@ import 'react-spring-bottom-sheet/dist/style.css';
 
 type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
 
-
 const AppContent: React.FC = () => {
   
   const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
@@ -229,10 +228,8 @@ const isModalOpen =
         </div>
       )}
 
-      {/* ▼▼▼ MODIFICATION ICI ▼▼▼ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         
-        {/* --- COLONNE DE GAUCHE (GARDE-ROBE) --- */}
         <div className="lg:col-span-2 space-y-10">
           
           {safeClothingItems.length >= 3 && (
@@ -266,7 +263,6 @@ const isModalOpen =
             />
           </div>
 
-          {/* --- VUE MOBILE --- */}
           <div className="md:hidden">
             {activeTab === 'home' && (
               <MobileHome
@@ -294,11 +290,18 @@ const isModalOpen =
                         onClick={() => handleItemClick(item)}
                         className="relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform"
                       >
-                        {itemIdsInSets.has(item.id) && (
+                        {/* ▼▼▼ MODIFICATION ICI (ICÔNE MOBILE) ▼▼▼ */}
+                        {item.isFavorite ? (
+                          <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-red-500 z-10">
+                            <HeartIconSolid />
+                          </span>
+                        ) : itemIdsInSets.has(item.id) ? (
                           <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white z-10">
                             <LinkIcon />
                           </span>
-                        )}
+                        ) : null}
+                        {/* ▲▲▲ FIN DE LA MODIFICATION ▲▲▲ */}
+
                         <div className="aspect-square">
                           <img
                             src={item.imageSrc}
@@ -322,10 +325,8 @@ const isModalOpen =
             )}
           </div>
           
-          {/* CETTE SECTION A ÉTÉ DÉPLACÉE */}
         </div>
         
-        {/* --- COLONNE DE DROITE (GÉNÉRATEURS) --- */}
         <div className="lg:col-span-1 space-y-10 lg:sticky lg:top-40 hidden md:block">
             <div id="outfit-generator">
               <OutfitGenerator
@@ -352,11 +353,10 @@ const isModalOpen =
                 plan={vacationPlan}
                 allClothingItems={safeClothingItems}
                 allClothingSets={safeClothingSets}
-                onCreateSet={handleCreateSet} // Ajout de la prop manquante
+                onCreateSet={handleCreateSet}
               />
             )}
         </div>
-        {/* --- FIN DE LA MODIFICATION --- */}
 
       </div>
 
@@ -402,7 +402,7 @@ const isModalOpen =
       />
 
       <VacationModal
-        open={showVacationModal}
+        open={showOutfitModal}
         clothingItems={safeClothingItems}
         clothingSets={safeClothingSets}
         onGeneratePlan={handleGenerateVacationPlan}
@@ -424,6 +424,7 @@ const isModalOpen =
     </main>
   );
 }
+
 
 
 const App: React.FC = () => {
