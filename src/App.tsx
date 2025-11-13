@@ -365,6 +365,7 @@ const isModalOpen =
           onUpdate={handleUpdateItem}
           onGenerateFrom={handleGenerateFromModal}
           onRemoveSet={handleRemoveSet}
+          onDelete={handleDeleteItem}
         />
       )}
       {wardrobeAnalysis && (
