@@ -102,51 +102,70 @@ export async function generateOutfits(
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
 
-    // ✅ MODIFICATION : On inclut les IDs dans la liste pour l'IA
-    const individualItemsFormatted = individualItems.map(item => `- ${item.analysis} (ID: ${item.id})`).join('\n');
-    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
+    // ▼▼▼ MODIFICATION : On envoie plus de données (Catégorie, Couleur, Matière) ▼▼▼
+    const individualItemsFormatted = individualItems.map(item => 
+      `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Couleur: ${item.color}, Mat: ${item.material})`
+    ).join('\n');
+    const setsFormatted = sets.map(set => 
+      `- ${set.name} (Ensemble, ID: ${set.id})`
+    ).join('\n');
+    // ▲▲▲ FIN DE LA MODIFICATION ▲▲▲
 
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
     const anchorInstruction = anchorItemOrSet
-        ? `\n**RÈGLE CRITIQUE : Chaque tenue DOIT impérativement inclure l'article ou l'ensemble suivant : "${isClothingSet(anchorItemOrSet) ? anchorItemOrSet.name : anchorItemOrSet.analysis} (ID: ${anchorItemOrSet.id})". C'est la pièce maîtresse.**\n`
+        ? `\n**RÈGLE D'ANCRAGE : Chaque tenue DOIT impérativement inclure l'article ou l'ensemble suivant : "${isClothingSet(anchorItemOrSet) ? anchorItemOrSet.name : anchorItemOrSet.analysis} (ID: ${anchorItemOrSet.id})". C'est la pièce maîtresse.**\n`
         : '';
 
+    // ▼▼▼ MODIFICATION : Le prompt intègre vos 4 règles de style ▼▼▼
     const prompt = `
-    Tu es un styliste de mode expert. Ta mission est de créer des tenues pour un utilisateur en fonction de sa garde-robe et d'un contexte précis.
+    Tu es un styliste de mode expert. Ta mission est de créer des tenues pertinentes, complètes et harmonieuses.
 
     Contexte de l'utilisateur : "${context}"
     
-    Vêtements et Ensembles disponibles (utilise leur ID) :
+    Vêtements et Ensembles disponibles (utilise leur ID, Cat, Couleur, Mat) :
     ${availableClothes}
     ${anchorInstruction}
 
-    RÈGLES :
+    ---
+    RÈGLES DE STYLE (CRITIQUES) :
+    Ce sont des règles impératives.
+    1. **Montre :** Chaque tenue DOIT inclure une montre (Cat: "Accessoires"). Choisis la plus adaptée au style de la tenue. Si aucune montre n'est disponible, n'en invente pas.
+    2. **Météo (Veste) :** Le "Contexte" inclut la météo. Si la température est inférieure à 20°C, la tenue DOIT inclure une veste, un manteau, ou un gilet (Cat: "Hauts").
+    3. **Pull Col V :** Si tu inclus un pull à col en "V" (Cat: "Hauts"), tu DOIS impérativement le superposer avec une chemise à col boutonné (Cat: "Hauts") en dessous.
+    4. **Pull Col Zippé :** Si tu inclus un pull à col zippé (Cat: "Hauts"), tu DOIS impérativement le superposer avec une chemise ou un t-shirt (Cat: "Hauts") en dessous.
+
+    ---
+    RÈGLES DE STYLE (GÉNÉRALES) :
+    1. **Cohérence :** Une tenue doit être complète et logique. Elle doit inclure au moins un "Hauts" et un "Bas". Si des "Chaussures" pertinentes existent, inclus-les.
+    2. **Harmonie :** Assure-toi que les couleurs et les matières de la tenue sont bien assorties.
+    3. **Variété :** Les 3 tenues proposées doivent être distinctes les unes des autres.
+
+    ---
+    RÈGLES DE FORMAT (OBLIGATOIRES) :
     1. Base-toi **uniquement** sur les vêtements et ensembles listés ci-dessus.
     2. Pour chaque article que tu sélectionnes, tu DOIS fournir son ID exact et sa description.
     3. Les articles marqués comme "(Ensemble)" sont inséparables.
 
     Crée 3 tenues distinctes. Pour chaque tenue, fournis :
     1. Un "titre" court et accrocheur.
-    2. Une "description" brève du style.
+    2. Une "description" brève du style et *pourquoi* elle est adaptée au contexte et respecte les règles.
     3. Une liste "vetements" d'objets, où chaque objet contient "id" et "description" de l'article ou de l'ensemble utilisé.
 
     Réponds en français.
   `;
+  // ▲▲▲ FIN DE LA MODIFICATION ▲▲▲
 
     const response = await ai.models.generateContent({
         model: "gemini-flash-latest",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
-            // ✅ MODIFICATION : Le schéma de réponse est mis à jour
             responseSchema: {
                 type: Type.OBJECT,
                 properties: {
                     tenues: {
-                        // ▼▼▼ CORRECTION ICI ▼▼▼
                         type: Type.ARRAY,
-                        // ▲▲▲ CORRECTION ICI ▲▲▲
                         description: "La liste des suggestions de tenues.",
                         items: {
                             type: Type.OBJECT,
@@ -268,9 +287,14 @@ export async function generateVacationPlan(
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
 
-    // ✅ MODIFICATION : On inclut les IDs dans la liste pour l'IA
-    const individualItemsFormatted = individualItems.map(item => `- ${item.analysis} (ID: ${item.id})`).join('\n');
-    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
+    // ▼▼▼ MODIFICATION : On envoie plus de données (Catégorie, Couleur, Matière) ▼▼▼
+    const individualItemsFormatted = individualItems.map(item => 
+      `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Couleur: ${item.color}, Mat: ${item.material})`
+    ).join('\n');
+    const setsFormatted = sets.map(set => 
+      `- ${set.name} (Ensemble, ID: ${set.id})`
+    ).join('\n');
+    // ▲▲▲ FIN DE LA MODIFICATION ▲▲▲
 
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
@@ -281,16 +305,17 @@ export async function generateVacationPlan(
     - Durée : ${days} jour(s)
     - Contexte / Météo : "${context}"
 
-    Vêtements et Ensembles disponibles (utilise leur ID) :
+    Vêtements et Ensembles disponibles (utilise leur ID, Cat, Couleur, Mat) :
     ${availableClothes}
     
     RÈGLES :
-    1. Crée une liste "valise" polyvalente et minimale.
+    1. Crée une liste "valise" polyvalente et minimale. Vise la "mix-and-match" (articles qui vont ensemble).
     2. Ne sélectionne QUE des articles de la liste fournie.
     3. Pour chaque article que tu sélectionnes, tu DOIS fournir son ID exact et sa description.
     4. Les articles marqués comme "(Ensemble)" sont inséparables.
+    5. Prends en compte le Contexte/Météo pour la sélection.
 
-    Réponds avec un "titre", un "resume", et la liste "valise".
+    Réponds avec un "titre", un "resume" (explique la stratégie de la valise), et la liste "valise".
     La liste "valise" doit contenir des objets, où chaque objet contient "id" et "description".
     `;
 
@@ -299,7 +324,6 @@ export async function generateVacationPlan(
         contents: prompt,
         config: {
             responseMimeType: "application/json",
-            // ✅ MODIFICATION : Le schéma de réponse est mis à jour
             responseSchema: {
                 type: Type.OBJECT,
                 properties: {
