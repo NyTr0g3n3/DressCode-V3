@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react'; // 'useState' n'est pas nécessaire ici
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import OutfitGenerator from './OutfitGenerator';
 import OutfitDisplay from './OutfitDisplay';
@@ -86,11 +86,10 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
           </div>
         )}
 
-        {suggestedOutfits.length > 0 && (
-          <OutfitDisplay outfits={suggestedOutfits} allClothingItems={clothingItems} allClothingSets={clothingSets} />
-        )}
+       
 
         <div ref={resultsRef}>
+        
           {suggestedOutfits.length > 0 && (
             <OutfitDisplay 
               outfits={suggestedOutfits} 
