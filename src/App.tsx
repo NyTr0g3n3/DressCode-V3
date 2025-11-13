@@ -33,7 +33,6 @@ type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
 
 const AppContent: React.FC = () => {
   
-
   const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [suggestedOutfits, setSuggestedOutfits] = useState<OutfitSuggestion[]>([]);
@@ -225,7 +224,10 @@ const isModalOpen =
         </div>
       )}
 
+      {/* ▼▼▼ MODIFICATION ICI ▼▼▼ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        
+        {/* --- COLONNE DE GAUCHE (GARDE-ROBE) --- */}
         <div className="lg:col-span-2 space-y-10">
           
           {safeClothingItems.length >= 3 && (
@@ -241,18 +243,15 @@ const isModalOpen =
                 disabled={isAnalyzingWardrobe}
                 className="px-4 md:px-6 py-3 bg-gradient-to-r from-gold to-gold-dark text-onyx rounded-xl hover:shadow-lg hover:shadow-gold/30 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm md:text-base flex-shrink-0"
               >
-                {/* ... (icône de chargement) ... */}
                 {isAnalyzingWardrobe ? 'Analyse...' : 'Analyser ma garde-robe'}
               </button>
             </div>
           )}
           
           <div className="hidden md:block">
-            {/* ✅ On passe les fonctions du contexte */}
             <ClothingUpload onAnalyze={analyzeClothingItems} isAnalyzing={isAnalyzing} />
           </div>
           <div className="hidden md:block">
-            {/* ✅ On passe les fonctions locales qui appellent le contexte */}
             <ClothingGallery 
               clothingItems={safeClothingItems} 
               clothingSets={safeClothingSets}
@@ -262,6 +261,7 @@ const isModalOpen =
             />
           </div>
 
+          {/* --- VUE MOBILE --- */}
           <div className="md:hidden">
             {activeTab === 'home' && (
               <MobileHome
@@ -317,10 +317,11 @@ const isModalOpen =
             )}
           </div>
           
-          {/* FIX: Le bloc ci-dessous était À L'INTÉRIEUR du bloc <div className="md:hidden"> juste au-dessus.
-            Je l'ai déplacé ici, pour qu'il soit un enfant direct de <div className="lg:col-span-2 space-y-10">
-          */}
-          <div className="space-y-10 hidden md:block">
+          {/* CETTE SECTION A ÉTÉ DÉPLACÉE */}
+        </div>
+        
+        {/* --- COLONNE DE DROITE (GÉNÉRATEURS) --- */}
+        <div className="lg:col-span-1 space-y-10 lg:sticky lg:top-40 hidden md:block">
             <div id="outfit-generator">
               <OutfitGenerator
                 clothingItems={safeClothingItems}
@@ -346,15 +347,12 @@ const isModalOpen =
                 plan={vacationPlan}
                 allClothingItems={safeClothingItems}
                 allClothingSets={safeClothingSets}
+                onCreateSet={handleCreateSet} // Ajout de la prop manquante
               />
             )}
-          </div>
         </div>
+        {/* --- FIN DE LA MODIFICATION --- */}
 
-        {/* Le reste de la colonne (lg:col-span-1) était dans votre code d'origine, mais 
-            votre version la plus récente (dans App.tsx) l'a déplacé. 
-            Cette structure semble correcte.
-        */}
       </div>
 
       {selectedItem && (
