@@ -399,7 +399,6 @@ const isModalOpen =
         weatherInfo={weatherInfo}
         weatherError={weatherError}
       />
-
     
       <VacationModal
         open={showVacationModal} 
