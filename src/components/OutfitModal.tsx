@@ -59,10 +59,10 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
         </div>
       }
       
-      defaultSnap={({ maxHeight }) => maxHeight * 0.65}
+      defaultSnap={({ maxHeight }) => maxHeight * 0.7}
       snapPoints={({ minHeight, maxHeight }) => [
         minHeight, 
-        maxHeight * 0.65, 
+        maxHeight * 0.7, 
         maxHeight * 0.85
       ]}
     >
