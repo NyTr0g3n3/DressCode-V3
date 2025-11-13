@@ -400,10 +400,9 @@ const isModalOpen =
         weatherError={weatherError}
       />
 
-      {/* ▼▼▼ CORRECTION ICI ▼▼▼ */}
+    
       <VacationModal
         open={showVacationModal} 
-        {/* ▲▲▲ FIN DE LA CORRECTION ▲▲▲ */}
         clothingItems={safeClothingItems}
         clothingSets={safeClothingSets}
         onGeneratePlan={handleGenerateVacationPlan}
