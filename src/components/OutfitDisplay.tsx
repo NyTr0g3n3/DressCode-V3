@@ -30,14 +30,26 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems
     };
   }, [selectedImage]);
 
-const findItemById = (id: string) => {
-  // Cherche d'abord dans les articles
-  const item = allClothingItems.find(ci => ci.id === id);
-  if (item) return item;
-  // Sinon, cherche dans les ensembles
-  const set = allClothingSets.find(cs => cs.id === id);
-  return set; // Renvoie l'ensemble (qui a aussi imageSrc) ou undefined
-};
+const findItemByIdOrDescription = (item: OutfitItem) => {
+      const { id, description } = item;
+      
+      // 1. Recherche par ID (méthode préférée)
+      let foundItem = allClothingItems.find(ci => ci.id === id);
+      if (foundItem) return foundItem;
+
+      let foundSet = allClothingSets.find(cs => cs.id === id);
+      if (foundSet) return foundSet;
+
+      // 2. Fallback: Recherche par description (si l'IA a mis la description dans le champ 'id')
+      foundItem = allClothingItems.find(ci => ci.analysis === id);
+      if (foundItem) return foundItem;
+      
+      // 3. Fallback: Recherche par description (si l'IA a bien suivi le champ 'description')
+      foundItem = allClothingItems.find(ci => ci.analysis === description);
+      if (foundItem) return foundItem;
+
+      return undefined; // Introuvable
+    };
 
   return (
     <>
