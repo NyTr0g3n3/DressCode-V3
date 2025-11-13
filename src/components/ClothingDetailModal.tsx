@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { ClothingItem, ClothingSet, Category } from '../types.ts';
-import { XIcon, SparklesIcon, UnlinkIcon, CheckCircleIcon } from './icons.tsx';
+import { XIcon, SparklesIcon, UnlinkIcon, CheckCircleIcon, RemoveIcon } from './icons.tsx';
 
 interface ClothingDetailModalProps {
   item: ClothingItem;
@@ -9,9 +9,18 @@ interface ClothingDetailModalProps {
   onUpdate: (item: ClothingItem) => void;
   onGenerateFrom: (item: ClothingItem) => void;
   onRemoveSet: (setId: string) => void;
+  onDelete: (itemId: string) => void;
 }
 
-const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({ item, clothingSets, onClose, onUpdate, onGenerateFrom, onRemoveSet }) => {
+const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({ 
+    item, 
+    clothingSets, 
+    onClose, 
+    onUpdate, 
+    onGenerateFrom, 
+    onRemoveSet, 
+    onDelete 
+}) => {
     const [formData, setFormData] = useState<Omit<ClothingItem, 'id' | 'imageSrc'>>({
         analysis: item.analysis,
         category: item.category,
@@ -56,6 +65,13 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({ item, clothin
         setTimeout(() => {
           setIsSaved(false);
         }, 2000);
+    };
+
+    const handleDelete = () => {
+        if (window.confirm("Êtes-vous sûr de vouloir supprimer cet article ? Cette action est irréversible.")) {
+            onDelete(item.id);
+            onClose();
+        }
     };
 
     return (
@@ -123,25 +139,44 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({ item, clothin
                             </div>
                         )}
                     </div>
-                    <div className="mt-6 pt-4 border-t border-black/10 dark:border-white/10 flex flex-col sm:flex-row gap-3">
-                         <button
-                            type="submit"
-                            disabled={isSaved} // Désactive le bouton pendant la confirmation
-                            className={`w-full sm:w-auto px-6 py-2.5 font-bold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 ${
-                                isSaved
-                                    ? 'bg-green-600 text-white cursor-not-allowed'
-                                    : 'bg-gold text-onyx hover:bg-gold-dark'
-                            }`}
+                    <div className="mt-6 pt-4 border-t border-black/10 dark:border-white/10 flex flex-col sm:flex-row gap-3 justify-between">
+                        <button
+                            type="button"
+                            onClick={handleDelete}
+                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 text-red-500 font-bold rounded-lg hover:bg-red-500/20 transition-all duration-300"
                         >
-                            {isSaved ? (
-                                <>
-                                    <CheckCircleIcon />
-                                    Enregistré !
-                                </>
-                            ) : (
-                                'Enregistrer'
-                            )}
+                            <RemoveIcon />
+                            Supprimer
                         </button>
+                        
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button
+                                type="button"
+                                onClick={() => onGenerateFrom(item)}
+                                className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-onyx dark:bg-snow border-2 border-gold text-gold dark:text-onyx font-bold rounded-lg hover:bg-gold/10 dark:hover:bg-onyx/10 transition-all duration-300"
+                            >
+                                <SparklesIcon />
+                                Créer une tenue
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isSaved}
+                                className={`w-full sm:w-auto px-6 py-2.5 font-bold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                                    isSaved
+                                        ? 'bg-green-600 text-white cursor-not-allowed'
+                                        : 'bg-gold text-onyx hover:bg-gold-dark'
+                                }`}
+                            >
+                                {isSaved ? (
+                                    <>
+                                        <CheckCircleIcon />
+                                        Enregistré !
+                                    </>
+                                ) : (
+                                    'Enregistrer'
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
