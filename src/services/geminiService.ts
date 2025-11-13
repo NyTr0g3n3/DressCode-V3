@@ -135,7 +135,7 @@ export async function generateOutfits(
   `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-pro",
+        model: "gemini-flash-latest",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
