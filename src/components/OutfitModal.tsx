@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import OutfitGenerator from './OutfitGenerator';
 import OutfitDisplay from './OutfitDisplay';
@@ -28,6 +28,16 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
   weatherError
 }) => {
   const isDarkMode = document.documentElement.classList.contains('dark');
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isGenerating && suggestedOutfits.length > 0 && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' 
+      });
+    }
+  }, [isGenerating, suggestedOutfits.length]);
 
   return (
     <BottomSheet
@@ -79,6 +89,16 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
         {suggestedOutfits.length > 0 && (
           <OutfitDisplay outfits={suggestedOutfits} allClothingItems={clothingItems} allClothingSets={clothingSets} />
         )}
+
+        <div ref={resultsRef}>
+          {suggestedOutfits.length > 0 && (
+            <OutfitDisplay 
+              outfits={suggestedOutfits} 
+              allClothingItems={clothingItems} 
+              allClothingSets={clothingSets} 
+            />
+          )}
+        </div>
       </div>
     </BottomSheet>
   );
