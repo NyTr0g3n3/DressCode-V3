@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { OutfitSuggestion, ClothingItem } from '../types.ts';
+import type { OutfitSuggestion, ClothingItem, ClothingSet, OutfitItem } from '../types.ts';
 import { QuestionMarkIcon, XIcon } from './icons.tsx';
 
 interface OutfitDisplayProps {
@@ -11,7 +11,6 @@ interface OutfitDisplayProps {
 const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems, allClothingSets }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Gère la fermeture de la lightbox (vue agrandie)
   useEffect(() => {
     if (!selectedImage) return;
 
@@ -21,35 +20,37 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden'; // Empêche le défilement de l'arrière-plan
+    document.body.style.overflow = 'hidden'; 
 
-    // Fonction de nettoyage
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'auto';
     };
   }, [selectedImage]);
 
-const findItemByIdOrDescription = (item: OutfitItem) => {
-      const { id, description } = item;
-      
-      // 1. Recherche par ID (méthode préférée)
-      let foundItem = allClothingItems.find(ci => ci.id === id);
-      if (foundItem) return foundItem;
 
-      let foundSet = allClothingSets.find(cs => cs.id === id);
-      if (foundSet) return foundSet;
 
-      // 2. Fallback: Recherche par description (si l'IA a mis la description dans le champ 'id')
-      foundItem = allClothingItems.find(ci => ci.analysis === id);
-      if (foundItem) return foundItem;
-      
-      // 3. Fallback: Recherche par description (si l'IA a bien suivi le champ 'description')
-      foundItem = allClothingItems.find(ci => ci.analysis === description);
-      if (foundItem) return foundItem;
+  const findItemByIdOrDescription = (item: OutfitItem) => {
+    const { id, description } = item;
+    
+    let foundItem = allClothingItems.find(ci => ci.id === id);
+    if (foundItem) return foundItem;
 
-      return undefined; // Introuvable
-    };
+    let foundSet = allClothingSets.find(cs => cs.id === id);
+    if (foundSet) return foundSet;
+
+  
+    foundItem = allClothingItems.find(ci => ci.analysis === id);
+    if (foundItem) return foundItem;
+    
+ 
+    foundItem = allClothingItems.find(ci => ci.analysis === description);
+    if (foundItem) return foundItem;
+
+    return undefined; 
+  };
+
 
   return (
     <>
@@ -60,39 +61,41 @@ const findItemByIdOrDescription = (item: OutfitItem) => {
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-5">{outfit.description}</p>
             
             <div className="flex flex-wrap gap-3 mb-5">
-              {outfit.vetements.map((item, itemIndex) => { // 'itemDesc' devient 'item'
-  const itemData = findItemById(item.id);
-  const imgSrc = itemData ? itemData.imageSrc : null;
-  return (
-    <button 
-      key={itemIndex} 
-      onClick={() => imgSrc && setSelectedImage(imgSrc)}
-      className="w-20 h-20 bg-gray-200 dark:bg-gray-800 rounded-md shadow-md border-2 border-white dark:border-raisin-black overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold dark:focus:ring-offset-onyx disabled:cursor-default disabled:hover:scale-100"
-      disabled={!imgSrc}
-      aria-label={`Agrandir l'image de : ${item.description}`} // On utilise la description de l'item
-    >
-      {imgSrc ? (
-        <img src={imgSrc} alt={item.description} className="w-full h-full object-cover" />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center p-1 text-center">
-          <QuestionMarkIcon />
-        </div>
-      )}
-    </button>
-  );
-})}
+              {outfit.vetements.map((item, itemIndex) => {
+         
+            
+                const itemData = findItemByIdOrDescription(item);
+        
+                const imgSrc = itemData ? itemData.imageSrc : null;
+                return (
+                  <button 
+                    key={itemIndex} 
+                    onClick={() => imgSrc && setSelectedImage(imgSrc)}
+                    className="w-20 h-20 bg-gray-200 dark:bg-gray-800 rounded-md shadow-md border-2 border-white dark:border-raisin-black overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold dark:focus:ring-offset-onyx disabled:cursor-default disabled:hover:scale-100"
+                    disabled={!imgSrc}
+                    aria-label={`Agrandir l'image de : ${item.description}`}
+                  >
+                    {imgSrc ? (
+                      <img src={imgSrc} alt={item.description} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center p-1 text-center">
+                        <QuestionMarkIcon />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             <ul className="list-disc list-inside space-y-1.5 text-sm pt-4 border-t border-black/5 dark:border-white/10">
               {outfit.vetements.map((item, itemIndex) => (
-  <li key={itemIndex} className="text-gray-700 dark:text-gray-300">{item.description}</li>
-))}
+                <li key={itemIndex} className="text-gray-700 dark:text-gray-300">{item.description}</li>
+              ))}
             </ul>
           </div>
         ))}
       </div>
 
-      {/* Lightbox Modal (vue agrandie) */}
       {selectedImage && (
         <div
           className="fixed inset-0 bg-onyx/80 backdrop-blur-md flex items-center justify-center z-[100] p-4"
