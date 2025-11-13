@@ -206,7 +206,7 @@ Analyse la garde-robe et identifie:
 Suggère 3-5 pièces maximum en priorisant les basiques polyvalents.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-pro",
+    model: "gemini-flash-latest",
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -295,7 +295,7 @@ export async function generateVacationPlan(
     `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-pro",
+        model: "gemini-flash-latest",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
