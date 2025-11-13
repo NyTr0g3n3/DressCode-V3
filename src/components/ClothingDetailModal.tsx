@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { ClothingItem, ClothingSet, Category } from '../types.ts';
-import { XIcon, SparklesIcon, UnlinkIcon, CheckCircleIcon, RemoveIcon } from './icons.tsx';
+import { XIcon, SparklesIcon, UnlinkIcon, CheckCircleIcon, RemoveIcon, HeartIcon, HeartIconSolid } from './icons.tsx';
 
 interface ClothingDetailModalProps {
   item: ClothingItem;
@@ -74,6 +74,11 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
         }
     };
 
+    const handleToggleFavorite = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Empêche la modale de se fermer
+        onUpdate({ ...item, isFavorite: !item.isFavorite });
+    };
+  
     return (
         <div
             className="fixed inset-0 bg-onyx/80 backdrop-blur-md flex items-center justify-center z-[100] p-4"
@@ -88,6 +93,18 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
             >
                 <div className="relative">
                     <img src={item.imageSrc} alt={item.analysis} className="w-full h-auto max-h-[50vh] object-cover" />
+
+                  <button
+                        onClick={handleToggleFavorite}
+                        className="absolute top-3 left-3 p-1.5 bg-black/40 backdrop-blur-sm rounded-full text-white hover:bg-black/60 transition-colors"
+                        aria-label="Ajouter aux favoris"
+                    >
+                        {item.isFavorite ? (
+                            <HeartIconSolid className="w-6 h-6 text-red-500" />
+                        ) : (
+                            <HeartIcon className="w-6 h-6" />
+                        )}
+                    </button>
                     <button
                         onClick={onClose}
                         className="absolute top-3 right-3 p-1.5 bg-black/40 backdrop-blur-sm rounded-full text-white hover:bg-black/60 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold dark:focus:ring-offset-raisin-black"
