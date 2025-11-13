@@ -30,6 +30,7 @@ import 'react-spring-bottom-sheet/dist/style.css';
 
 type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
 
+
 const AppContent: React.FC = () => {
   
   const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
@@ -290,7 +291,6 @@ const isModalOpen =
                         onClick={() => handleItemClick(item)}
                         className="relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform"
                       >
-                        {/* ▼▼▼ MODIFICATION ICI (ICÔNE MOBILE) ▼▼▼ */}
                         {item.isFavorite ? (
                           <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-red-500 z-10">
                             <HeartIconSolid />
@@ -300,7 +300,6 @@ const isModalOpen =
                             <LinkIcon />
                           </span>
                         ) : null}
-                        {/* ▲▲▲ FIN DE LA MODIFICATION ▲▲▲ */}
 
                         <div className="aspect-square">
                           <img
@@ -401,8 +400,10 @@ const isModalOpen =
         weatherError={weatherError}
       />
 
+      {/* ▼▼▼ CORRECTION ICI ▼▼▼ */}
       <VacationModal
-        open={showOutfitModal}
+        open={showVacationModal} 
+        {/* ▲▲▲ FIN DE LA CORRECTION ▲▲▲ */}
         clothingItems={safeClothingItems}
         clothingSets={safeClothingSets}
         onGeneratePlan={handleGenerateVacationPlan}
@@ -424,7 +425,6 @@ const isModalOpen =
     </main>
   );
 }
-
 
 
 const App: React.FC = () => {
