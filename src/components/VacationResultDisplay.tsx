@@ -11,12 +11,26 @@ interface VacationResultDisplayProps {
 
 const VacationResultDisplay: React.FC<VacationResultDisplayProps> = ({ plan, allClothingItems, allClothingSets }) => {
 
-const findItemById = (id: string) => {
-  const item = allClothingItems.find(ci => ci.id === id);
-  if (item) return item;
-  const set = allClothingSets.find(cs => cs.id === id);
-  return set;
-};
+const findItemByIdOrDescription = (item: OutfitItem) => {
+      const { id, description } = item;
+      
+      // 1. Recherche par ID (méthode préférée)
+      let foundItem = allClothingItems.find(ci => ci.id === id);
+      if (foundItem) return foundItem;
+
+      let foundSet = allClothingSets.find(cs => cs.id === id);
+      if (foundSet) return foundSet;
+
+      // 2. Fallback: Recherche par description (si l'IA a mis la description dans le champ 'id')
+      foundItem = allClothingItems.find(ci => ci.analysis === id);
+      if (foundItem) return foundItem;
+      
+      // 3. Fallback: Recherche par description (si l'IA a bien suivi le champ 'description')
+      foundItem = allClothingItems.find(ci => ci.analysis === description);
+      if (foundItem) return foundItem;
+
+      return undefined; // Introuvable
+    };
 
   return (
     <div className="mt-10">
