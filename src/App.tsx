@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
-import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis } from './types.ts';
+import { HeartIcon, HeartIconSolid } from './components/icons.tsx';
+import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, FavoriteOutfit } from './types.ts';
 import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps } from './services/geminiService.ts';
 // Imports des composants
 import Header from './components/Header.tsx';
@@ -25,6 +26,7 @@ import { config } from './config.ts';
 
 
 import { WardrobeProvider, useWardrobe } from './contexts/WardrobeContext.tsx';
+import FavoriteOutfitsModal from './components/FavoriteOutfitsModal.tsx';
 
 import 'react-spring-bottom-sheet/dist/style.css';
 
@@ -45,6 +47,7 @@ const AppContent: React.FC = () => {
   const [showOutfitModal, setShowOutfitModal] = useState(false);
   const [showVacationModal, setShowVacationModal] = useState(false);
   const [showSetModal, setShowSetModal] = useState(false);
+  const [showFavoriteModal, setShowFavoriteModal] = useState(false);
   const [weatherInfo, setWeatherInfo] = useState<string | null>(null);
   const [weatherError, setWeatherError] = useState<string | null>(null);
 
@@ -57,7 +60,10 @@ const AppContent: React.FC = () => {
     deleteClothingItem,   
     createClothingSet,    
     updateClothingItem,  
-    deleteClothingSet    
+    deleteClothingSet,
+    favoriteOutfits,     
+    addFavoriteOutfit,   
+    deleteFavoriteOutfit 
   } = useWardrobe();
 
  
@@ -67,6 +73,20 @@ const AppContent: React.FC = () => {
       (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0)
     );
   }, [clothingItems]);
+
+
+  const handleToggleFavorite = useCallback((outfit: OutfitSuggestion) => {
+    // Vérifier si cette tenue (basée sur le titre/desc) est déjà une favorite
+    const existingFavorite = favoriteOutfits.find(
+      (fav) => fav.titre === outfit.titre && fav.description === outfit.description
+    );
+
+    if (existingFavorite) {
+      deleteFavoriteOutfit(existingFavorite.id);
+    } else {
+      addFavoriteOutfit(outfit);
+    }
+  }, [favoriteOutfits, addFavoriteOutfit, deleteFavoriteOutfit]);
   const safeClothingSets = React.useMemo(() => clothingSets || [], [clothingSets]);
   const itemIdsInSets = React.useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
 
@@ -271,8 +291,10 @@ const isModalOpen =
                 onScrollToOutfits={handleScrollToOutfits}
                 onScrollToVacation={handleScrollToVacation}
                 onStartSetCreation={() => setShowSetModal(true)}
+                onShowFavorites={() => setShowFavoriteModal(true)}
                 isAnalyzingWardrobe={isAnalyzingWardrobe}
                 clothingCount={safeClothingItems.length}
+                favoriteOutfitCount={favoriteOutfits.length}
               />
             )}
             {activeTab !== 'home' && (
@@ -337,7 +359,28 @@ const isModalOpen =
                 weatherError={weatherError}
               />
             </div>
-            {suggestedOutfits.length > 0 && <OutfitDisplay outfits={suggestedOutfits} allClothingItems={safeClothingItems} allClothingSets={safeClothingSets} />}
+            {suggestedOutfits.length > 0 && (
+                  <OutfitDisplay 
+                    outfits={suggestedOutfits} 
+                    allClothingItems={safeClothingItems} 
+                    allClothingSets={safeClothingSets}
+                    favoriteOutfits={favoriteOutfits}
+                    onToggleFavorite={handleToggleFavorite}
+                  />
+              )}
+
+          {favoriteOutfits.length > 0 && (
+    <div className="mt-10">
+      <h2 className="text-2xl font-serif font-bold mb-6 text-gold">Mes Tenues Favorites</h2>
+      <OutfitDisplay
+        outfits={favoriteOutfits} 
+        allClothingItems={safeClothingItems}
+        allClothingSets={safeClothingSets}
+        favoriteOutfits={favoriteOutfits} 
+        onToggleFavorite={handleToggleFavorite}
+      />
+    </div>
+  )}
             
             <div id="vacation-planner">
               <VacationPlanner
@@ -398,6 +441,8 @@ const isModalOpen =
         onClose={() => setShowOutfitModal(false)}
         weatherInfo={weatherInfo}
         weatherError={weatherError}
+        favoriteOutfits={favoriteOutfits}
+        onToggleFavorite={handleToggleFavorite}
       />
     
       <VacationModal
@@ -420,6 +465,15 @@ const isModalOpen =
                 setShowSetModal(false);
               }}
             />
+
+      <FavoriteOutfitsModal
+      open={showFavoriteModal}
+      onClose={() => setShowFavoriteModal(false)}
+      allClothingItems={safeClothingItems}
+      allClothingSets={safeClothingSets}
+      favoriteOutfits={favoriteOutfits}
+      onToggleFavorite={handleToggleFavorite}
+  />
     </main>
   );
 }
