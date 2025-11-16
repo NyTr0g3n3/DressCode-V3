@@ -57,7 +57,7 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems
   return (
     <>
       <div className="mt-10 space-y-8">
-        {outfits.map((outfit, index) => (
+        {outfits.map((outfit, index) => {
       const isFavorite = favoriteOutfits.some(
             (fav) => fav.titre === outfit.titre && fav.description === outfit.description
           );
@@ -116,7 +116,7 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems
               ))}
             </ul>
           </div>
-        ))}
+            })}
       </div>
 
       {selectedImage && (
