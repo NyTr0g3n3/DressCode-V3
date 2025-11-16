@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User } from 'firebase/auth';
-import type { ClothingItem, ClothingSet } from '../types';
+import type { ClothingItem, ClothingSet, FavoriteOutfit, OutfitSuggestion } from '../types';
 import { 
   listenToClothingItems,
   listenToClothingSets,
@@ -8,7 +8,10 @@ import {
   updateClothingItem,
   deleteClothingItem,
   addClothingSet,
-  deleteClothingSet 
+  deleteClothingSet,
+  listenToFavoriteOutfits,
+  addFavoriteOutfit,
+  deleteFavoriteOutfit
 } from '../services/firestoreService';
 import { analyzeClothingImages } from '../services/geminiService';
 import { uploadClothingImage } from '../services/storageService';
@@ -16,12 +19,15 @@ import { uploadClothingImage } from '../services/storageService';
 interface WardrobeContextType {
   clothingItems: ClothingItem[];
   clothingSets: ClothingSet[];
+  favoriteOutfits: FavoriteOutfit[];
   isAnalyzing: boolean;
   analyzeClothingItems: (files: File[]) => Promise<void>;
   deleteClothingItem: (itemId: string) => Promise<void>;
   updateClothingItem: (item: ClothingItem) => Promise<void>;
   createClothingSet: (name: string, itemIds: string[]) => Promise<void>;
   deleteClothingSet: (setId: string) => Promise<void>;
+  addFavoriteOutfit: (outfit: OutfitSuggestion) => Promise<void>;
+  deleteFavoriteOutfit: (outfitId: string) => Promise<void>;
 }
 
 const WardrobeContext = createContext<WardrobeContextType | undefined>(undefined);
@@ -34,6 +40,7 @@ interface WardrobeProviderProps {
 export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, user }) => {
   const [clothingItems, setClothingItems] = useState<ClothingItem[]>([]);
   const [clothingSets, setClothingSets] = useState<ClothingSet[]>([]);
+  const [favoriteOutfits, setFavoriteOutfits] = useState<FavoriteOutfit[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
@@ -46,13 +53,19 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
         setClothingSets(sets);
       });
 
+      const unsubscribeFavs = listenToFavoriteOutfits(user.uid, (favs) => { 
+        setFavoriteOutfits(favs);
+      });
+
       return () => {
         unsubscribeItems();
         unsubscribeSets();
+        unsubscribeFavs();
       };
     } else {
       setClothingItems([]);
       setClothingSets([]);
+      setFavoriteOutfits([]);
     }
   }, [user]);
 
@@ -125,6 +138,25 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
     }
   }, [user]);
 
+  const addFavoriteOutfitCallback = useCallback(async (outfit: OutfitSuggestion) => {
+    if (!user) return;
+    try {
+      const { id, ...outfitData } = outfit as any; 
+      await addFavoriteOutfit(user.uid, outfitData);
+    } catch (err) {
+      console.error("Erreur ajout favori:", err);
+    }
+  }, [user]);
+
+  const deleteFavoriteOutfitCallback = useCallback(async (outfitId: string) => {
+    if (!user) return;
+    try {
+      await deleteFavoriteOutfit(user.uid, outfitId);
+    } catch (err) {
+      console.error("Erreur suppression favori:", err);
+    }
+  }, [user]);
+
   const createClothingSetCallback = useCallback(async (name: string, itemIds: string[]) => {
     if (!user) return;
     const firstItemImage = clothingItems.find(item => item.id === itemIds[0])?.imageSrc || '';
@@ -148,12 +180,15 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
   const value = {
     clothingItems,
     clothingSets,
+    favoriteOutfits,
     isAnalyzing,
     analyzeClothingItems,
     deleteClothingItem: deleteClothingItemCallback,
     updateClothingItem: updateClothingItemCallback,
     createClothingSet: createClothingSetCallback,
-    deleteClothingSet: deleteClothingSetCallback
+    deleteClothingSet: deleteClothingSetCallback,
+    addFavoriteOutfit: addFavoriteOutfitCallback, 
+    deleteFavoriteOutfit: deleteFavoriteOutfitCallback 
   };
 
   return (
