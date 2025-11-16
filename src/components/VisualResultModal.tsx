@@ -30,6 +30,17 @@ const VisualResultModal: React.FC<VisualResultModalProps> = ({ imageUrl, onClose
       role="dialog"
       aria-modal="true"
     >
+
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-2 bg-raisin-black/90 border-2 border-white/20 rounded-full text-white hover:bg-red-500 hover:border-red-500 transition-all focus:outline-none focus:ring-2 focus:ring-gold z-[110] active:scale-95"
+        aria-label="Fermer"
+      >
+        <XIcon />
+      </button>
+
+      <div 
+      
       <div 
         className="relative bg-white dark:bg-raisin-black rounded-lg shadow-2xl p-4"
         onClick={(e) => e.stopPropagation()}
