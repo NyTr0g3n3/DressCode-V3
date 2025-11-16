@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
-import { HeartIcon, HeartIconSolid } from './components/icons.tsx';
 import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, FavoriteOutfit } from './types.ts';
-import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps } from './services/geminiService.ts';
+import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps, generateVisualOutfit } from './services/geminiService.ts';
 // Imports des composants
 import Header from './components/Header.tsx';
 import Auth from './components/Auth.tsx';
@@ -21,12 +20,14 @@ import WardrobeSuggestions from './components/WardrobeSuggestions.tsx';
 import OutfitModal from './components/OutfitModal.tsx';  
 import VacationModal from './components/VacationModal.tsx'; 
 import SetCreatorModal from './components/SetCreatorModal.tsx';
-import { LinkIcon, HeartIconSolid } from './components/icons.tsx';
+import { LinkIcon, HeartIconSolid } from './components/icons.tsx'; // HeartIconSolid est utilisé pour les favoris mobiles
 import { config } from './config.ts';
 
 
 import { WardrobeProvider, useWardrobe } from './contexts/WardrobeContext.tsx';
 import FavoriteOutfitsModal from './components/FavoriteOutfitsModal.tsx';
+
+import VisualResultModal from './components/VisualResultModal.tsx'; 
 
 import 'react-spring-bottom-sheet/dist/style.css';
 
@@ -50,6 +51,9 @@ const AppContent: React.FC = () => {
   const [showFavoriteModal, setShowFavoriteModal] = useState(false);
   const [weatherInfo, setWeatherInfo] = useState<string | null>(null);
   const [weatherError, setWeatherError] = useState<string | null>(null);
+
+  const [generatingVisualFor, setGeneratingVisualFor] = useState<string | null>(null);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
 
   
   const { 
@@ -76,7 +80,6 @@ const AppContent: React.FC = () => {
 
 
   const handleToggleFavorite = useCallback((outfit: OutfitSuggestion) => {
-    // Vérifier si cette tenue (basée sur le titre/desc) est déjà une favorite
     const existingFavorite = favoriteOutfits.find(
       (fav) => fav.titre === outfit.titre && fav.description === outfit.description
     );
@@ -180,7 +183,33 @@ const AppContent: React.FC = () => {
     }
   }, [safeClothingItems, safeClothingSets]);
 
-  
+
+  const handleGenerateVisual = useCallback(async (outfit: OutfitSuggestion) => {
+    setGeneratingVisualFor(outfit.titre);
+    setError(null);
+
+    try {
+      const itemsInOutfit: ClothingItem[] = outfit.vetements.map(outfitItem => {
+        return safeClothingItems.find(ci => ci.id === outfitItem.id || ci.analysis === outfitItem.description);
+      }).filter((item): item is ClothingItem => !!item); // Filtre les items non trouvés
+
+      if (itemsInOutfit.length === 0) {
+        throw new Error("Impossible de retrouver les articles originaux pour le rendu.");
+      }
+
+
+      const imageUrl = await generateVisualOutfit(itemsInOutfit, outfit.description);
+
+
+      setGeneratedImageUrl(imageUrl);
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur inconnue lors du rendu visuel");
+    } finally {
+      setGeneratingVisualFor(null);
+    }
+  }, [safeClothingItems]); 
+
  
   const handleScrollToOutfits = useCallback(() => setShowOutfitModal(true), []);
   const handleScrollToVacation = useCallback(() => setShowVacationModal(true), []);
@@ -233,12 +262,13 @@ const AppContent: React.FC = () => {
         return false;
       });
 
-const isModalOpen = 
+  const isModalOpen = 
     showOutfitModal || 
     showVacationModal || 
     showSetModal || 
     !!selectedItem ||  
-    !!wardrobeAnalysis; 
+    !!wardrobeAnalysis ||
+    !!generatedImageUrl; 
   
   return (
     <main className="container mx-auto px-4 lg:px-8 py-10">
@@ -253,6 +283,7 @@ const isModalOpen =
         
         <div className="lg:col-span-2 space-y-10">
           
+         
           {safeClothingItems.length >= 3 && (
             <div className="hidden md:block bg-gradient-to-r from-gold/10 to-gold-dark/10 border-2 border-gold/30 rounded-xl p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4 md:justify-between">
               <div>
@@ -271,9 +302,11 @@ const isModalOpen =
             </div>
           )}
           
+        
           <div className="hidden md:block">
             <ClothingUpload onAnalyze={analyzeClothingItems} isAnalyzing={isAnalyzing} />
           </div>
+        
           <div className="hidden md:block">
             <ClothingGallery 
               clothingItems={safeClothingItems} 
@@ -284,6 +317,7 @@ const isModalOpen =
             />
           </div>
 
+          
           <div className="md:hidden">
             {activeTab === 'home' && (
               <MobileHome
@@ -366,21 +400,25 @@ const isModalOpen =
                     allClothingSets={safeClothingSets}
                     favoriteOutfits={favoriteOutfits}
                     onToggleFavorite={handleToggleFavorite}
+                    onGenerateVisual={handleGenerateVisual}
+                    generatingVisualFor={generatingVisualFor}
                   />
               )}
 
           {favoriteOutfits.length > 0 && (
-    <div className="mt-10">
-      <h2 className="text-2xl font-serif font-bold mb-6 text-gold">Mes Tenues Favorites</h2>
-      <OutfitDisplay
-        outfits={favoriteOutfits} 
-        allClothingItems={safeClothingItems}
-        allClothingSets={safeClothingSets}
-        favoriteOutfits={favoriteOutfits} 
-        onToggleFavorite={handleToggleFavorite}
-      />
-    </div>
-  )}
+            <div className="mt-10">
+              <h2 className="text-2xl font-serif font-bold mb-6 text-gold">Mes Tenues Favorites</h2>
+              <OutfitDisplay
+                outfits={favoriteOutfits} 
+                allClothingItems={safeClothingItems}
+                allClothingSets={safeClothingSets}
+                favoriteOutfits={favoriteOutfits} 
+                onToggleFavorite={handleToggleFavorite}
+                onGenerateVisual={handleGenerateVisual}
+                generatingVisualFor={generatingVisualFor}
+              />
+            </div>
+          )}
             
             <div id="vacation-planner">
               <VacationPlanner
@@ -402,6 +440,7 @@ const isModalOpen =
 
       </div>
 
+
       {selectedItem && (
         <ClothingDetailModal
           item={selectedItem}
@@ -413,10 +452,18 @@ const isModalOpen =
           onDelete={handleDeleteItem}
         />
       )}
+
       {wardrobeAnalysis && (
         <WardrobeSuggestions
           analysis={wardrobeAnalysis}
           onClose={() => setWardrobeAnalysis(null)}
+        />
+      )}
+
+      {generatedImageUrl && (
+        <VisualResultModal
+          imageUrl={generatedImageUrl}
+          onClose={() => setGeneratedImageUrl(null)}
         />
       )}
 
@@ -443,6 +490,8 @@ const isModalOpen =
         weatherError={weatherError}
         favoriteOutfits={favoriteOutfits}
         onToggleFavorite={handleToggleFavorite}
+        onGenerateVisual={handleGenerateVisual}
+        generatingVisualFor={generatingVisualFor}
       />
     
       <VacationModal
@@ -467,13 +516,15 @@ const isModalOpen =
             />
 
       <FavoriteOutfitsModal
-      open={showFavoriteModal}
-      onClose={() => setShowFavoriteModal(false)}
-      allClothingItems={safeClothingItems}
-      allClothingSets={safeClothingSets}
-      favoriteOutfits={favoriteOutfits}
-      onToggleFavorite={handleToggleFavorite}
-  />
+        open={showFavoriteModal}
+        onClose={() => setShowFavoriteModal(false)}
+        allClothingItems={safeClothingItems}
+        allClothingSets={safeClothingSets}
+        favoriteOutfits={favoriteOutfits}
+        onToggleFavorite={handleToggleFavorite}
+        onGenerateVisual={handleGenerateVisual}
+        generatingVisualFor={generatingVisualFor}
+      />
     </main>
   );
 }
