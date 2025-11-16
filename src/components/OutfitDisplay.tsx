@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import type { OutfitSuggestion, ClothingItem, ClothingSet, OutfitItem, FavoriteOutfit } from '../types.ts';
-import { QuestionMarkIcon, XIcon, HeartIcon, HeartIconSolid } from './icons.tsx';
+import { QuestionMarkIcon, XIcon, HeartIcon, HeartIconSolid, MagicWandIcon, LoadingSpinner } from './icons.tsx';
 
 
 interface OutfitDisplayProps {
@@ -10,10 +10,20 @@ interface OutfitDisplayProps {
   allClothingSets: ClothingSet[];
   favoriteOutfits: FavoriteOutfit[];
   onToggleFavorite: (outfit: OutfitSuggestion) => void;
+  onGenerateVisual: (outfit: OutfitSuggestion) => void;
+  generatingVisualFor: string | null;
 }
 
 
-const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems, allClothingSets, favoriteOutfits, onToggleFavorite }) => {
+const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ 
+  outfits, 
+  allClothingItems, 
+  allClothingSets, 
+  favoriteOutfits, 
+  onToggleFavorite,
+  onGenerateVisual,
+  generatingVisualFor
+}) => {
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
@@ -66,11 +76,25 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems
           const isFavorite = favoriteOutfits.some(
             (fav) => fav.titre === outfit.titre && fav.description === outfit.description
           );
-
+    const isLoadingVisual = generatingVisualFor === outfit.titre;
           return (
             <div key={index} className="bg-snow dark:bg-onyx border border-black/10 dark:border-white/10 rounded-lg p-5 transition-all duration-300 hover:shadow-lg hover:border-gold/50">
               <div className="flex justify-between items-start">
                   <h3 className="font-serif font-bold text-xl text-gold">{outfit.titre}</h3>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => onGenerateVisual(outfit)}
+                      disabled={isLoadingVisual}
+                      className="p-1.5 text-gray-400 hover:text-gold dark:hover:text-gold transition-colors disabled:cursor-not-allowed"
+                      aria-label="Générer un rendu visuel"
+                      title="Générer un rendu visuel"
+                    >
+                      {isLoadingVisual ? (
+                        <LoadingSpinner className="h-5 w-5" /> // Assurez-vous que LoadingSpinner accepte className
+                      ) : (
+                        <MagicWandIcon />
+                      )}
+                    </button>
                   <button 
                     onClick={() => onToggleFavorite(outfit)}
                     className="p-1.5 text-gray-400 hover:text-gold dark:hover:text-gold transition-colors"
