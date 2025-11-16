@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import type { OutfitSuggestion, ClothingItem, ClothingSet, OutfitItem } from '../types.ts';
-import { QuestionMarkIcon, XIcon } from './icons.tsx';
+
+import type { OutfitSuggestion, ClothingItem, ClothingSet, OutfitItem, FavoriteOutfit } from '../types.ts';
+import { QuestionMarkIcon, XIcon, HeartIcon, HeartIconSolid } from './icons.tsx';
+
 
 interface OutfitDisplayProps {
   outfits: OutfitSuggestion[] | FavoriteOutfit[];
@@ -10,7 +12,9 @@ interface OutfitDisplayProps {
   onToggleFavorite: (outfit: OutfitSuggestion) => void;
 }
 
-const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems, allClothingSets, onToggleFavorite }) => {
+
+const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems, allClothingSets, favoriteOutfits, onToggleFavorite }) => {
+
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -57,66 +61,64 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems
   return (
     <>
       <div className="mt-10 space-y-8">
+        
         {outfits.map((outfit, index) => {
-      const isFavorite = favoriteOutfits.some(
+          const isFavorite = favoriteOutfits.some(
             (fav) => fav.titre === outfit.titre && fav.description === outfit.description
           );
 
           return (
-            
-          <div key={index} className="bg-snow dark:bg-onyx border border-black/10 dark:border-white/10 rounded-lg p-5 transition-all duration-300 hover:shadow-lg hover:border-gold/50">
-            <div className="flex justify-between items-start">
-                <h3 className="font-serif font-bold text-xl text-gold">{outfit.titre}</h3>
-                <button 
-                  onClick={() => onToggleFavorite(outfit)}
-                  className="p-1.5 text-gray-400 hover:text-gold dark:hover:text-gold transition-colors"
-                  aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-                >
-                  {isFavorite ? (
-                    <HeartIconSolid className="w-6 h-6 text-gold" />
-                  ) : (
-                    <HeartIcon className="w-6 h-6" />
-                  )}
-                </button>
-              </div>
-
-            
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-5">{outfit.description}</p>
-            
-            <div className="flex flex-wrap gap-3 mb-5">
-              {outfit.vetements.map((item, itemIndex) => {
-         
-            
-                const itemData = findItemByIdOrDescription(item);
-        
-                const imgSrc = itemData ? itemData.imageSrc : null;
-                return (
+            <div key={index} className="bg-snow dark:bg-onyx border border-black/10 dark:border-white/10 rounded-lg p-5 transition-all duration-300 hover:shadow-lg hover:border-gold/50">
+              <div className="flex justify-between items-start">
+                  <h3 className="font-serif font-bold text-xl text-gold">{outfit.titre}</h3>
                   <button 
-                    key={itemIndex} 
-                    onClick={() => imgSrc && setSelectedImage(imgSrc)}
-                    className="w-20 h-20 bg-gray-200 dark:bg-gray-800 rounded-md shadow-md border-2 border-white dark:border-raisin-black overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold dark:focus:ring-offset-onyx disabled:cursor-default disabled:hover:scale-100"
-                    disabled={!imgSrc}
-                    aria-label={`Agrandir l'image de : ${item.description}`}
+                    onClick={() => onToggleFavorite(outfit)}
+                    className="p-1.5 text-gray-400 hover:text-gold dark:hover:text-gold transition-colors"
+                    aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
                   >
-                    {imgSrc ? (
-                      <img src={imgSrc} alt={item.description} className="w-full h-full object-cover" />
+                    {isFavorite ? (
+                      <HeartIconSolid className="w-6 h-6 text-gold" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center p-1 text-center">
-                        <QuestionMarkIcon />
-                      </div>
+                      <HeartIcon className="w-6 h-6" />
                     )}
                   </button>
-                );
-              })}
-            </div>
+                </div>
 
-            <ul className="list-disc list-inside space-y-1.5 text-sm pt-4 border-t border-black/5 dark:border-white/10">
-              {outfit.vetements.map((item, itemIndex) => (
-                <li key={itemIndex} className="text-gray-700 dark:text-gray-300">{item.description}</li>
-              ))}
-            </ul>
-          </div>
-            })}
+              
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-5">{outfit.description}</p>
+              
+              <div className="flex flex-wrap gap-3 mb-5">
+                {outfit.vetements.map((item, itemIndex) => {
+                  const itemData = findItemByIdOrDescription(item);
+                  const imgSrc = itemData ? itemData.imageSrc : null;
+                  return (
+                    <button 
+                      key={itemIndex} 
+                      onClick={() => imgSrc && setSelectedImage(imgSrc)}
+                      className="w-20 h-20 bg-gray-200 dark:bg-gray-800 rounded-md shadow-md border-2 border-white dark:border-raisin-black overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold dark:focus:ring-offset-onyx disabled:cursor-default disabled:hover:scale-100"
+                      disabled={!imgSrc}
+                      aria-label={`Agrandir l'image de : ${item.description}`}
+                    >
+                      {imgSrc ? (
+                        <img src={imgSrc} alt={item.description} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center p-1 text-center">
+                          <QuestionMarkIcon />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <ul className="list-disc list-inside space-y-1.5 text-sm pt-4 border-t border-black/5 dark:border-white/10">
+                {outfit.vetements.map((item, itemIndex) => (
+                  <li key={itemIndex} className="text-gray-700 dark:text-gray-300">{item.description}</li>
+                ))}
+              </ul>
+            </div>
+          ); 
+        })}  
       </div>
 
       {selectedImage && (
