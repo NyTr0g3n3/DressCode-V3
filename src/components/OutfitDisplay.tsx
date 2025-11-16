@@ -3,12 +3,14 @@ import type { OutfitSuggestion, ClothingItem, ClothingSet, OutfitItem } from '..
 import { QuestionMarkIcon, XIcon } from './icons.tsx';
 
 interface OutfitDisplayProps {
-  outfits: OutfitSuggestion[];
+  outfits: OutfitSuggestion[] | FavoriteOutfit[];
   allClothingItems: ClothingItem[];
   allClothingSets: ClothingSet[];
+  favoriteOutfits: FavoriteOutfit[];
+  onToggleFavorite: (outfit: OutfitSuggestion) => void;
 }
 
-const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems, allClothingSets }) => {
+const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems, allClothingSets, onToggleFavorite }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -56,8 +58,29 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ outfits, allClothingItems
     <>
       <div className="mt-10 space-y-8">
         {outfits.map((outfit, index) => (
+      const isFavorite = favoriteOutfits.some(
+            (fav) => fav.titre === outfit.titre && fav.description === outfit.description
+          );
+
+          return (
+            
           <div key={index} className="bg-snow dark:bg-onyx border border-black/10 dark:border-white/10 rounded-lg p-5 transition-all duration-300 hover:shadow-lg hover:border-gold/50">
-            <h3 className="font-serif font-bold text-xl text-gold">{outfit.titre}</h3>
+            <div className="flex justify-between items-start">
+                <h3 className="font-serif font-bold text-xl text-gold">{outfit.titre}</h3>
+                <button 
+                  onClick={() => onToggleFavorite(outfit)}
+                  className="p-1.5 text-gray-400 hover:text-gold dark:hover:text-gold transition-colors"
+                  aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+                >
+                  {isFavorite ? (
+                    <HeartIconSolid className="w-6 h-6 text-gold" />
+                  ) : (
+                    <HeartIcon className="w-6 h-6" />
+                  )}
+                </button>
+              </div>
+
+            
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-5">{outfit.description}</p>
             
             <div className="flex flex-wrap gap-3 mb-5">
