@@ -42,10 +42,10 @@ const FavoriteOutfitsModal: React.FC<FavoriteOutfitsModalProps> = ({
         </div>
       }
       
-      defaultSnap={({ maxHeight }) => maxHeight * 0.7}
+      defaultSnap={({ maxHeight }) => maxHeight * 0.8}
       snapPoints={({ minHeight, maxHeight }) => [
         minHeight, 
-        maxHeight * 0.7, 
+        maxHeight * 0.8, 
         maxHeight * 0.9
       ]}
     >
