@@ -286,15 +286,12 @@ export async function generateVacationPlan(
 ): Promise<VacationPlan> {
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
-
-    // ▼▼▼ MODIFICATION : On envoie plus de données (Catégorie, Couleur, Matière) ▼▼▼
     const individualItemsFormatted = individualItems.map(item => 
       `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Couleur: ${item.color}, Mat: ${item.material})`
     ).join('\n');
     const setsFormatted = sets.map(set => 
       `- ${set.name} (Ensemble, ID: ${set.id})`
     ).join('\n');
-    // ▲▲▲ FIN DE LA MODIFICATION ▲▲▲
 
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
@@ -346,6 +343,37 @@ export async function generateVacationPlan(
             }
         }
     });
+
+  const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+export async function generateVisualOutfit(
+    items: ClothingItem[],
+    context: string,
+): Promise<string> {
+    
+    console.log("Appel factice de génération d'image avec :", {
+        context: context,
+        items: items.map(item => item.analysis)
+    });
+
+    // Simule le temps de génération de l'image (3 secondes)
+    await wait(3000); 
+
+    // TODO: Remplacer ceci par un véritable appel à l'API Google Imagen (Vertex AI)
+    // Le vrai prompt ressemblerait à :
+    // "Photo réaliste en pied d'un mannequin portant :
+    // - Haut: [Utiliser l'image de items[0].imageSrc comme référence] ${items[0].analysis}
+    // - Bas: [Utiliser l'image de items[1].imageSrc comme référence] ${items[1].analysis}
+    // - ...etc
+    // Style: ${context}"
+    
+    // On renvoie une image de substitution pour le test
+    const placeholderImage = `https://picsum.photos/seed/${encodeURIComponent(context)}/512/768`;
+    
+    console.log("Rendu factice généré :", placeholderImage);
+    
+    return placeholderImage;
+}
 
     try {
         const jsonResponse = JSON.parse(response.text);
