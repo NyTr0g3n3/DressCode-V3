@@ -23,6 +23,12 @@ const VisualResultModal: React.FC<VisualResultModalProps> = ({ imageUrl, onClose
     };
   }, [onClose]);
 
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onClose();
+  };
+
   return (
     <div
       className="fixed inset-0 bg-onyx/80 backdrop-blur-md flex items-center justify-center z-[100] p-4"
@@ -30,11 +36,11 @@ const VisualResultModal: React.FC<VisualResultModalProps> = ({ imageUrl, onClose
       role="dialog"
       aria-modal="true"
     >
-      <div 
-        className="relative"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="bg-white dark:bg-raisin-black rounded-lg shadow-2xl p-4">
+      <div className="relative max-w-[90vw] max-h-[90vh]">
+        <div 
+          className="bg-white dark:bg-raisin-black rounded-lg shadow-2xl p-4"
+          onClick={(e) => e.stopPropagation()}
+        >
           <img 
             src={imageUrl} 
             alt="Rendu visuel de la tenue" 
@@ -46,8 +52,10 @@ const VisualResultModal: React.FC<VisualResultModalProps> = ({ imageUrl, onClose
         </div>
         
         <button
-          onClick={onClose}
-          className="absolute -top-3 -right-3 p-2 bg-raisin-black border-2 border-white dark:border-onyx rounded-full text-white hover:bg-red-500 hover:scale-110 transition-all focus:outline-none focus:ring-2 focus:ring-gold active:scale-95"
+          onClick={handleButtonClick}
+          onTouchEnd={handleButtonClick}
+          className="fixed top-4 right-4 p-4 bg-red-500 border-4 border-white rounded-full text-white shadow-2xl z-[9999] active:scale-90"
+          style={{ touchAction: 'manipulation' }}
           aria-label="Fermer"
         >
           <XIcon />
