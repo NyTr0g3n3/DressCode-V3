@@ -1,23 +1,28 @@
 import React from 'react';
-import { LinkIcon } from './icons.tsx'; // <-- 1. Importer l'icône
+import { LinkIcon, HeartIcon } from './icons.tsx'; 
 
 interface MobileHomeProps {
   onAnalyzeWardrobe: () => void;
   onScrollToOutfits: () => void;
   onScrollToVacation: () => void;
-  onStartSetCreation: () => void; // <-- 2. Ajouter la nouvelle prop
+  onStartSetCreation: () => void;
+  onShowFavorites: () => void; // <-- AJOUTER
   isAnalyzingWardrobe: boolean;
   clothingCount: number;
+  favoriteOutfitCount: number; // <-- AJOUTER
 }
 
 const MobileHome: React.FC<MobileHomeProps> = ({ 
   onAnalyzeWardrobe, 
   onScrollToOutfits, 
   onScrollToVacation,
-  onStartSetCreation, // <-- 3. Récupérer la prop
+  onStartSetCreation,
+  onShowFavorites, // <-- AJOUTER
   isAnalyzingWardrobe,
-  clothingCount
+  clothingCount,
+  favoriteOutfitCount // <-- AJOUTER
 }) => {
+  
   return (
     <div className="space-y-4 pb-24">
       {/* Header (inchangé) */}
@@ -110,7 +115,7 @@ const MobileHome: React.FC<MobileHomeProps> = ({
           <h4 className="font-semibold mb-3 text-sm text-gray-600 dark:text-gray-400">
             Aperçu rapide
           </h4>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             {/* Carte Vêtements (inchangée) */}
             <div className="bg-white dark:bg-raisin-black rounded-xl p-3 text-center">
               <p className="text-2xl font-bold text-gold">{clothingCount}</p>
@@ -129,6 +134,16 @@ const MobileHome: React.FC<MobileHomeProps> = ({
                 </svg>
               </div>
               <p className="text-xs text-gray-500 mt-1.5 font-medium">Créer un ensemble</p>
+            </button>
+<button
+              onClick={onShowFavorites}
+              className="bg-white dark:bg-raisin-black rounded-xl p-3 text-center flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-raisin-black/50 transition-colors active:scale-95"
+            >
+              <div className="text-red-500">
+                <HeartIcon /> {/* Utiliser HeartIcon */}
+              </div>
+              <p className="text-2xl font-bold">{favoriteOutfitCount}</p>
+              <p className="text-xs text-gray-500 mt-0.5 font-medium">Favorites</p>
             </button>
 
           </div>
