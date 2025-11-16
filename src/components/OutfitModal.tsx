@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react'; // 'useState' n'est pas néces
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import OutfitGenerator from './OutfitGenerator';
 import OutfitDisplay from './OutfitDisplay';
-import type { ClothingItem, ClothingSet, OutfitSuggestion } from '../types';
+import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit } from '../types';
 
 interface OutfitModalProps {
   open: boolean;
@@ -14,6 +14,8 @@ interface OutfitModalProps {
   onClose: () => void;
   weatherInfo: string | null;
   weatherError: string | null;
+  favoriteOutfits: FavoriteOutfit[];
+  onToggleFavorite: (outfit: OutfitSuggestion) => void;
 }
 
 const OutfitModal: React.FC<OutfitModalProps> = ({ 
@@ -25,7 +27,9 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
   suggestedOutfits,
   onClose,
   weatherInfo,
-  weatherError
+  weatherError,
+  favoriteOutfits,
+  onToggleFavorite
 }) => {
   const isDarkMode = document.documentElement.classList.contains('dark');
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -95,6 +99,8 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
               outfits={suggestedOutfits} 
               allClothingItems={clothingItems} 
               allClothingSets={clothingSets} 
+              favoriteOutfits={favoriteOutfits}
+              onToggleFavorite={onToggleFavorite}
             />
           )}
         </div>
