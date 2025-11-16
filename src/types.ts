@@ -18,6 +18,13 @@ export interface ClothingSet {
   imageSrc: string; // Utilise l'image du premier article de l'ensemble
 }
 
+export interface FavoriteOutfit {
+  id: string; // ID du document Firestore
+  titre: string;
+  description: string;
+  vetements: OutfitItem[];
+}
+
 export interface OutfitItem {
   id: string; // L'ID de l'article (item) ou de l'ensemble (set)
   description: string; // La description (ex: "T-shirt bleu")
