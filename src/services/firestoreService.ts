@@ -10,10 +10,11 @@ import {
   query
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import type { ClothingItem, ClothingSet } from '../types';
+import type { ClothingItem, ClothingSet, FavoriteOutfit, OutfitSuggestion } from '../types';
 
 type NewClothingItem = Omit<ClothingItem, 'id'>;
 type NewClothingSet = Omit<ClothingSet, 'id'>;
+type NewFavoriteOutfit = Omit<FavoriteOutfit, 'id'>;
 
 // --- CLOTHING ITEMS ---
 
@@ -97,6 +98,45 @@ export const loadClothingSets = async (userId: string): Promise<ClothingSet[]> =
   } catch (error) {
     console.error('Erreur lors du chargement des ensembles:', error);
     return [];
+  }
+};
+
+// --- FAVORITE OUTFITS ---
+
+export const listenToFavoriteOutfits = (userId: string, callback: (sets: FavoriteOutfit[]) => void) => {
+  const favsCol = collection(db, 'users', userId, 'favoriteOutfits');
+  const q = query(favsCol);
+  const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const favs = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as FavoriteOutfit));
+    callback(favs);
+  }, (error) => {
+    console.error('Erreur (favoriteOutfits listener):', error);
+  });
+  return unsubscribe;
+};
+
+export const addFavoriteOutfit = async (userId: string, outfit: Omit<OutfitSuggestion, 'id'>): Promise<string> => {
+  try {
+    const favsCol = collection(db, 'users', userId, 'favoriteOutfits');
+    // On sauvegarde l'objet OutfitSuggestion directement
+    const docRef = await addDoc(favsCol, outfit);
+    return docRef.id;
+  } catch (error) {
+    console.error("Erreur lors de l'ajout d'une tenue favorite:", error);
+    throw error;
+  }
+};
+
+export const deleteFavoriteOutfit = async (userId: string, outfitId: string) => {
+  try {
+    const favDoc = doc(db, 'users', userId, 'favoriteOutfits', outfitId);
+    await deleteDoc(favDoc);
+  } catch (error) {
+    console.error("Erreur lors de la suppression d'une tenue favorite:", error);
+    throw error;
   }
 };
 
