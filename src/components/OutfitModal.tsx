@@ -16,6 +16,8 @@ interface OutfitModalProps {
   weatherError: string | null;
   favoriteOutfits: FavoriteOutfit[];
   onToggleFavorite: (outfit: OutfitSuggestion) => void;
+  onGenerateVisual: (outfit: OutfitSuggestion) => void;
+  generatingVisualFor: string | null;
 }
 
 const OutfitModal: React.FC<OutfitModalProps> = ({ 
@@ -29,7 +31,9 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
   weatherInfo,
   weatherError,
   favoriteOutfits,
-  onToggleFavorite
+  onToggleFavorite,
+  onGenerateVisual,
+  generatingVisualFor
 }) => {
   const isDarkMode = document.documentElement.classList.contains('dark');
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -101,6 +105,8 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
               allClothingSets={clothingSets} 
               favoriteOutfits={favoriteOutfits}
               onToggleFavorite={onToggleFavorite}
+              onGenerateVisual={onGenerateVisual}
+              generatingVisualFor={generatingVisualFor}
             />
           )}
         </div>
