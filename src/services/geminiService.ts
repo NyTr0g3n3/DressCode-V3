@@ -102,14 +102,14 @@ export async function generateOutfits(
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
 
-    // ▼▼▼ MODIFICATION : On envoie plus de données (Catégorie, Couleur, Matière) ▼▼▼
+
     const individualItemsFormatted = individualItems.map(item => 
       `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Couleur: ${item.color}, Mat: ${item.material})`
     ).join('\n');
     const setsFormatted = sets.map(set => 
       `- ${set.name} (Ensemble, ID: ${set.id})`
     ).join('\n');
-    // ▲▲▲ FIN DE LA MODIFICATION ▲▲▲
+
 
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
@@ -117,7 +117,7 @@ export async function generateOutfits(
         ? `\n**RÈGLE D'ANCRAGE : Chaque tenue DOIT impérativement inclure l'article ou l'ensemble suivant : "${isClothingSet(anchorItemOrSet) ? anchorItemOrSet.name : anchorItemOrSet.analysis} (ID: ${anchorItemOrSet.id})". C'est la pièce maîtresse.**\n`
         : '';
 
-    // ▼▼▼ MODIFICATION : Le prompt intègre vos 4 règles de style ▼▼▼
+ 
     const prompt = `
     Tu es un styliste de mode expert. Ta mission est de créer des tenues pertinentes, complètes et harmonieuses.
 
@@ -154,7 +154,7 @@ export async function generateOutfits(
 
     Réponds en français.
   `;
-  // ▲▲▲ FIN DE LA MODIFICATION ▲▲▲
+
 
     const response = await ai.models.generateContent({
         model: "gemini-flash-latest",
@@ -286,12 +286,15 @@ export async function generateVacationPlan(
 ): Promise<VacationPlan> {
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
+
+    // ▼▼▼ MODIFICATION : On envoie plus de données (Catégorie, Couleur, Matière) ▼▼▼
     const individualItemsFormatted = individualItems.map(item => 
       `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Couleur: ${item.color}, Mat: ${item.material})`
     ).join('\n');
     const setsFormatted = sets.map(set => 
       `- ${set.name} (Ensemble, ID: ${set.id})`
     ).join('\n');
+    // ▲▲▲ FIN DE LA MODIFICATION ▲▲▲
 
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
@@ -344,13 +347,26 @@ export async function generateVacationPlan(
         }
     });
 
-  const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+    try {
+        const jsonResponse = JSON.parse(response.text);
+        return jsonResponse as VacationPlan;
+    } catch (e) {
+        console.error("Erreur de parsing JSON:", e);
+        throw new Error("L'IA a renvoyé une réponse malformée.");
+    }
+}
 
+// -------------------------------------------------
+// FONCTION FACTICE POUR LE RENDU VISUEL
+// (Ceci simule un appel à une API de génération d'images)
+// -------------------------------------------------
 export async function generateVisualOutfit(
     items: ClothingItem[],
     context: string,
 ): Promise<string> {
     
+    const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
     console.log("Appel factice de génération d'image avec :", {
         context: context,
         items: items.map(item => item.analysis)
@@ -373,13 +389,4 @@ export async function generateVisualOutfit(
     console.log("Rendu factice généré :", placeholderImage);
     
     return placeholderImage;
-}
-
-    try {
-        const jsonResponse = JSON.parse(response.text);
-        return jsonResponse as VacationPlan;
-    } catch (e) {
-        console.error("Erreur de parsing JSON:", e);
-        throw new Error("L'IA a renvoyé une réponse malformée.");
-    }
 }
