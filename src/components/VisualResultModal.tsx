@@ -7,7 +7,7 @@ interface VisualResultModalProps {
 }
 
 const VisualResultModal: React.FC<VisualResultModalProps> = ({ imageUrl, onClose }) => {
-  // Effet pour fermer avec la touche "Echap" et bloquer le scroll
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -34,19 +34,23 @@ const VisualResultModal: React.FC<VisualResultModalProps> = ({ imageUrl, onClose
         className="relative bg-white dark:bg-raisin-black rounded-lg shadow-2xl p-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative">
+        
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 p-1.5 bg-black/40 backdrop-blur-sm rounded-full text-white hover:bg-red-500 hover:scale-110 transition-all focus:outline-none focus:ring-2 focus:ring-gold z-10"
+          aria-label="Fermer"
+        >
+          <XIcon />
+        </button>
+
+
+        <div className="relative"> 
           <img 
             src={imageUrl} 
             alt="Rendu visuel de la tenue" 
             className="max-w-[80vw] max-h-[80vh] object-contain rounded-lg" 
           />
-          <button
-            onClick={onClose}
-            className="absolute -top-6 -right-6 p-1.5 bg-raisin-black border-2 border-white dark:border-onyx rounded-full text-white hover:bg-red-500 hover:scale-110 transition-all focus:outline-none focus:ring-2 focus:ring-gold"
-            aria-label="Fermer"
-          >
-            <XIcon />
-          </button>
+
         </div>
         
         <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-3">
