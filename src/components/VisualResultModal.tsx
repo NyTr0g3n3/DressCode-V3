@@ -30,7 +30,6 @@ const VisualResultModal: React.FC<VisualResultModalProps> = ({ imageUrl, onClose
       role="dialog"
       aria-modal="true"
     >
-
       <button
         onClick={onClose}
         className="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-2 bg-raisin-black/90 border-2 border-white/20 rounded-full text-white hover:bg-red-500 hover:border-red-500 transition-all focus:outline-none focus:ring-2 focus:ring-gold z-[110] active:scale-95"
@@ -40,28 +39,15 @@ const VisualResultModal: React.FC<VisualResultModalProps> = ({ imageUrl, onClose
       </button>
 
       <div 
-      
-      <div 
-        className="relative bg-white dark:bg-raisin-black rounded-lg shadow-2xl p-4"
+        className="relative bg-white dark:bg-raisin-black rounded-lg shadow-2xl p-4 max-w-full"
         onClick={(e) => e.stopPropagation()}
       >
-
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 p-1.5 bg-black/40 backdrop-blur-sm rounded-full text-white hover:bg-red-500 hover:scale-110 transition-all focus:outline-none focus:ring-2 focus:ring-gold z-50"
-          aria-label="Fermer"
-        >
-          <XIcon />
-        </button>
-
-
         <img 
           src={imageUrl} 
           alt="Rendu visuel de la tenue" 
-          className="max-w-[80vw] max-h-[80vh] object-contain rounded-lg" 
+          className="max-w-[85vw] max-h-[75vh] object-contain rounded-lg" 
         />
 
-        
         <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-3">
           Rendu généré par IA (image factice).
         </p>
