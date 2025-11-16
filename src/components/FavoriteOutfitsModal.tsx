@@ -10,6 +10,8 @@ interface FavoriteOutfitsModalProps {
   allClothingSets: ClothingSet[];
   favoriteOutfits: FavoriteOutfit[];
   onToggleFavorite: (outfit: OutfitSuggestion) => void;
+  onGenerateVisual: (outfit: OutfitSuggestion) => void;
+  generatingVisualFor: string | null;
 }
 
 const FavoriteOutfitsModal: React.FC<FavoriteOutfitsModalProps> = ({ 
@@ -18,7 +20,9 @@ const FavoriteOutfitsModal: React.FC<FavoriteOutfitsModalProps> = ({
   allClothingItems,
   allClothingSets,
   favoriteOutfits,
-  onToggleFavorite
+  onToggleFavorite,
+  onGenerateVisual,
+  generatingVisualFor
 }) => {
   const isDarkMode = document.documentElement.classList.contains('dark');
 
@@ -57,6 +61,8 @@ const FavoriteOutfitsModal: React.FC<FavoriteOutfitsModalProps> = ({
             allClothingSets={allClothingSets} 
             favoriteOutfits={favoriteOutfits}
             onToggleFavorite={onToggleFavorite}
+            onGenerateVisual={onGenerateVisual}
+            generatingVisualFor={generatingVisualFor}
           />
         ) : (
           <div className="text-center py-12">
