@@ -1,8 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan, WardrobeAnalysis } from '../types';
-import { config } from '../config.ts';
-import { httpsCallable } from 'firebase/functions';  
-import { functions } from '../firebase';              
+import { config } from '../config.ts';          
 
 if (!config.geminiApiKey) {
   throw new Error("Clé API manquante. Veuillez la configurer dans vos variables d'environnement.");
@@ -358,52 +356,3 @@ export async function generateVacationPlan(
 }
 
 const generateVisualFunction = httpsCallable(functions, 'generateVisualOutfitOnServer');
-
-export async function generateVisualOutfit(
-    items: ClothingItem[],
-    context: string,
-): Promise<string> {
-    // ⚠️ FONCTION TEMPORAIREMENT DÉSACTIVÉE - QUOTA DÉPASSÉ
-    throw new Error("Génération de rendus visuels temporairement désactivée. Quota Vertex AI dépassé.");
-}
-
-/* ANCIEN CODE - RÉACTIVER PLUS TARD
-const generateVisualFunction = httpsCallable(functions, 'generateVisualOutfitOnServer');
-
-export async function generateVisualOutfit(
-    items: ClothingItem[],
-    context: string,
-): Promise<string> {
-
-    console.log("Appel de la Cloud Function 'generateVisualOutfitOnServer'...");
-
-    try {
-        const payload = {
-            context: context,
-            items: items.map(item => ({
-                analysis: item.analysis,
-                imageSrc: item.imageSrc,
-            }))
-        };
-        
-        console.log("Payload envoyé:", payload);
-
-        const result = await generateVisualFunction(payload);
-        
-        console.log("Résultat brut:", result);
-
-        const data = result.data as { imageUrl: string };
-        if (!data || !data.imageUrl) {
-            throw new Error("La Cloud Function n'a pas renvoyé d'URL d'image.");
-        }
-
-        console.log("Rendu visuel reçu de la Cloud Function.");
-        return data.imageUrl;
-
-    } catch (error) {
-        console.error("Erreur complète:", error);
-        console.error("Détails de l'erreur:", JSON.stringify(error, null, 2));
-        throw new Error(`Échec de la génération : ${error}`);
-    }
-}
-*/
