@@ -1,7 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan, WardrobeAnalysis } from '../types';
-
 import { config } from '../config.ts';
+import { httpsCallable } from 'firebase/functions';  
+import { functions } from '../firebase';              
 
 if (!config.geminiApiKey) {
   throw new Error("Clé API manquante. Veuillez la configurer dans vos variables d'environnement.");
