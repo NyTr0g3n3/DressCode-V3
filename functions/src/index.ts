@@ -1,16 +1,15 @@
 import { onCall } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
-import { defineSecret } from "firebase-functions/params";
+import { defineString } from "firebase-functions/params";
 
-// Référence au secret depuis Secret Manager
-const huggingfaceApiKey = defineSecret("HUGGINGFACE_API_KEY");
+// Variable d'environnement au lieu de Secret Manager
+const huggingfaceApiKey = defineString("HUGGINGFACE_API_KEY");
 
 export const generateImageWithHuggingFace = onCall(
   { 
     cors: true, 
     timeoutSeconds: 120,
-    memory: "512MiB",
-    secrets: [huggingfaceApiKey]
+    memory: "512MiB"
   },
   async (request) => {
     logger.info("Génération d'image avec Hugging Face...");
@@ -22,7 +21,7 @@ export const generateImageWithHuggingFace = onCall(
         throw new Error("Le prompt est requis");
       }
 
-      logger.info("Prompt reçu:", prompt);
+      logger.info("Prompt:", prompt);
 
       const response = await fetch(
         "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1",
@@ -55,7 +54,7 @@ export const generateImageWithHuggingFace = onCall(
       };
 
     } catch (error) {
-      logger.error("Erreur lors de la génération:", error);
+      logger.error("Erreur:", error);
       throw error;
     }
   }
