@@ -1,29 +1,29 @@
-import { onCall } from "firebase-functions/v2/https";
+import { onRequest } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { defineString } from "firebase-functions/params";
 
-// Variable d'environnement au lieu de Secret Manager
 const huggingfaceApiKey = defineString("HUGGINGFACE_API_KEY");
 
-export const generateImageWithHuggingFace = onCall(
+export const generateImageWithHuggingFace = onRequest(
   { 
-    cors: true, 
     timeoutSeconds: 120,
-    memory: "512MiB"
+    memory: "512MiB",
+    cors: ["https://nytr0g3n3.github.io", "http://localhost:5173"]
   },
-  async (request) => {
+  async (request, response) => {
     logger.info("Génération d'image avec Hugging Face...");
 
     try {
-      const { prompt } = request.data;
+      const { prompt } = request.body;
 
       if (!prompt) {
-        throw new Error("Le prompt est requis");
+        response.status(400).json({ error: "Le prompt est requis" });
+        return;
       }
 
       logger.info("Prompt:", prompt);
 
-      const response = await fetch(
+      const hfResponse = await fetch(
         "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1",
         {
           headers: { 
@@ -38,24 +38,27 @@ export const generateImageWithHuggingFace = onCall(
         }
       );
 
-      if (!response.ok) {
-        const errorText = await response.text();
+      if (!hfResponse.ok) {
+        const errorText = await hfResponse.text();
         logger.error("Erreur Hugging Face:", errorText);
-        throw new Error(`Hugging Face API error: ${response.status}`);
+        response.status(hfResponse.status).json({ 
+          error: `Hugging Face API error: ${hfResponse.status}` 
+        });
+        return;
       }
 
-      const imageBuffer = await response.arrayBuffer();
+      const imageBuffer = await hfResponse.arrayBuffer();
       const base64Image = Buffer.from(imageBuffer).toString('base64');
       
       logger.info("Image générée avec succès");
 
-      return { 
+      response.status(200).json({ 
         imageUrl: `data:image/png;base64,${base64Image}`
-      };
+      });
 
     } catch (error) {
       logger.error("Erreur:", error);
-      throw error;
+      response.status(500).json({ error: String(error) });
     }
   }
 );
