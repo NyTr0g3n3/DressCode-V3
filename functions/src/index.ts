@@ -1,34 +1,23 @@
-import { onRequest } from "firebase-functions/v2/https";
+import { onCall } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { defineString } from "firebase-functions/params";
 
 const huggingfaceApiKey = defineString("HUGGINGFACE_API_KEY");
 
-export const generateImageWithHuggingFace = onRequest(
+export const generateImageWithHuggingFace = onCall(
   { 
+    cors: true,  // Important : active CORS automatiquement
     timeoutSeconds: 120,
     memory: "512MiB"
   },
-  async (request, response) => {
-    // Gérer CORS manuellement
-    response.set('Access-Control-Allow-Origin', '*');
-    response.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    response.set('Access-Control-Allow-Headers', 'Content-Type');
-
-    // Répondre aux preflight requests
-    if (request.method === 'OPTIONS') {
-      response.status(204).send('');
-      return;
-    }
-
+  async (request) => {
     logger.info("Génération d'image avec Hugging Face...");
 
     try {
-      const { prompt } = request.body;
+      const { prompt } = request.data;
 
       if (!prompt) {
-        response.status(400).json({ error: "Le prompt est requis" });
-        return;
+        throw new Error("Le prompt est requis");
       }
 
       logger.info("Prompt:", prompt);
@@ -51,10 +40,7 @@ export const generateImageWithHuggingFace = onRequest(
       if (!hfResponse.ok) {
         const errorText = await hfResponse.text();
         logger.error("Erreur Hugging Face:", errorText);
-        response.status(hfResponse.status).json({ 
-          error: `Hugging Face API error: ${hfResponse.status}` 
-        });
-        return;
+        throw new Error(`Hugging Face API error: ${hfResponse.status}`);
       }
 
       const imageBuffer = await hfResponse.arrayBuffer();
@@ -62,13 +48,13 @@ export const generateImageWithHuggingFace = onRequest(
       
       logger.info("Image générée avec succès");
 
-      response.status(200).json({ 
+      return { 
         imageUrl: `data:image/png;base64,${base64Image}`
-      });
+      };
 
     } catch (error) {
       logger.error("Erreur:", error);
-      response.status(500).json({ error: String(error) });
+      throw error;
     }
   }
 );
