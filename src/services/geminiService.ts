@@ -361,8 +361,15 @@ export async function generateVisualOutfit(
     items: ClothingItem[],
     context: string,
 ): Promise<string> {
-    const prompt = `A fashion photo of a person wearing: ${items.map(i => i.analysis).join(", ")}. ${context}. Professional studio lighting, clean background.`;
     
+    if (!config.huggingfaceApiKey) {
+        throw new Error("Clé Hugging Face manquante");
+    }
+
+    const prompt = `A professional fashion photograph of a mannequin wearing: ${items.map(i => i.analysis).join(", ")}. Context: ${context}. Studio lighting, neutral background, full body shot.`;
+    
+    console.log("Génération avec Hugging Face...", prompt);
+
     const response = await fetch(
         "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1",
         {
@@ -378,6 +385,11 @@ export async function generateVisualOutfit(
         }
     );
 
+    if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Erreur Hugging Face: ${error}`);
+    }
+
     const blob = await response.blob();
-    return URL.createObjectURL(blob); // Retourne l'URL de l'image
+    return URL.createObjectURL(blob);
 }
