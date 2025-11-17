@@ -369,8 +369,24 @@ export async function generateVisualOutfit(
     console.log("Génération via Cloud Function Hugging Face...");
 
     try {
-        const result = await generateImageFunction({ prompt });
-        const data = result.data as { imageUrl: string };
+        // Appel HTTP direct au lieu de httpsCallable
+        const response = await fetch(
+            "https://us-central1-dresscode-ai-32c50.cloudfunctions.net/generateImageWithHuggingFace",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ prompt })
+            }
+        );
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Erreur génération");
+        }
+
+        const data = await response.json();
         
         if (!data || !data.imageUrl) {
             throw new Error("Pas d'image retournée");
