@@ -3796,13 +3796,19 @@ Content-Type: `+h.contentType+`\r
     ---
     RÈGLES DE FORMAT (OBLIGATOIRES) :
     1. Base-toi **uniquement** sur les vêtements et ensembles listés ci-dessus.
-    2. Pour chaque article que tu sélectionnes, tu DOIS fournir son ID exact et sa description.
-    3. Les articles marqués comme "(Ensemble)" sont inséparables.
+    
+    2. Pour chaque article que tu sélectionnes, tu DOIS fournir les deux champs suivants :
+       a. "id": L'ID exact (la chaîne de caractères qui suit "(ID:" dans la liste, ex: "abc-123-xyz").
+       b. "description": La description textuelle COMPLÈTE (la chaîne de caractères qui précède "(ID:", ex: "Pull en maille bleu marine à col montant zippé...").
+
+    3. **IMPORTANT :** Tu DOIS copier l'ID et la "description" (le champ 'analysis' que je t'ai donné) **exactement** comme ils sont fournis dans la liste. Ne les modifie pas, ne les résume pas, ne les réécris pas.
+
+    4. Les articles marqués comme "(Ensemble)" sont inséparables.
 
     Crée 3 tenues distinctes. Pour chaque tenue, fournis :
     1. Un "titre" court et accrocheur.
-    2. Une "description" brève du style et *pourquoi* elle est adaptée au contexte et respecte les règles.
-    3. Une liste "vetements" d'objets, où chaque objet contient "id" et "description" de l'article ou de l'ensemble utilisé.
+    2. Une "description" brève du style (pour la tenue globale).
+    3. Une liste "vetements" d'objets, où chaque objet contient "id" et "description" de l'article ou de l'ensemble utilisé (en respectant la règle n°3).
 
     Réponds en français.
   `,E=await kp.models.generateContent({model:"gemini-flash-latest",contents:g,config:{responseMimeType:"application/json",responseSchema:{type:qe.OBJECT,properties:{tenues:{type:qe.ARRAY,description:"La liste des suggestions de tenues.",items:{type:qe.OBJECT,properties:{titre:{type:qe.STRING,description:"Le nom de la tenue."},description:{type:qe.STRING,description:"Une brève description du style de la tenue."},vetements:{type:qe.ARRAY,description:"La liste des objets vêtements composant la tenue.",items:{type:qe.OBJECT,properties:{id:{type:qe.STRING,description:"L'ID de l'article ou de l'ensemble."},description:{type:qe.STRING,description:"La description de l'article."}},required:["id","description"]}}},required:["titre","description","vetements"]}}},required:["tenues"]}}});try{return JSON.parse(E.text).tenues}catch(T){throw console.error("Erreur de parsing JSON de la réponse Gemini:",T),console.error("Réponse reçue:",E.text),new Error("L'IA a renvoyé une réponse malformée.")}}async function Vq(t,e){const n=t.map(a=>`${a.category}: ${a.analysis}, couleur ${a.color}, matière ${a.material}`).join(`
