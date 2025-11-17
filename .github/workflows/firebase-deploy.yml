@@ -26,7 +26,7 @@ jobs:
           cd functions
           npm run build
       
-   - name: Deploy to Firebase
+      - name: Deploy to Firebase
         run: |
           echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > $HOME/gcloud-key.json
           export GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud-key.json
