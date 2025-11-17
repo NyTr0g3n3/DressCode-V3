@@ -363,7 +363,10 @@ export async function generateVisualOutfit(
     items: ClothingItem[],
     context: string,
 ): Promise<string> {
-
+    // ⚠️ FONCTION TEMPORAIREMENT DÉSACTIVÉE - QUOTA DÉPASSÉ
+    throw new Error("Génération de rendus visuels temporairement désactivée. Quota Vertex AI dépassé.");
+    
+    /* RÉACTIVER PLUS TARD
     console.log("Appel de la Cloud Function 'generateVisualOutfitOnServer'...");
 
     try {
