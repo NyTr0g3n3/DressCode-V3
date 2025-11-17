@@ -355,8 +355,6 @@ export async function generateVacationPlan(
     }
 }
 
-const generateVisualFunction = httpsCallable(functions, 'generateVisualOutfitOnServer');
-
 export async function generateVisualOutfit(
     items: ClothingItem[],
     context: string,
