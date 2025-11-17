@@ -356,37 +356,40 @@ export async function generateVacationPlan(
     }
 }
 
-// -------------------------------------------------
-// FONCTION FACTICE POUR LE RENDU VISUEL
-// (Ceci simule un appel à une API de génération d'images)
-// -------------------------------------------------
+const generateVisualFunction = httpsCallable(functions, 'generateVisualOutfitOnServer');
+
 export async function generateVisualOutfit(
     items: ClothingItem[],
     context: string,
 ): Promise<string> {
-    
-    const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-    console.log("Appel factice de génération d'image avec :", {
-        context: context,
-        items: items.map(item => item.analysis)
-    });
+    console.log("Appel de la Cloud Function 'generateVisualOutfitOnServer'...");
 
-    // Simule le temps de génération de l'image (3 secondes)
-    await wait(3000); 
+    try {
+        // 1. Préparer les données à envoyer
+        // On envoie seulement ce qui est nécessaire pour minimiser la taille de la requête
+        const payload = {
+            context: context,
+            items: items.map(item => ({
+                analysis: item.analysis,
+                imageSrc: item.imageSrc, // La Cloud Function aura besoin de l'URL
+            }))
+        };
 
-    // TODO: Remplacer ceci par un véritable appel à l'API Google Imagen (Vertex AI)
-    // Le vrai prompt ressemblerait à :
-    // "Photo réaliste en pied d'un mannequin portant :
-    // - Haut: [Utiliser l'image de items[0].imageSrc comme référence] ${items[0].analysis}
-    // - Bas: [Utiliser l'image de items[1].imageSrc comme référence] ${items[1].analysis}
-    // - ...etc
-    // Style: ${context}"
-    
-    // On renvoie une image de substitution pour le test
-    const placeholderImage = `https://picsum.photos/seed/${encodeURIComponent(context)}/512/768`;
-    
-    console.log("Rendu factice généré :", placeholderImage);
-    
-    return placeholderImage;
+        // 2. Appeler la fonction backend et attendre le résultat
+        const result = await generateVisualFunction(payload);
+
+        // 3. Extraire l'URL de l'image (en base64) de la réponse
+        const data = result.data as { imageUrl: string };
+        if (!data || !data.imageUrl) {
+            throw new Error("La Cloud Function n'a pas renvoyé d'URL d'image.");
+        }
+
+        console.log("Rendu visuel reçu de la Cloud Function.");
+        return data.imageUrl; // Renvoie l'URL "data:image/png;base64,..."
+
+    } catch (error) {
+        console.error("Erreur lors de l'appel à la Cloud Function:", error);
+        throw new Error(`Échec de la génération : ${error}`);
+    }
 }
