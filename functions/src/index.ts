@@ -7,10 +7,20 @@ const huggingfaceApiKey = defineString("HUGGINGFACE_API_KEY");
 export const generateImageWithHuggingFace = onRequest(
   { 
     timeoutSeconds: 120,
-    memory: "512MiB",
-    cors: ["https://nytr0g3n3.github.io", "http://localhost:5173"]
+    memory: "512MiB"
   },
   async (request, response) => {
+    // Gérer CORS manuellement
+    response.set('Access-Control-Allow-Origin', '*');
+    response.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    response.set('Access-Control-Allow-Headers', 'Content-Type');
+
+    // Répondre aux preflight requests
+    if (request.method === 'OPTIONS') {
+      response.status(204).send('');
+      return;
+    }
+
     logger.info("Génération d'image avec Hugging Face...");
 
     try {
