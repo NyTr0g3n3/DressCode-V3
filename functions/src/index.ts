@@ -24,7 +24,7 @@ const bucket = getStorage().bucket(GCS_BUCKET_NAME);
 
 // ▼▼▼ CORRECTION : Le nom de modèle exact de VOTRE screenshot ▼▼▼
 const generativeModel = vertexAI.getGenerativeModel({
-  model: "imagen-4.0-fast-generate",
+  model: "imagen-3.0-fast-generate-001",
 });
 // ▲▲▲ FIN DE LA CORRECTION ▲▲▲
 // ------------------------------------------
