@@ -1,6 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan, WardrobeAnalysis } from '../types';
-import { config } from '../config.ts';          
+import { config } from '../config.ts';     
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
 
 if (!config.geminiApiKey) {
   throw new Error("Clé API manquante. Veuillez la configurer dans vos variables d'environnement.");
@@ -355,39 +357,30 @@ export async function generateVacationPlan(
     }
 }
 
+const generateImageFunction = httpsCallable(functions, 'generateImageWithHuggingFace');
+
 export async function generateVisualOutfit(
     items: ClothingItem[],
     context: string,
 ): Promise<string> {
     
-    if (!config.huggingfaceApiKey) {
-        throw new Error("Clé Hugging Face manquante");
-    }
-
-    const prompt = `A professional fashion photograph of a mannequin wearing: ${items.map(i => i.analysis).join(", ")}. Context: ${context}. Studio lighting, neutral background, full body shot.`;
+    const prompt = `A professional fashion photograph of a person wearing: ${items.map(i => i.analysis).join(", ")}. Context: ${context}. Studio lighting, neutral background, full body shot.`;
     
-    console.log("Génération avec Hugging Face...", prompt);
+    console.log("Génération via Cloud Function Hugging Face...");
 
-    const response = await fetch(
-        "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1",
-        {
-            headers: { 
-                Authorization: `Bearer ${config.huggingfaceApiKey}`,
-                "Content-Type": "application/json"
-            },
-            method: "POST",
-            body: JSON.stringify({ 
-                inputs: prompt,
-                options: { wait_for_model: true }
-            }),
+    try {
+        const result = await generateImageFunction({ prompt });
+        const data = result.data as { imageUrl: string };
+        
+        if (!data || !data.imageUrl) {
+            throw new Error("Pas d'image retournée");
         }
-    );
 
-    if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Erreur Hugging Face: ${error}`);
+        console.log("Image reçue avec succès !");
+        return data.imageUrl;
+        
+    } catch (error) {
+        console.error("Erreur lors de la génération:", error);
+        throw error;
     }
-
-    const blob = await response.blob();
-    return URL.createObjectURL(blob);
 }
