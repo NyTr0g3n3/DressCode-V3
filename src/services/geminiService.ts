@@ -356,3 +356,28 @@ export async function generateVacationPlan(
 }
 
 const generateVisualFunction = httpsCallable(functions, 'generateVisualOutfitOnServer');
+
+export async function generateVisualOutfit(
+    items: ClothingItem[],
+    context: string,
+): Promise<string> {
+    const prompt = `A fashion photo of a person wearing: ${items.map(i => i.analysis).join(", ")}. ${context}. Professional studio lighting, clean background.`;
+    
+    const response = await fetch(
+        "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1",
+        {
+            headers: { 
+                Authorization: `Bearer ${config.huggingfaceApiKey}`,
+                "Content-Type": "application/json"
+            },
+            method: "POST",
+            body: JSON.stringify({ 
+                inputs: prompt,
+                options: { wait_for_model: true }
+            }),
+        }
+    );
+
+    const blob = await response.blob();
+    return URL.createObjectURL(blob); // Retourne l'URL de l'image
+}
