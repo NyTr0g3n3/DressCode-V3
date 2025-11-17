@@ -367,30 +367,31 @@ export async function generateVisualOutfit(
     console.log("Appel de la Cloud Function 'generateVisualOutfitOnServer'...");
 
     try {
-        // 1. Préparer les données à envoyer
-        // On envoie seulement ce qui est nécessaire pour minimiser la taille de la requête
         const payload = {
             context: context,
             items: items.map(item => ({
                 analysis: item.analysis,
-                imageSrc: item.imageSrc, // La Cloud Function aura besoin de l'URL
+                imageSrc: item.imageSrc,
             }))
         };
+        
+        console.log("Payload envoyé:", payload); // ← AJOUTER
 
-        // 2. Appeler la fonction backend et attendre le résultat
         const result = await generateVisualFunction(payload);
+        
+        console.log("Résultat brut:", result); // ← AJOUTER
 
-        // 3. Extraire l'URL de l'image (en base64) de la réponse
         const data = result.data as { imageUrl: string };
         if (!data || !data.imageUrl) {
             throw new Error("La Cloud Function n'a pas renvoyé d'URL d'image.");
         }
 
         console.log("Rendu visuel reçu de la Cloud Function.");
-        return data.imageUrl; // Renvoie l'URL "data:image/png;base64,..."
+        return data.imageUrl;
 
     } catch (error) {
-        console.error("Erreur lors de l'appel à la Cloud Function:", error);
+        console.error("Erreur complète:", error); // ← MODIFIER
+        console.error("Détails de l'erreur:", JSON.stringify(error, null, 2)); // ← AJOUTER
         throw new Error(`Échec de la génération : ${error}`);
     }
 }
