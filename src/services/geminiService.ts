@@ -145,13 +145,19 @@ export async function generateOutfits(
     ---
     RÈGLES DE FORMAT (OBLIGATOIRES) :
     1. Base-toi **uniquement** sur les vêtements et ensembles listés ci-dessus.
-    2. Pour chaque article que tu sélectionnes, tu DOIS fournir son ID exact et sa description.
-    3. Les articles marqués comme "(Ensemble)" sont inséparables.
+    
+    2. Pour chaque article que tu sélectionnes, tu DOIS fournir les deux champs suivants :
+       a. "id": L'ID exact (la chaîne de caractères qui suit "(ID:" dans la liste, ex: "abc-123-xyz").
+       b. "description": La description textuelle COMPLÈTE (la chaîne de caractères qui précède "(ID:", ex: "Pull en maille bleu marine à col montant zippé...").
+
+    3. **IMPORTANT :** Tu DOIS copier l'ID et la "description" (le champ 'analysis' que je t'ai donné) **exactement** comme ils sont fournis dans la liste. Ne les modifie pas, ne les résume pas, ne les réécris pas.
+
+    4. Les articles marqués comme "(Ensemble)" sont inséparables.
 
     Crée 3 tenues distinctes. Pour chaque tenue, fournis :
     1. Un "titre" court et accrocheur.
-    2. Une "description" brève du style et *pourquoi* elle est adaptée au contexte et respecte les règles.
-    3. Une liste "vetements" d'objets, où chaque objet contient "id" et "description" de l'article ou de l'ensemble utilisé.
+    2. Une "description" brève du style (pour la tenue globale).
+    3. Une liste "vetements" d'objets, où chaque objet contient "id" et "description" de l'article ou de l'ensemble utilisé (en respectant la règle n°3).
 
     Réponds en français.
   `;
