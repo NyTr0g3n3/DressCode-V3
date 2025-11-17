@@ -365,8 +365,16 @@ export async function generateVisualOutfit(
 ): Promise<string> {
     // ⚠️ FONCTION TEMPORAIREMENT DÉSACTIVÉE - QUOTA DÉPASSÉ
     throw new Error("Génération de rendus visuels temporairement désactivée. Quota Vertex AI dépassé.");
-    
-    /* RÉACTIVER PLUS TARD
+}
+
+/* ANCIEN CODE - RÉACTIVER PLUS TARD
+const generateVisualFunction = httpsCallable(functions, 'generateVisualOutfitOnServer');
+
+export async function generateVisualOutfit(
+    items: ClothingItem[],
+    context: string,
+): Promise<string> {
+
     console.log("Appel de la Cloud Function 'generateVisualOutfitOnServer'...");
 
     try {
@@ -378,11 +386,11 @@ export async function generateVisualOutfit(
             }))
         };
         
-        console.log("Payload envoyé:", payload); // ← AJOUTER
+        console.log("Payload envoyé:", payload);
 
         const result = await generateVisualFunction(payload);
         
-        console.log("Résultat brut:", result); // ← AJOUTER
+        console.log("Résultat brut:", result);
 
         const data = result.data as { imageUrl: string };
         if (!data || !data.imageUrl) {
@@ -393,8 +401,9 @@ export async function generateVisualOutfit(
         return data.imageUrl;
 
     } catch (error) {
-        console.error("Erreur complète:", error); // ← MODIFIER
-        console.error("Détails de l'erreur:", JSON.stringify(error, null, 2)); // ← AJOUTER
+        console.error("Erreur complète:", error);
+        console.error("Détails de l'erreur:", JSON.stringify(error, null, 2));
         throw new Error(`Échec de la génération : ${error}`);
     }
 }
+*/
