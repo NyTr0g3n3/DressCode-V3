@@ -257,46 +257,62 @@ export async function generateVacationPlan(
     return JSON.parse(response.text() || "{}");
 }
 
-// --- GÉNÉRATION VISUELLE (HUGGING FACE / SDXL) ---
+// --- GÉNÉRATION VISUELLE (HUGGING FACE) ---
 export async function generateVisualOutfit(
     items: ClothingItem[],
     context: string,
 ): Promise<string> {
     
+    // Diagnostic Clé API
     if (!config.huggingFaceApiKey) {
-        console.error("Clé API Hugging Face manquante.");
-        throw new Error("Configuration requise : Clé API Hugging Face introuvable.");
+        console.error("❌ Clé API Hugging Face manquante (VITE_HUGGINGFACE_API_KEY non trouvée).");
+        throw new Error("Clé API Hugging Face manquante. Vérifiez vos secrets GitHub.");
+    } else {
+        // On log juste la présence (pas la clé entière pour sécurité)
+        console.log("✅ Clé API Hugging Face détectée (longueur: " + config.huggingFaceApiKey.length + ")");
     }
 
     const itemsDescription = items.map(i => i.analysis).join(", ");
-    // Prompt optimisé pour le modèle SDXL
-    const prompt = `Fashion photography, full body shot of a model wearing: ${itemsDescription}. 
-    Context: ${context}. 
-    High quality, photorealistic, 8k, studio lighting, fashion magazine style, neutral background.`;
     
-    console.log("Génération visuelle via Hugging Face (SDXL)...");
+    // On utilise un modèle plus léger et permissif pour éviter les erreurs CORS du modèle SDXL
+    // Modèle alternatif : "prompthero/openjourney" ou "runwayml/stable-diffusion-v1-5"
+    const MODEL_ID = "runwayml/stable-diffusion-v1-5"; 
+
+    const prompt = `Fashion photo of a person wearing: ${itemsDescription}. Context: ${context}. Photorealistic, 8k.`;
+    
+    console.log(`Génération visuelle via Hugging Face (${MODEL_ID})...`);
 
     try {
-        // Appel direct à l'API d'inférence Hugging Face
         const response = await fetch(
-            "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+            `https://api-inference.huggingface.co/models/${MODEL_ID}`,
             {
                 headers: {
                     Authorization: `Bearer ${config.huggingFaceApiKey}`,
                     "Content-Type": "application/json",
+                    "x-use-cache": "false" // Force la non-utilisation du cache parfois problématique
                 },
                 method: "POST",
                 body: JSON.stringify({ 
                     inputs: prompt,
-                    options: { wait_for_model: true }
+                    options: { 
+                        wait_for_model: true,
+                        use_cache: false 
+                    }
                 }),
             }
         );
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error("Erreur API Hugging Face:", errorText);
-            throw new Error(`Erreur génération image (${response.status})`);
+            console.error("❌ Erreur API Hugging Face:", errorText);
+            
+            if (response.status === 403 || response.status === 401) {
+                 throw new Error("Erreur d'authentification HF. Vérifiez votre token.");
+            }
+            if (errorText.includes("estimated_time")) {
+                 throw new Error("Le modèle démarre, réessayez dans 30 secondes.");
+            }
+            throw new Error(`Erreur HF (${response.status})`);
         }
 
         const blob = await response.blob();
