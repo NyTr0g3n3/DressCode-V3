@@ -31,11 +31,10 @@ jobs:
           cd functions
           npm run build
       
-      # Cette étape crée le fichier .env que la fonction va lire
       - name: Create .env file for Functions
         run: |
           cd functions
-          echo "HUGGINGFACE_API_KEY=${{ secrets.HUGGINGFACE_API_KEY }}" > .env
+          echo "HUGGINGFACE_API_KEY=${{ secrets.VITE_HUGGINGFACE_API_KEY }}" > .env
       
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
