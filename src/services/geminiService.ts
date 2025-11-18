@@ -1,8 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan, WardrobeAnalysis } from '../types';
 import { config } from '../config.ts';     
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../firebase';
 
 if (!config.geminiApiKey) {
   throw new Error("Clé API manquante. Veuillez la configurer dans vos variables d'environnement.");
@@ -12,6 +10,7 @@ const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
 
 type AnalysisResult = Omit<ClothingItem, 'id' | 'imageSrc'>;
 
+// --- ANALYSE DES VÊTEMENTS ---
 export async function analyzeClothingImages(base64Images: string[]): Promise<AnalysisResult[]> {
   const textPart = {
     text: `Analyse chacune des images de vêtements fournies. Pour chaque image, dans l'ordre, extrais les informations suivantes en français :
@@ -31,7 +30,7 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
   }));
 
   const response = await ai.models.generateContent({
-    model: 'gemini-flash-latest',
+    model: 'gemini-2.0-flash',
     contents: { parts: [textPart, ...imageParts] },
     config: {
         responseMimeType: "application/json",
@@ -44,23 +43,13 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
                     items: {
                         type: Type.OBJECT,
                         properties: {
-                            analysis: {
-                                type: Type.STRING,
-                                description: "La description concise du vêtement."
-                            },
+                            analysis: { type: Type.STRING },
                             category: {
                                 type: Type.STRING,
-                                description: 'La catégorie du vêtement parmi "Hauts", "Bas", "Chaussures", ou "Accessoires".',
                                 enum: ["Hauts", "Bas", "Chaussures", "Accessoires"]
                             },
-                            color: {
-                                type: Type.STRING,
-                                description: "La couleur principale du vêtement."
-                            },
-                            material: {
-                                type: Type.STRING,
-                                description: "La matière principale du vêtement."
-                            }
+                            color: { type: Type.STRING },
+                            material: { type: Type.STRING }
                         },
                         required: ["analysis", "category", "color", "material"]
                     }
@@ -72,28 +61,25 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
   });
 
   try {
-      const result = JSON.parse(response.text);
+      const result = JSON.parse(response.text() || "{}");
       const validCategories: Category[] = ["Hauts", "Bas", "Chaussures", "Accessoires"];
       
-      (result.items as AnalysisResult[]).forEach(item => {
-          if (!validCategories.includes(item.category)) {
-              console.warn(`Catégorie invalide reçue de l'IA: ${item.category}, fallback sur "Accessoires"`);
-              item.category = "Accessoires";
-          }
-      });
-      
-      return result.items as AnalysisResult[];
+      if (result.items) {
+          (result.items as AnalysisResult[]).forEach(item => {
+              if (!validCategories.includes(item.category)) {
+                  item.category = "Accessoires";
+              }
+          });
+          return result.items as AnalysisResult[];
+      }
+      return [];
   } catch (e) {
-      console.error("Erreur de parsing de la réponse de l'IA pour l'analyse par lot:", e);
-      console.error("Réponse reçue:", response.text);
-      throw new Error("L'IA a renvoyé une réponse d'analyse malformée.");
+      console.error("Erreur parsing Gemini:", e);
+      throw new Error("L'IA a renvoyé une réponse malformée.");
   }
 }
 
-function isClothingSet(item: any): item is ClothingSet {
-    return item && item.name && Array.isArray(item.itemIds);
-}
-
+// --- GÉNÉRATION DE TENUES ---
 export async function generateOutfits(
     clothingList: ClothingItem[],
     sets: ClothingSet[],
@@ -103,68 +89,33 @@ export async function generateOutfits(
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
 
-
     const individualItemsFormatted = individualItems.map(item => 
-      `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Couleur: ${item.color}, Mat: ${item.material})`
+      `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category})`
     ).join('\n');
-    const setsFormatted = sets.map(set => 
-      `- ${set.name} (Ensemble, ID: ${set.id})`
-    ).join('\n');
-
-
+    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
     const anchorInstruction = anchorItemOrSet
-        ? `\n**RÈGLE D'ANCRAGE : Chaque tenue DOIT impérativement inclure l'article ou l'ensemble suivant : "${isClothingSet(anchorItemOrSet) ? anchorItemOrSet.name : anchorItemOrSet.analysis} (ID: ${anchorItemOrSet.id})". C'est la pièce maîtresse.**\n`
+        ? `\n**RÈGLE D'ANCRAGE : La tenue DOIT inclure : "${'name' in anchorItemOrSet ? anchorItemOrSet.name : anchorItemOrSet.analysis} (ID: ${anchorItemOrSet.id})".**\n`
         : '';
-
  
     const prompt = `
-    Tu es un styliste de mode expert. Ta mission est de créer des tenues pertinentes, complètes et harmonieuses.
-
-    Contexte de l'utilisateur : "${context}"
+    Tu es un styliste expert. Crée 3 tenues complètes et harmonieuses basées sur le contexte : "${context}".
     
-    Vêtements et Ensembles disponibles (utilise leur ID, Cat, Couleur, Mat) :
+    Vêtements disponibles :
     ${availableClothes}
     ${anchorInstruction}
 
-    ---
-    RÈGLES DE STYLE (CRITIQUES) :
-    Ce sont des règles impératives.
-    1. **Montre :** Chaque tenue DOIT inclure une montre (Cat: "Accessoires"). Choisis la plus adaptée au style de la tenue. Si aucune montre n'est disponible, n'en invente pas.
-    2. **Météo (Veste) :** Le "Contexte" inclut la météo. Si la température est inférieure à 20°C, la tenue DOIT inclure une veste, un manteau, ou un gilet (Cat: "Hauts").
-    3. **Pull Col V :** Si tu inclus un pull à col en "V" (Cat: "Hauts"), tu DOIS impérativement le superposer avec une chemise à col boutonné (Cat: "Hauts") en dessous.
-    4. **Pull Col Zippé :** Si tu inclus un pull à col zippé (Cat: "Hauts"), tu DOIS impérativement le superposer avec une chemise ou un t-shirt (Cat: "Hauts") en dessous.
+    Règles :
+    1. Utilise UNIQUEMENT les articles listés.
+    2. Chaque tenue doit être complète (Haut + Bas + Chaussures si dispo).
+    3. IMPORTANT : Renvoie l'ID EXACT et la description EXACTE pour chaque article.
 
-    ---
-    RÈGLES DE STYLE (GÉNÉRALES) :
-    1. **Cohérence :** Une tenue doit être complète et logique. Elle doit inclure au moins un "Hauts" et un "Bas". Si des "Chaussures" pertinentes existent, inclus-les.
-    2. **Harmonie :** Assure-toi que les couleurs et les matières de la tenue sont bien assorties.
-    3. **Variété :** Les 3 tenues proposées doivent être distinctes les unes des autres.
-
-    ---
-    RÈGLES DE FORMAT (OBLIGATOIRES) :
-    1. Base-toi **uniquement** sur les vêtements et ensembles listés ci-dessus.
-    
-    2. Pour chaque article que tu sélectionnes, tu DOIS fournir les deux champs suivants :
-       a. "id": L'ID exact (la chaîne de caractères qui suit "(ID:" dans la liste, ex: "abc-123-xyz").
-       b. "description": La description textuelle COMPLÈTE (la chaîne de caractères qui précède "(ID:", ex: "Pull en maille bleu marine à col montant zippé...").
-
-    3. **IMPORTANT :** Tu DOIS copier l'ID et la "description" (le champ 'analysis' que je t'ai donné) **exactement** comme ils sont fournis dans la liste. Ne les modifie pas, ne les résume pas, ne les réécris pas.
-
-    4. Les articles marqués comme "(Ensemble)" sont inséparables.
-
-    Crée 3 tenues distinctes. Pour chaque tenue, fournis :
-    1. Un "titre" court et accrocheur.
-    2. Une "description" brève du style (pour la tenue globale).
-    3. Une liste "vetements" d'objets, où chaque objet contient "id" et "description" de l'article ou de l'ensemble utilisé (en respectant la règle n°3).
-
-    Réponds en français.
+    Réponds en JSON avec une liste "tenues".
   `;
 
-
     const response = await ai.models.generateContent({
-        model: "gemini-flash-latest",
+        model: "gemini-2.0-flash",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -173,20 +124,18 @@ export async function generateOutfits(
                 properties: {
                     tenues: {
                         type: Type.ARRAY,
-                        description: "La liste des suggestions de tenues.",
                         items: {
                             type: Type.OBJECT,
                             properties: {
-                                titre: { type: Type.STRING, description: "Le nom de la tenue." },
-                                description: { type: Type.STRING, description: "Une brève description du style de la tenue." },
+                                titre: { type: Type.STRING },
+                                description: { type: Type.STRING },
                                 vetements: {
                                     type: Type.ARRAY,
-                                    description: "La liste des objets vêtements composant la tenue.",
                                     items: {
                                         type: Type.OBJECT,
                                         properties: {
-                                            id: { type: Type.STRING, description: "L'ID de l'article ou de l'ensemble." },
-                                            description: { type: Type.STRING, description: "La description de l'article." }
+                                            id: { type: Type.STRING },
+                                            description: { type: Type.STRING }
                                         },
                                         required: ["id", "description"]
                                     }
@@ -202,57 +151,39 @@ export async function generateOutfits(
     });
 
     try {
-        const jsonResponse = JSON.parse(response.text);
+        const jsonResponse = JSON.parse(response.text() || "{}");
         return jsonResponse.tenues as OutfitSuggestion[];
     } catch (e) {
-        console.error("Erreur de parsing JSON de la réponse Gemini:", e);
-        console.error("Réponse reçue:", response.text);
-        throw new Error("L'IA a renvoyé une réponse malformée.");
+        console.error("Erreur parsing Gemini:", e);
+        throw new Error("Réponse malformée.");
     }
 }
 
+// --- ANALYSE DES MANQUES ---
 export async function analyzeWardrobeGaps(
   clothingItems: ClothingItem[],
   clothingSets: ClothingSet[]
 ): Promise<WardrobeAnalysis> {
-  const itemsDescription = clothingItems.map(item => 
-    `${item.category}: ${item.analysis}, couleur ${item.color}, matière ${item.material}`
-  ).join('\n');
+  const itemsDescription = clothingItems.map(item => `${item.category}: ${item.analysis}`).join('\n');
 
-  const prompt = `Tu es un expert en mode et stylisme. Analyse cette garde-robe et suggère des pièces stratégiques à acheter pour la rendre plus versatile et polyvalente.
-
-GARDE-ROBE ACTUELLE (${clothingItems.length} pièces):
-${itemsDescription}
-
-Analyse la garde-robe et identifie:
-1. Les points forts de cette garde-robe
-2. Les manques ou gaps à combler
-3. Les pièces à acheter pour maximiser la polyvalence
-
-Suggère 3-5 pièces maximum en priorisant les basiques polyvalents.`;
+  const prompt = `Analyse cette garde-robe (${clothingItems.length} pièces) et suggère 3-5 achats stratégiques.
+  
+  Garde-robe :
+  ${itemsDescription}
+  
+  Renvoie un résumé, les points forts, les manques, et des suggestions avec priorité et prix estimé.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-flash-latest",
+    model: "gemini-2.0-flash",
     contents: prompt,
     config: {
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
         properties: {
-          summary: {
-            type: Type.STRING,
-            description: "Résumé général de la garde-robe (2-3 phrases)"
-          },
-          strengths: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING },
-            description: "Liste des points forts"
-          },
-          gaps: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING },
-            description: "Liste des manques"
-          },
+          summary: { type: Type.STRING },
+          strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+          gaps: { type: Type.ARRAY, items: { type: Type.STRING } },
           suggestions: {
             type: Type.ARRAY,
             items: {
@@ -261,10 +192,7 @@ Suggère 3-5 pièces maximum en priorisant les basiques polyvalents.`;
                 category: { type: Type.STRING },
                 description: { type: Type.STRING },
                 reason: { type: Type.STRING },
-                priority: {
-                  type: Type.STRING,
-                  enum: ["high", "medium", "low"]
-                },
+                priority: { type: Type.STRING, enum: ["high", "medium", "low"] },
                 estimatedPrice: { type: Type.STRING }
               },
               required: ["category", "description", "reason", "priority", "estimatedPrice"]
@@ -276,15 +204,10 @@ Suggère 3-5 pièces maximum en priorisant les basiques polyvalents.`;
     }
   });
 
-  try {
-    const analysis: WardrobeAnalysis = JSON.parse(response.text);
-    return analysis;
-  } catch (error) {
-    console.error('Erreur:', error);
-    throw error;
-  }
+  return JSON.parse(response.text() || "{}");
 }
 
+// --- PLANIFICATEUR DE VALISE ---
 export async function generateVacationPlan(
     clothingList: ClothingItem[],
     sets: ClothingSet[],
@@ -294,56 +217,33 @@ export async function generateVacationPlan(
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
 
-    // ▼▼▼ MODIFICATION : On envoie plus de données (Catégorie, Couleur, Matière) ▼▼▼
-    const individualItemsFormatted = individualItems.map(item => 
-      `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Couleur: ${item.color}, Mat: ${item.material})`
-    ).join('\n');
-    const setsFormatted = sets.map(set => 
-      `- ${set.name} (Ensemble, ID: ${set.id})`
-    ).join('\n');
-    // ▲▲▲ FIN DE LA MODIFICATION ▲▲▲
-
+    const individualItemsFormatted = individualItems.map(item => `- ${item.analysis} (ID: ${item.id})`).join('\n');
+    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
-    const prompt = `
-    Tu es un styliste de voyage. Ta mission est de créer une valise optimisée.
-
-    Détails du voyage :
-    - Durée : ${days} jour(s)
-    - Contexte / Météo : "${context}"
-
-    Vêtements et Ensembles disponibles (utilise leur ID, Cat, Couleur, Mat) :
+    const prompt = `Crée une valise optimisée pour ${days} jours. Contexte : ${context}.
+    Utilise ces vêtements :
     ${availableClothes}
     
-    RÈGLES :
-    1. Crée une liste "valise" polyvalente et minimale. Vise la "mix-and-match" (articles qui vont ensemble).
-    2. Ne sélectionne QUE des articles de la liste fournie.
-    3. Pour chaque article que tu sélectionnes, tu DOIS fournir son ID exact et sa description.
-    4. Les articles marqués comme "(Ensemble)" sont inséparables.
-    5. Prends en compte le Contexte/Météo pour la sélection.
-
-    Réponds avec un "titre", un "resume" (explique la stratégie de la valise), et la liste "valise".
-    La liste "valise" doit contenir des objets, où chaque objet contient "id" et "description".
-    `;
+    Renvoie un titre, un résumé et la liste des articles (id et description).`;
 
     const response = await ai.models.generateContent({
-        model: "gemini-flash-latest",
+        model: "gemini-2.0-flash",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
             responseSchema: {
                 type: Type.OBJECT,
                 properties: {
-                    titre: { type: Type.STRING, description: "Le nom du plan de valise." },
-                    resume: { type: Type.STRING, description: "Un bref résumé de la stratégie de la valise." },
+                    titre: { type: Type.STRING },
+                    resume: { type: Type.STRING },
                     valise: {
                         type: Type.ARRAY,
-                        description: "La liste des objets vêtements à emporter.",
                         items: {
                             type: Type.OBJECT,
                             properties: {
-                                id: { type: Type.STRING, description: "L'ID de l'article ou de l'ensemble." },
-                                description: { type: Type.STRING, description: "La description de l'article." }
+                                id: { type: Type.STRING },
+                                description: { type: Type.STRING }
                             },
                             required: ["id", "description"]
                         }
@@ -354,39 +254,62 @@ export async function generateVacationPlan(
         }
     });
 
-    try {
-        const jsonResponse = JSON.parse(response.text);
-        return jsonResponse as VacationPlan;
-    } catch (e) {
-        console.error("Erreur de parsing JSON:", e);
-        throw new Error("L'IA a renvoyé une réponse malformée.");
-    }
+    return JSON.parse(response.text() || "{}");
 }
 
-const generateImageFunction = httpsCallable(functions, 'generateImageWithHuggingFace');
-
+// --- GÉNÉRATION VISUELLE (HUGGING FACE / SDXL) ---
 export async function generateVisualOutfit(
     items: ClothingItem[],
     context: string,
 ): Promise<string> {
     
-    const prompt = `A professional fashion photograph of a person wearing: ${items.map(i => i.analysis).join(", ")}. Context: ${context}. Studio lighting, neutral background, full body shot.`;
+    if (!config.huggingFaceApiKey) {
+        console.error("Clé API Hugging Face manquante.");
+        throw new Error("Configuration requise : Clé API Hugging Face introuvable.");
+    }
+
+    const itemsDescription = items.map(i => i.analysis).join(", ");
+    // Prompt optimisé pour le modèle SDXL
+    const prompt = `Fashion photography, full body shot of a model wearing: ${itemsDescription}. 
+    Context: ${context}. 
+    High quality, photorealistic, 8k, studio lighting, fashion magazine style, neutral background.`;
     
-    console.log("Génération via Cloud Function Hugging Face...");
+    console.log("Génération visuelle via Hugging Face (SDXL)...");
 
     try {
-        const result = await generateImageFunction({ prompt });
-        const data = result.data as { imageUrl: string };
-        
-        if (!data || !data.imageUrl) {
-            throw new Error("Pas d'image retournée");
+        // Appel direct à l'API d'inférence Hugging Face
+        const response = await fetch(
+            "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+            {
+                headers: {
+                    Authorization: `Bearer ${config.huggingFaceApiKey}`,
+                    "Content-Type": "application/json",
+                },
+                method: "POST",
+                body: JSON.stringify({ 
+                    inputs: prompt,
+                    options: { wait_for_model: true }
+                }),
+            }
+        );
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Erreur API Hugging Face:", errorText);
+            throw new Error(`Erreur génération image (${response.status})`);
         }
 
-        console.log("Image reçue avec succès !");
-        return data.imageUrl;
+        const blob = await response.blob();
+        
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
         
     } catch (error) {
-        console.error("Erreur lors de la génération:", error);
+        console.error("Erreur lors de la génération visuelle:", error);
         throw error;
     }
 }
