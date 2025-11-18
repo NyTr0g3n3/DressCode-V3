@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan, WardrobeAnalysis } from '../types';
 import { config } from '../config.ts';     
-// Réintégration des imports Firebase nécessaires pour contourner le CORS
+// 1. Import des fonctions Firebase
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 
@@ -261,7 +261,7 @@ export async function generateVacationPlan(
 }
 
 // --- GÉNÉRATION VISUELLE (VIA CLOUD FUNCTION) ---
-// Initialisation de l'appel à la fonction Cloud déployée
+// 2. On prépare l'appel à la fonction serveur pour éviter le CORS
 const generateImageFunction = httpsCallable(functions, 'generateImageWithHuggingFace');
 
 export async function generateVisualOutfit(
@@ -269,15 +269,14 @@ export async function generateVisualOutfit(
     context: string,
 ): Promise<string> {
     
-    // On prépare le prompt ici, le serveur fera l'appel API
     const itemsDescription = items.map(i => i.analysis).join(", ");
     const prompt = `Fashion photo of a person wearing: ${itemsDescription}. Context: ${context}. Photorealistic, 8k.`;
     
-    console.log("🚀 Génération visuelle via Cloud Function (Relais Hugging Face)...");
+    // Ce log prouvera que le bon code est chargé
+    console.log("🚀 Génération via Cloud Function (Relais Serveur)...");
 
     try {
-        // Appel de la Cloud Function : C'est LE SERVEUR qui appellera Hugging Face, pas le navigateur.
-        // Cela résout définitivement le problème CORS.
+        // 3. Appel au serveur (plus de fetch direct vers Hugging Face)
         const result = await generateImageFunction({ prompt });
         const data = result.data as { imageUrl: string };
         
@@ -290,7 +289,6 @@ export async function generateVisualOutfit(
         
     } catch (error) {
         console.error("❌ Erreur lors de l'appel Cloud Function:", error);
-        // Message d'erreur détaillé pour vous aider
-        throw new Error("Erreur serveur. Assurez-vous que votre projet Firebase est en formule 'Blaze' (les appels externes sont bloqués en formule gratuite 'Spark').");
+        throw error;
     }
 }
