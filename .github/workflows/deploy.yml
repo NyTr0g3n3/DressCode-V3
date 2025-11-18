@@ -26,6 +26,7 @@ jobs:
     - name: Build
       run: npm run build
       env:
+        # On passe les secrets aux variables d'environnement du build
         VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
         VITE_HUGGINGFACE_API_KEY: ${{ secrets.VITE_HUGGINGFACE_API_KEY }}
         VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
