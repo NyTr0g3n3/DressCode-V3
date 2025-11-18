@@ -43,3 +43,4 @@ jobs:
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           PROJECT_ID: dresscode-ai-32c50
+ 
