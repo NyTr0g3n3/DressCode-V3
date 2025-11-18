@@ -15,7 +15,7 @@ type AnalysisResult = Omit<ClothingItem, 'id' | 'imageSrc'>;
 
 /**
  * Fonction utilitaire pour extraire le texte de la réponse Gemini de manière sécurisée.
- * Gère le cas où la méthode .text() n'existe pas.
+ * Corrige l'erreur "TypeError: E.text is not a function".
  */
 function extractText(response: any): string {
   try {
@@ -57,7 +57,7 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
   }));
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash', // MISE À JOUR : Gemini 2.5 Flash
+    model: 'gemini-1.5-flash', // Modèle rapide et stable
     contents: { parts: [textPart, ...imageParts] },
     config: {
         responseMimeType: "application/json",
@@ -88,6 +88,7 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
   });
 
   try {
+      // Utilisation de la fonction sécurisée
       const rawText = extractText(response);
       const result = JSON.parse(rawText);
       
@@ -144,7 +145,7 @@ export async function generateOutfits(
   `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash", // MISE À JOUR : Gemini 2.5 Flash
+        model: "gemini-1.5-flash", // Modèle rapide et stable
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -180,6 +181,7 @@ export async function generateOutfits(
     });
 
     try {
+        // Utilisation de la fonction sécurisée
         const rawText = extractText(response);
         const jsonResponse = JSON.parse(rawText);
         return jsonResponse.tenues as OutfitSuggestion[];
@@ -204,7 +206,7 @@ export async function analyzeWardrobeGaps(
   Renvoie un résumé, les points forts, les manques, et des suggestions avec priorité et prix estimé.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash", // MISE À JOUR : Gemini 2.5 Flash
+    model: "gemini-1.5-flash", // Modèle rapide et stable
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -234,6 +236,7 @@ export async function analyzeWardrobeGaps(
     }
   });
 
+  // Utilisation de la fonction sécurisée
   const rawText = extractText(response);
   return JSON.parse(rawText);
 }
@@ -259,7 +262,7 @@ export async function generateVacationPlan(
     Renvoie un titre, un résumé et la liste des articles (id et description).`;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash", // MISE À JOUR : Gemini 2.5 Flash
+        model: "gemini-1.5-flash", // Modèle rapide et stable
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -285,6 +288,7 @@ export async function generateVacationPlan(
         }
     });
 
+    // Utilisation de la fonction sécurisée
     const rawText = extractText(response);
     return JSON.parse(rawText);
 }
