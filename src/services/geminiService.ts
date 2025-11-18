@@ -33,7 +33,7 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
   }));
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash', // MISE À JOUR : Utilisation de la version Pro
+    model: 'gemini-3.0-pro', // MISE À JOUR : Utilisation de la version Pro
     contents: { parts: [textPart, ...imageParts] },
     config: {
         responseMimeType: "application/json",
