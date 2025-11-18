@@ -3783,7 +3783,7 @@ Content-Type: `+h.contentType+`\r
     3. IMPORTANT : Renvoie l'ID EXACT et la description EXACTE pour chaque article.
 
     Réponds en JSON avec une liste "tenues".
-  `,E=await kp.models.generateContent({model:"gemini-3.0-pro",contents:y,config:{responseMimeType:"application/json",responseSchema:{type:Be.OBJECT,properties:{tenues:{type:Be.ARRAY,items:{type:Be.OBJECT,properties:{titre:{type:Be.STRING},description:{type:Be.STRING},vetements:{type:Be.ARRAY,items:{type:Be.OBJECT,properties:{id:{type:Be.STRING},description:{type:Be.STRING}},required:["id","description"]}}},required:["titre","description","vetements"]}}},required:["tenues"]}}});try{return JSON.parse(E.text()||"{}").tenues}catch(T){throw console.error("Erreur parsing Gemini:",T),new Error("Réponse malformée.")}}async function QB(t,e){const n=t.map(a=>`${a.category}: ${a.analysis}`).join(`
+  `,E=await kp.models.generateContent({model:"gemini-2.5-flash",contents:y,config:{responseMimeType:"application/json",responseSchema:{type:Be.OBJECT,properties:{tenues:{type:Be.ARRAY,items:{type:Be.OBJECT,properties:{titre:{type:Be.STRING},description:{type:Be.STRING},vetements:{type:Be.ARRAY,items:{type:Be.OBJECT,properties:{id:{type:Be.STRING},description:{type:Be.STRING}},required:["id","description"]}}},required:["titre","description","vetements"]}}},required:["tenues"]}}});try{return JSON.parse(E.text()||"{}").tenues}catch(T){throw console.error("Erreur parsing Gemini:",T),new Error("Réponse malformée.")}}async function QB(t,e){const n=t.map(a=>`${a.category}: ${a.analysis}`).join(`
 `),i=`Analyse cette garde-robe (${t.length} pièces) et suggère 3-5 achats stratégiques.
   
   Garde-robe :
