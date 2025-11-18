@@ -7,9 +7,8 @@ const huggingfaceApiKey = defineString("HUGGINGFACE_API_KEY");
 export const generateImageWithHuggingFace = onCall(
   { 
     cors: true,
-    // C'EST ICI QUE TOUT SE JOUE :
-    timeoutSeconds: 300, // Doit être à 300 (pas 120)
-    memory: "1GiB",      // Doit être à 1GiB (pas 512MiB)
+    timeoutSeconds: 300,
+    memory: "1GiB",
   },
   async (request) => {
     logger.info("Génération d'image avec Hugging Face...");
@@ -27,9 +26,8 @@ export const generateImageWithHuggingFace = onCall(
           throw new HttpsError('failed-precondition', 'Clé API manquante sur le serveur.');
       }
 
-      // Utilisation du modèle Stable Diffusion v1-5 (plus stable pour les cold starts)
       const response = await fetch(
-        "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5",
+        "https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5",
         {
           headers: { 
             Authorization: `Bearer ${apiKey}`,
@@ -54,7 +52,8 @@ export const generateImageWithHuggingFace = onCall(
         if (errorText.includes("estimated_time")) {
              throw new HttpsError('resource-exhausted', 'Le modèle démarre (Cold Start). Réessayez dans 30 secondes.');
         }
-        throw new HttpsError('unavailable', `Erreur API HF: ${response.status} - ${errorText}`);
+        // On inclut le status code pour mieux déboguer (ex: 410, 404, etc.)
+        throw new HttpsError('unavailable', `Erreur API HF (${response.status}): ${errorText}`);
       }
 
       const imageBuffer = await response.arrayBuffer();
