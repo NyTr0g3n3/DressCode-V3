@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - 'functions/**' # Ne déploie que si le dossier functions change
+      - 'functions/**' 
 
 jobs:
   deploy_functions:
@@ -31,15 +31,19 @@ jobs:
           cd functions
           npm run build
       
+     
       - name: Create .env file for Functions
         run: |
           cd functions
           echo "HUGGINGFACE_API_KEY=${{ secrets.HUGGINGFACE_API_KEY }}" > .env
+      
       
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
           args: deploy --only functions
         env:
+         
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+ 
           PROJECT_ID: dresscode-ai-32c50
