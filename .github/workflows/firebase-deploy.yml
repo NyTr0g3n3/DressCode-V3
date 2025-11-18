@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - 'functions/**' 
+      - 'functions/**'
 
 jobs:
   deploy_functions:
@@ -31,19 +31,18 @@ jobs:
           cd functions
           npm run build
       
-     
       - name: Create .env file for Functions
         run: |
           cd functions
-          echo "HUGGINGFACE_API_KEY=${{ secrets.HUGGINGFACE_API_KEY }}" > .env
-      
+          echo "HUGGINGFACE_API_KEY=${{ secrets.VITE_HUGGINGFACE_API_KEY }}" > .env
+          # ⚠️ COMMANDE MAGIQUE : On modifie le .gitignore pour forcer l'upload du .env
+          # Sinon Firebase l'ignore et la clé n'arrive jamais sur le serveur.
+          sed -i '/.env/d' .gitignore || true
       
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
           args: deploy --only functions
         env:
-         
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
- 
           PROJECT_ID: dresscode-ai-32c50
