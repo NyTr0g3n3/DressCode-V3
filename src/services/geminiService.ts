@@ -118,7 +118,7 @@ export async function generateOutfits(
   `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-3.0-pro", // MISE À JOUR : Utilisation de la version Pro
+        model: "gemini-2.5-flash", // MISE À JOUR : Utilisation de la version Pro
         contents: prompt,
         config: {
             responseMimeType: "application/json",
