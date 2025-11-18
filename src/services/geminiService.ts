@@ -13,6 +13,30 @@ const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
 
 type AnalysisResult = Omit<ClothingItem, 'id' | 'imageSrc'>;
 
+/**
+ * Fonction utilitaire pour extraire le texte de la réponse Gemini de manière sécurisée.
+ * Gère le cas où la méthode .text() n'existe pas.
+ */
+function extractText(response: any): string {
+  try {
+    // 1. Essayer la méthode officielle si elle existe
+    if (typeof response.text === 'function') {
+      return response.text();
+    }
+    // 2. Fallback : Accès direct à la structure de données (candidates)
+    if (response.candidates && response.candidates.length > 0) {
+      const candidate = response.candidates[0];
+      if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+        return candidate.content.parts[0].text || "{}";
+      }
+    }
+    return "{}";
+  } catch (error) {
+    console.error("Erreur lors de l'extraction du texte Gemini:", error);
+    return "{}";
+  }
+}
+
 // --- ANALYSE DES VÊTEMENTS ---
 export async function analyzeClothingImages(base64Images: string[]): Promise<AnalysisResult[]> {
   const textPart = {
@@ -33,7 +57,7 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
   }));
 
   const response = await ai.models.generateContent({
-    model: 'gemini-3.0-pro', // MISE À JOUR : Utilisation de la version Pro
+    model: 'gemini-2.5-flash', // MISE À JOUR : Gemini 2.5 Flash
     contents: { parts: [textPart, ...imageParts] },
     config: {
         responseMimeType: "application/json",
@@ -64,7 +88,9 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
   });
 
   try {
-      const result = JSON.parse(response.text() || "{}");
+      const rawText = extractText(response);
+      const result = JSON.parse(rawText);
+      
       const validCategories: Category[] = ["Hauts", "Bas", "Chaussures", "Accessoires"];
       
       if (result.items) {
@@ -118,7 +144,7 @@ export async function generateOutfits(
   `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash", // MISE À JOUR : Utilisation de la version Pro
+        model: "gemini-2.5-flash", // MISE À JOUR : Gemini 2.5 Flash
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -154,7 +180,8 @@ export async function generateOutfits(
     });
 
     try {
-        const jsonResponse = JSON.parse(response.text() || "{}");
+        const rawText = extractText(response);
+        const jsonResponse = JSON.parse(rawText);
         return jsonResponse.tenues as OutfitSuggestion[];
     } catch (e) {
         console.error("Erreur parsing Gemini:", e);
@@ -177,7 +204,7 @@ export async function analyzeWardrobeGaps(
   Renvoie un résumé, les points forts, les manques, et des suggestions avec priorité et prix estimé.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.0-pro", // MISE À JOUR : Utilisation de la version Pro
+    model: "gemini-2.5-flash", // MISE À JOUR : Gemini 2.5 Flash
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -207,7 +234,8 @@ export async function analyzeWardrobeGaps(
     }
   });
 
-  return JSON.parse(response.text() || "{}");
+  const rawText = extractText(response);
+  return JSON.parse(rawText);
 }
 
 // --- PLANIFICATEUR DE VALISE ---
@@ -231,7 +259,7 @@ export async function generateVacationPlan(
     Renvoie un titre, un résumé et la liste des articles (id et description).`;
 
     const response = await ai.models.generateContent({
-        model: "gemini-3.0-pro", // MISE À JOUR : Utilisation de la version Pro
+        model: "gemini-2.5-flash", // MISE À JOUR : Gemini 2.5 Flash
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -257,7 +285,8 @@ export async function generateVacationPlan(
         }
     });
 
-    return JSON.parse(response.text() || "{}");
+    const rawText = extractText(response);
+    return JSON.parse(rawText);
 }
 
 // --- GÉNÉRATION VISUELLE (VIA CLOUD FUNCTION) ---
