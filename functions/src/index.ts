@@ -7,7 +7,6 @@ export const generateVisualOutfit = onCall(
     cors: true,
     timeoutSeconds: 120,
     memory: "1GiB",
-    secrets: ["REPLICATE_API_TOKEN"],
   },
   async (request) => {
     logger.info("Demarrage VTON avec Replicate...");
