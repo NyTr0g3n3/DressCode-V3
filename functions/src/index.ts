@@ -42,21 +42,20 @@ export const generateVisualOutfit = onCall(
       logger.info(`Traitement : ${description || "Vetement"} (${category})`);
 
       const output = await replicate.run(
-        "cuuupid/idm-vton:0513734a452173b8173e907e3a59d19a36266e55b485285594328d21c7d7e985",
-        {
-          input: {
-            garm_img: garmentUrl,
-            human_img: userImage,
-            garment_des: description || "clothing",
-            category:
-              category === "Hauts" ?
-                "upper_body" :
-                category === "Bas" ?
-                "lower_body" :
-                "dresses",
-          },
-        }
-      );
+  "cuuupid/idm-vton",  // ⬅️ SANS version spécifique
+  {
+    input: {
+      garm_img: garmentUrl,
+      human_img: userImage,
+      category:
+        category === "Hauts" ?
+          "upper_body" :
+          category === "Bas" ?
+          "lower_body" :
+          "dresses",
+    },
+  }
+);
 
       logger.info("Image generee :", output);
 
