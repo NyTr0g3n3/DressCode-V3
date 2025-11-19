@@ -50,7 +50,7 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
   }));
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash', // ✅ Modèle mis à jour
+    model: 'gemini-2.5-flash',
     contents: { parts: [textPart, ...imageParts] },
     config: {
         responseMimeType: "application/json",
@@ -136,7 +136,7 @@ export async function generateOutfits(
   `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash", // ✅ Modèle mis à jour
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -196,7 +196,7 @@ export async function analyzeWardrobeGaps(
   Renvoie un résumé, les points forts, les manques, et des suggestions avec priorité et prix estimé.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash", // ✅ Modèle mis à jour
+    model: "gemini-2.5-flash",
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -251,7 +251,7 @@ export async function generateVacationPlan(
     Renvoie un titre, un résumé et la liste des articles (id et description).`;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash", // ✅ Modèle mis à jour
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
