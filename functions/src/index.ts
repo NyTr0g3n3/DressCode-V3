@@ -12,12 +12,12 @@ export const generateVisualOutfit = onCall(
     secrets: [],
   },
   async (request) => {
-    logger.info("🚀 Démarrage VTON avec Replicate...");
+    logger.info("Démarrage VTON avec Replicate...");
 
     const apiToken = process.env.REPLICATE_API_TOKEN;
 
     if (!apiToken) {
-      logger.error("❌ CRITIQUE: La clé REPLICATE_API_TOKEN est introuvable.");
+      logger.error("CRITIQUE: La clé REPLICATE_API_TOKEN est introuvable.");
       throw new HttpsError(
         "failed-precondition",
         "Configuration serveur invalide (API Key manquante)."
@@ -63,14 +63,14 @@ export const generateVisualOutfit = onCall(
         }
       );
 
-      logger.info("✅ Image générée :", output);
+      logger.info("Image générée :", output);
 
       return {
         imageUrl: output,
       };
     } catch (error) {
       const err = error as Error;
-      logger.error("❌ Erreur Replicate détaillée:", err);
+      logger.error("Erreur Replicate détaillée:", err);
 
       const errorMessage = err.message || String(error);
 
