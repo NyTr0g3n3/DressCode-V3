@@ -30,14 +30,13 @@ jobs:
         run: |
           cd functions
           npm run build
-
-       - name: Set environment config
-         run: |
-            cd functions
-            firebase functions:config:set replicate.token="${{ secrets.REPLICATE_API_TOKEN }}"
-         env:
-            GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-            PROJECT_ID: dresscode-ai-32c50   
+      
+      - name: Set environment config
+        run: |
+          firebase functions:config:set replicate.token="${{ secrets.REPLICATE_API_TOKEN }}"
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          PROJECT_ID: dresscode-ai-32c50
       
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
