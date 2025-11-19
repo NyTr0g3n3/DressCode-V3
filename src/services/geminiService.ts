@@ -1,7 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan, WardrobeAnalysis } from '../types';
 import { config } from '../config.ts';     
-// Import des fonctions Firebase
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 
@@ -13,9 +12,6 @@ const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
 
 type AnalysisResult = Omit<ClothingItem, 'id' | 'imageSrc'>;
 
-/**
- * Fonction utilitaire pour extraire le texte de la réponse Gemini de manière sécurisée.
- */
 function extractText(response: any): string {
   try {
     if (typeof response.text === 'function') {
@@ -54,7 +50,7 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
   }));
 
   const response = await ai.models.generateContent({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.5-flash', // ✅ Modèle mis à jour
     contents: { parts: [textPart, ...imageParts] },
     config: {
         responseMimeType: "application/json",
@@ -140,7 +136,7 @@ export async function generateOutfits(
   `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash", // ✅ Modèle mis à jour
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -200,7 +196,7 @@ export async function analyzeWardrobeGaps(
   Renvoie un résumé, les points forts, les manques, et des suggestions avec priorité et prix estimé.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.5-flash", // ✅ Modèle mis à jour
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -255,7 +251,7 @@ export async function generateVacationPlan(
     Renvoie un titre, un résumé et la liste des articles (id et description).`;
 
     const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash", // ✅ Modèle mis à jour
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -286,7 +282,6 @@ export async function generateVacationPlan(
 }
 
 // --- GÉNÉRATION VISUELLE (VIRTUAL TRY-ON VIA REPLICATE) ---
-// On pointe vers la nouvelle fonction Cloud configurée pour Replicate
 const generateVisualFunction = httpsCallable(functions, 'generateVisualOutfit');
 
 export async function generateVisualOutfit(
@@ -296,7 +291,6 @@ export async function generateVisualOutfit(
     
     console.log("🚀 Préparation du Virtual Try-On...");
 
-    // Pour le VTON, on prend le premier article de la liste comme pièce principale à visualiser
     const mainItem = items[0];
 
     if (!mainItem || !mainItem.imageSrc) {
@@ -304,13 +298,10 @@ export async function generateVisualOutfit(
     }
 
     try {
-        // Appel à la Cloud Function avec les paramètres pour Replicate
         const result = await generateVisualFunction({ 
-            garmentUrl: mainItem.imageSrc, // L'URL Firebase Storage du vêtement
-            category: mainItem.category,   // Utile pour que l'IA sache si c'est un haut/bas/robe
+            garmentUrl: mainItem.imageSrc, 
+            category: mainItem.category,   
             description: mainItem.analysis
-            // Note: Si vous gérez la photo de l'utilisateur, ajoutez:
-            // humanImageUrl: "URL_PHOTO_USER"
         });
         
         const data = result.data as { imageUrl: string };
