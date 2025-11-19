@@ -297,19 +297,29 @@ export async function generateVacationPlan(
 // 2. On prépare l'appel à la fonction serveur pour éviter le CORS
 const generateImageFunction = httpsCallable(functions, 'generateImageWithHuggingFace');
 
+// src/services/geminiService.ts
+
+// ... imports existants ...
+
 export async function generateVisualOutfit(
     items: ClothingItem[],
     context: string,
 ): Promise<string> {
     
-    const itemsDescription = items.map(i => i.analysis).join(", ");
-    const prompt = `Fashion photo of a person wearing: ${itemsDescription}. Context: ${context}. Photorealistic, 8k.`;
-    
-    // Ce log prouvera que le bon code est chargé
-    console.log("🚀 Génération via Cloud Function (Relais Serveur)...");
+    const detailedItems = items.map(i => 
+        `wearing a ${i.color} ${i.material} ${i.category} (${i.analysis})`
+    ).join(", ");
+
+    const prompt = `
+      High fashion photography, full body shot of a stylish person ${detailedItems}.
+      Context: ${context}.
+      Lighting: cinematic soft lighting, 8k resolution, highly detailed texture, realistic fabric, masterpiece, trending on artstation.
+      Style: photorealistic, vogue magazine editorial.
+    `.replace(/\s+/g, ' ').trim(); 
+
+    console.log("🚀 Génération visuelle avec prompt:", prompt);
 
     try {
-        // 3. Appel au serveur (plus de fetch direct vers Hugging Face)
         const result = await generateImageFunction({ prompt });
         const data = result.data as { imageUrl: string };
         
@@ -317,7 +327,6 @@ export async function generateVisualOutfit(
             throw new Error("Pas d'image retournée par le serveur.");
         }
 
-        console.log("✅ Image reçue du serveur avec succès !");
         return data.imageUrl;
         
     } catch (error) {
