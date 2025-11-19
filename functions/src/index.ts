@@ -2,6 +2,9 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import Replicate from "replicate";
 
+// ⚠️ SUPPRIMÉ ICI : const replicate = new Replicate(); 
+// C'est cette suppression qui va permettre à votre commit de passer.
+
 export const generateVisualOutfit = onCall(
   { 
     cors: true,
@@ -12,15 +15,15 @@ export const generateVisualOutfit = onCall(
   async (request) => {
     logger.info("🚀 Démarrage VTON avec Replicate...");
 
-    // 1. Vérification de sécurité : Est-ce que la clé est là ?
+    // 1. On récupère la clé UNIQUEMENT quand la fonction est appelée
     const apiToken = process.env.REPLICATE_API_TOKEN;
+    
     if (!apiToken) {
       logger.error("❌ CRITIQUE: La clé REPLICATE_API_TOKEN est introuvable.");
       throw new HttpsError('failed-precondition', "Configuration serveur invalide (API Key manquante).");
     }
 
-    // 2. CORRECTION ICI : On initialise Replicate DANS la fonction
-    // C'est le seul moyen pour qu'il lise correctement la variable d'environnement
+    // 2. Initialisation sécurisée ICI (à l'intérieur)
     const replicate = new Replicate({
       auth: apiToken,
     });
@@ -29,14 +32,13 @@ export const generateVisualOutfit = onCall(
       const { garmentUrl, humanImageUrl, category, description } = request.data;
 
       if (!garmentUrl) {
-        throw new HttpsError('invalid-argument', "L'image du vêtement (garmentUrl) est manquante.");
+        throw new HttpsError('invalid-argument', "L'image du vêtement est manquante.");
       }
 
-      // Image de mannequin par défaut fiable
       const defaultModelUrl = "https://replicate.delivery/pbxt/JJ8O8M5p644w2Z5p644w2Z/model.jpg"; 
       const userImage = humanImageUrl || defaultModelUrl;
 
-      logger.info(`Traitement en cours pour : ${description || 'Vêtement'}`);
+      logger.info(`Traitement : ${description || 'Vêtement'} (${category})`);
 
       const output = await replicate.run(
         "cuuupid/idm-vton:c871bb9b0466074280c2a9a7386749d8b80df77287a616f749d78283b770428f",
@@ -52,7 +54,7 @@ export const generateVisualOutfit = onCall(
         }
       );
 
-      logger.info("✅ Image générée avec succès :", output);
+      logger.info("✅ Image générée :", output);
 
       return { 
         imageUrl: output 
@@ -60,11 +62,6 @@ export const generateVisualOutfit = onCall(
 
     } catch (error: any) {
       logger.error("❌ Erreur Replicate détaillée:", error);
-      
-      if (error.message && error.message.includes("401")) {
-         throw new HttpsError('unauthenticated', "Erreur d'authentification Replicate (Clé invalide).");
-      }
-
       throw new HttpsError('internal', `Erreur de génération: ${error.message || String(error)}`);
     }
   }
