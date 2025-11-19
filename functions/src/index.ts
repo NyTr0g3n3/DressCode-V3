@@ -1,17 +1,16 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
-import { defineString } from "firebase-functions/params";
 
-const huggingfaceApiKey = defineString("HUGGINGFACE_API_KEY");
+// Plus besoin de defineString("HUGGINGFACE_API_KEY") pour cette solution
 
 export const generateImageWithHuggingFace = onCall(
   { 
     cors: true,
-    timeoutSeconds: 300,
-    memory: "1GiB",
+    timeoutSeconds: 60, // Pollinations est rapide, 60s suffisent
+    memory: "512MiB",   // Moins de mémoire requise car on ne fait que du fetch
   },
   async (request) => {
-    logger.info("Génération d'image avec Hugging Face...");
+    logger.info("Génération d'image via Pollinations.ai...");
 
     try {
       const { prompt } = request.data;
@@ -20,47 +19,27 @@ export const generateImageWithHuggingFace = onCall(
         throw new HttpsError('invalid-argument', 'Le prompt est requis');
       }
 
-      const apiKey = huggingfaceApiKey.value();
-      if (!apiKey) {
-          logger.error("ERREUR : Clé API manquante");
-          throw new HttpsError('failed-precondition', 'Clé API manquante sur le serveur.');
-      }
+      // Nettoyage du prompt pour l'URL (enlever les caractères spéciaux)
+      const safePrompt = encodeURIComponent(prompt.substring(0, 1000));
+      
+      // Construction de l'URL Pollinations
+      // On ajoute 'nologo' pour éviter le watermark si possible et des paramètres de seed aléatoire
+      const seed = Math.floor(Math.random() * 1000000);
+      const url = `https://image.pollinations.ai/prompt/${safePrompt}?width=512&height=768&seed=${seed}&nologo=true&model=flux`; 
+      // Note: 'model=flux' donne souvent de meilleurs résultats pour les vêtements que SD v1.5
 
-      const response = await fetch(
-        "https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5",
-        {
-          headers: { 
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-            "x-use-cache": "false"
-          },
-          method: "POST",
-          body: JSON.stringify({ 
-            inputs: prompt,
-            options: { 
-                wait_for_model: true,
-                use_cache: false
-            }
-          }),
-        }
-      );
+      const response = await fetch(url);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        logger.error("Erreur Hugging Face:", errorText);
-        
-        if (errorText.includes("estimated_time")) {
-             throw new HttpsError('resource-exhausted', 'Le modèle démarre (Cold Start). Réessayez dans 30 secondes.');
-        }
-        // On inclut le status code pour mieux déboguer (ex: 410, 404, etc.)
-        throw new HttpsError('unavailable', `Erreur API HF (${response.status}): ${errorText}`);
+        throw new HttpsError('unavailable', `Erreur Pollinations (${response.status})`);
       }
 
+      // Pollinations renvoie directement le binaire de l'image (buffer)
       const imageBuffer = await response.arrayBuffer();
       const base64Image = Buffer.from(imageBuffer).toString('base64');
       
       return { 
-        imageUrl: `data:image/png;base64,${base64Image}`
+        imageUrl: `data:image/jpeg;base64,${base64Image}`
       };
 
     } catch (error) {
