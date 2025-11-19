@@ -34,7 +34,7 @@ jobs:
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
-          args: deploy --only functions --force
+          args: deploy --only functions --force --set-env-vars REPLICATE_API_TOKEN=${{ secrets.REPLICATE_API_TOKEN }}
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           PROJECT_ID: dresscode-ai-32c50
