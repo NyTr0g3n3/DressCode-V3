@@ -31,12 +31,6 @@ jobs:
           cd functions
           npm run build
       
-      - name: Create .env file for Functions
-        run: |
-          cd functions
-          echo "REPLICATE_API_TOKEN=${{ secrets.REPLICATE_API_TOKEN }}" > .env
-          sed -i '/.env/d' .gitignore || true
-      
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
