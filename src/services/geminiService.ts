@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan, WardrobeAnalysis } from '../types';
 import { config } from '../config.ts';     
-// 1. Import des fonctions Firebase
+// Import des fonctions Firebase
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 
@@ -15,15 +15,12 @@ type AnalysisResult = Omit<ClothingItem, 'id' | 'imageSrc'>;
 
 /**
  * Fonction utilitaire pour extraire le texte de la réponse Gemini de manière sécurisée.
- * Corrige l'erreur "TypeError: E.text is not a function".
  */
 function extractText(response: any): string {
   try {
-    // 1. Essayer la méthode officielle si elle existe
     if (typeof response.text === 'function') {
       return response.text();
     }
-    // 2. Fallback : Accès direct à la structure de données (candidates)
     if (response.candidates && response.candidates.length > 0) {
       const candidate = response.candidates[0];
       if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
@@ -46,7 +43,7 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
     3. Sa couleur principale (ex: "Bleu", "Noir"). Sois concis.
     4. Sa matière principale (ex: "Coton", "Cuir"). Sois concis.
     
-    Retourne le résultat sous la forme d'un objet JSON unique contenant une clé "items", qui est un tableau d'objets. Chaque objet du tableau doit correspondre à une image et contenir les champs : "analysis", "category", "color", et "material".`,
+    Retourne le résultat sous la forme d'un objet JSON unique contenant une clé "items", qui est un tableau d'objets.`,
   };
 
   const imageParts = base64Images.map(img => ({
@@ -57,7 +54,7 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
   }));
 
   const response = await ai.models.generateContent({
-    model: 'gemini-1.5-flash', // Modèle rapide et stable
+    model: 'gemini-1.5-flash',
     contents: { parts: [textPart, ...imageParts] },
     config: {
         responseMimeType: "application/json",
@@ -66,7 +63,6 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
             properties: {
                 items: {
                     type: Type.ARRAY,
-                    description: "Un tableau d'analyses pour chaque vêtement.",
                     items: {
                         type: Type.OBJECT,
                         properties: {
@@ -88,7 +84,6 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
   });
 
   try {
-      // Utilisation de la fonction sécurisée
       const rawText = extractText(response);
       const result = JSON.parse(rawText);
       
@@ -145,7 +140,7 @@ export async function generateOutfits(
   `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash", // Modèle rapide et stable
+        model: "gemini-1.5-flash",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -181,7 +176,6 @@ export async function generateOutfits(
     });
 
     try {
-        // Utilisation de la fonction sécurisée
         const rawText = extractText(response);
         const jsonResponse = JSON.parse(rawText);
         return jsonResponse.tenues as OutfitSuggestion[];
@@ -206,7 +200,7 @@ export async function analyzeWardrobeGaps(
   Renvoie un résumé, les points forts, les manques, et des suggestions avec priorité et prix estimé.`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash", // Modèle rapide et stable
+    model: "gemini-1.5-flash",
     contents: prompt,
     config: {
       responseMimeType: "application/json",
@@ -236,7 +230,6 @@ export async function analyzeWardrobeGaps(
     }
   });
 
-  // Utilisation de la fonction sécurisée
   const rawText = extractText(response);
   return JSON.parse(rawText);
 }
@@ -262,7 +255,7 @@ export async function generateVacationPlan(
     Renvoie un titre, un résumé et la liste des articles (id et description).`;
 
     const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash", // Modèle rapide et stable
+        model: "gemini-1.5-flash",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -288,49 +281,49 @@ export async function generateVacationPlan(
         }
     });
 
-    // Utilisation de la fonction sécurisée
     const rawText = extractText(response);
     return JSON.parse(rawText);
 }
 
-// --- GÉNÉRATION VISUELLE (VIA CLOUD FUNCTION) ---
-// 2. On prépare l'appel à la fonction serveur pour éviter le CORS
-const generateImageFunction = httpsCallable(functions, 'generateImageWithHuggingFace');
-
-// src/services/geminiService.ts
-
-// ... imports existants ...
+// --- GÉNÉRATION VISUELLE (VIRTUAL TRY-ON VIA REPLICATE) ---
+// On pointe vers la nouvelle fonction Cloud configurée pour Replicate
+const generateVisualFunction = httpsCallable(functions, 'generateVisualOutfit');
 
 export async function generateVisualOutfit(
     items: ClothingItem[],
     context: string,
 ): Promise<string> {
     
-    const detailedItems = items.map(i => 
-        `wearing a ${i.color} ${i.material} ${i.category} (${i.analysis})`
-    ).join(", ");
+    console.log("🚀 Préparation du Virtual Try-On...");
 
-    const prompt = `
-      High fashion photography, full body shot of a stylish person ${detailedItems}.
-      Context: ${context}.
-      Lighting: cinematic soft lighting, 8k resolution, highly detailed texture, realistic fabric, masterpiece, trending on artstation.
-      Style: photorealistic, vogue magazine editorial.
-    `.replace(/\s+/g, ' ').trim(); 
+    // Pour le VTON, on prend le premier article de la liste comme pièce principale à visualiser
+    const mainItem = items[0];
 
-    console.log("🚀 Génération visuelle avec prompt:", prompt);
+    if (!mainItem || !mainItem.imageSrc) {
+        throw new Error("Aucun vêtement valide trouvé pour l'essayage.");
+    }
 
     try {
-        const result = await generateImageFunction({ prompt });
+        // Appel à la Cloud Function avec les paramètres pour Replicate
+        const result = await generateVisualFunction({ 
+            garmentUrl: mainItem.imageSrc, // L'URL Firebase Storage du vêtement
+            category: mainItem.category,   // Utile pour que l'IA sache si c'est un haut/bas/robe
+            description: mainItem.analysis
+            // Note: Si vous gérez la photo de l'utilisateur, ajoutez:
+            // humanImageUrl: "URL_PHOTO_USER"
+        });
+        
         const data = result.data as { imageUrl: string };
         
         if (!data || !data.imageUrl) {
             throw new Error("Pas d'image retournée par le serveur.");
         }
 
+        console.log("✅ Image reçue de Replicate !");
         return data.imageUrl;
         
     } catch (error) {
-        console.error("❌ Erreur lors de l'appel Cloud Function:", error);
+        console.error("❌ Erreur lors de l'appel Cloud Function :", error);
         throw error;
     }
 }
