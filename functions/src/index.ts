@@ -1,17 +1,22 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {defineSecret} from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import Replicate from "replicate";
+
+// ⬇️ IMPORTANT : Définir le secret
+const replicateToken = defineSecret("REPLICATE_API_TOKEN");
 
 export const generateVisualOutfit = onCall(
   {
     cors: true,
     timeoutSeconds: 120,
     memory: "1GiB",
+    secrets: [replicateToken], // ⬅️ Déclarer le secret ici
   },
   async (request) => {
     logger.info("Demarrage VTON avec Replicate...");
 
-    const apiToken = process.env.REPLICATE_API_TOKEN;
+    const apiToken = replicateToken.value(); // ⬅️ Lire la valeur du secret
 
     if (!apiToken) {
       logger.error("CRITIQUE: La cle REPLICATE_API_TOKEN est introuvable.");
@@ -42,22 +47,22 @@ export const generateVisualOutfit = onCall(
       logger.info(`Traitement : ${description || "Vetement"} (${category})`);
 
       const output = await replicate.run(
-  "cuuupid/idm-vton",  // ⬅️ SANS version spécifique
-  {
-    input: {
-      garm_img: garmentUrl,
-      human_img: userImage,
-      category:
-        category === "Hauts" ?
-          "upper_body" :
-          category === "Bas" ?
-          "lower_body" :
-          "dresses",
-    },
-  }
-);
+        "cuuupid/idm-vton",
+        {
+          input: {
+            garm_img: garmentUrl,
+            human_img: userImage,
+            category:
+              category === "Hauts" ?
+                "upper_body" :
+                category === "Bas" ?
+                "lower_body" :
+                "dresses",
+          },
+        }
+      );
 
-      logger.info("Image generee :", output);
+      logger.info("Image generee avec succes");
 
       return {
         imageUrl: output,
@@ -66,18 +71,9 @@ export const generateVisualOutfit = onCall(
       const err = error as Error;
       logger.error("Erreur Replicate detaillee:", err);
 
-      const errorMessage = err.message || String(error);
-
-      if (errorMessage.includes("401")) {
-        throw new HttpsError(
-          "unauthenticated",
-          "Erreur d'authentification Replicate (Cle invalide)."
-        );
-      }
-
       throw new HttpsError(
         "internal",
-        `Erreur de generation: ${errorMessage}`
+        `Erreur de generation: ${err.message}`
       );
     }
   }
