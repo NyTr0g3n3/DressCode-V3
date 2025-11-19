@@ -11,7 +11,7 @@ export const generateVisualOutfit = onCall(
   async (request) => {
     logger.info("Demarrage VTON avec Replicate...");
 
-    const apiToken = process.env.REPLICATE_API_TOKEN;
+    const apiToken = process.env.REPLICATE_TOKEN;
 
     if (!apiToken) {
       logger.error("CRITIQUE: La cle REPLICATE_API_TOKEN est introuvable.");
