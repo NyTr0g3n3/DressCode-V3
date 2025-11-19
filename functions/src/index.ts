@@ -1,22 +1,18 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
-import {defineSecret} from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import Replicate from "replicate";
-
-// ⬇️ IMPORTANT : Définir le secret
-const replicateToken = defineSecret("REPLICATE_API_TOKEN");
 
 export const generateVisualOutfit = onCall(
   {
     cors: true,
     timeoutSeconds: 120,
     memory: "1GiB",
-    secrets: [replicateToken], // ⬅️ Déclarer le secret ici
+    // PAS de secrets: []
   },
   async (request) => {
     logger.info("Demarrage VTON avec Replicate...");
 
-    const apiToken = replicateToken.value(); // ⬅️ Lire la valeur du secret
+    const apiToken = process.env.REPLICATE_API_TOKEN;
 
     if (!apiToken) {
       logger.error("CRITIQUE: La cle REPLICATE_API_TOKEN est introuvable.");
