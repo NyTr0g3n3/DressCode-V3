@@ -1,3 +1,6 @@
+import React, { useState } from 'react'; // <--- C'est cette ligne qui manquait !
+import { SuitcaseIcon } from './icons.tsx';
+
 interface VacationPlannerProps {
   clothingItems: any[];
   clothingSets: any[];
@@ -8,12 +11,12 @@ interface VacationPlannerProps {
 const VacationPlanner: React.FC<VacationPlannerProps> = ({ clothingItems, clothingSets, onGeneratePlan, isGenerating }) => {
   const [days, setDays] = useState<number>(3);
   const [context, setContext] = useState('');
-  const [maxWeight, setMaxWeight] = useState<string>(''); 
+  const [maxWeight, setMaxWeight] = useState<string>('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const safeContext = context || '';
-    const weightValue = maxWeight ? parseFloat(maxWeight) : undefined; 
+    const weightValue = maxWeight ? parseFloat(maxWeight) : undefined;
 
     if (safeContext.trim() && days > 0) {
       onGeneratePlan(days, safeContext, weightValue);
@@ -25,7 +28,7 @@ const VacationPlanner: React.FC<VacationPlannerProps> = ({ clothingItems, clothi
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
         
         <div className="sm:col-span-1">
-          <label htmlFor="days" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <label htmlFor="days" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 text-center sm:text-left">
             Durée (jours)
           </label>
           <input
@@ -42,7 +45,7 @@ const VacationPlanner: React.FC<VacationPlannerProps> = ({ clothingItems, clothi
         </div>
 
         <div className="sm:col-span-1">
-          <label htmlFor="weight" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <label htmlFor="weight" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 text-center sm:text-left">
             Poids max (kg)
           </label>
           <div className="relative">
@@ -62,7 +65,7 @@ const VacationPlanner: React.FC<VacationPlannerProps> = ({ clothingItems, clothi
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor="vacation-context" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+          <label htmlFor="vacation-context" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 text-center sm:text-left">
             Destination / Météo
           </label>
           <input
@@ -70,20 +73,19 @@ const VacationPlanner: React.FC<VacationPlannerProps> = ({ clothingItems, clothi
             type="text"
             value={context}
             onChange={(e) => setContext(e.target.value)}
-            placeholder="Ex: Weekend à Rome"
-            className="w-full px-4 py-3 bg-snow dark:bg-onyx border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-colors"
+            placeholder="Ex: Weekend à Rome, temps doux"
+            className="w-full px-4 py-3 bg-snow dark:bg-onyx border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-colors text-center sm:text-left"
             disabled={isGenerating}
             required
           />
         </div>
       </div>
-      
       <button
         type="submit"
         disabled={isGenerating || !(context || '').trim() || days <= 0}
         className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gold text-onyx font-bold rounded-lg hover:bg-gold-dark transition-all duration-300 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transform hover:scale-105"
       >
-        <SuitcaseIcon /> 
+        <SuitcaseIcon />
         {isGenerating ? 'Analyse du poids...' : 'Générer la valise'}
       </button>
     </form>
