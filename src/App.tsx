@@ -20,7 +20,7 @@ import WardrobeSuggestions from './components/WardrobeSuggestions.tsx';
 import OutfitModal from './components/OutfitModal.tsx';  
 import VacationModal from './components/VacationModal.tsx'; 
 import SetCreatorModal from './components/SetCreatorModal.tsx';
-import { LinkIcon, HeartIconSolid } from './components/icons.tsx'; // HeartIconSolid est utilisé pour les favoris mobiles
+import { LinkIcon, HeartIconSolid, ChevronDownIcon } from './components/icons.tsx'; 
 import { config } from './config.ts';
 
 
@@ -54,6 +54,7 @@ const AppContent: React.FC = () => {
 
   const [generatingVisualFor, setGeneratingVisualFor] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
 
   
   const { 
@@ -407,19 +408,37 @@ const AppContent: React.FC = () => {
               )}
 
           {favoriteOutfits.length > 0 && (
-            <div className="mt-10">
-              <h2 className="text-2xl font-serif font-bold mb-6 text-gold">Mes Tenues Favorites</h2>
-              <OutfitDisplay
-                outfits={favoriteOutfits} 
-                allClothingItems={safeClothingItems}
-                allClothingSets={safeClothingSets}
-                favoriteOutfits={favoriteOutfits} 
-                onToggleFavorite={handleToggleFavorite}
-                onGenerateVisual={handleGenerateVisual}
-                generatingVisualFor={generatingVisualFor}
-              />
-            </div>
-          )}
+  <div className="mt-10 border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-raisin-black shadow-sm">
+    <button
+      onClick={() => setIsFavoritesOpen(!isFavoritesOpen)}
+      className="w-full flex items-center justify-between p-5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+    >
+      <div className="flex items-center gap-2">
+        <HeartIconSolid className="text-gold w-5 h-5" />
+        <h2 className="text-xl font-serif font-bold text-raisin-black dark:text-snow">
+          Mes Favoris <span className="text-sm font-sans font-normal text-gray-500">({favoriteOutfits.length})</span>
+        </h2>
+      </div>
+      <div className={`transition-transform duration-300 ${isFavoritesOpen ? 'rotate-180' : ''} text-gray-400`}>
+        <ChevronDownIcon />
+      </div>
+    </button>
+
+    {isFavoritesOpen && (
+      <div className="p-4 border-t border-black/10 dark:border-white/10 bg-snow dark:bg-onyx/50 max-h-[600px] overflow-y-auto custom-scrollbar">
+        <OutfitDisplay
+          outfits={favoriteOutfits}
+          allClothingItems={safeClothingItems}
+          allClothingSets={safeClothingSets}
+          favoriteOutfits={favoriteOutfits}
+          onToggleFavorite={handleToggleFavorite}
+          onGenerateVisual={handleGenerateVisual}
+          generatingVisualFor={generatingVisualFor}
+        />
+      </div>
+    )}
+  </div>
+)}
             
             <div id="vacation-planner">
               <VacationPlanner
