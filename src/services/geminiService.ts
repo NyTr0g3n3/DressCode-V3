@@ -236,6 +236,7 @@ export async function generateVacationPlan(
     sets: ClothingSet[],
     days: number,
     context: string,
+    maxWeight?: number 
 ): Promise<VacationPlan> {
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
@@ -244,11 +245,18 @@ export async function generateVacationPlan(
     const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
+ 
+    const weightInstruction = maxWeight 
+        ? `CONTRAINTE MAJEURE : Le poids total de la valise NE DOIT PAS dépasser ${maxWeight} kg. Estime le poids moyen de chaque vêtement (ex: T-shirt ~150g, Jean ~600g) pour respecter cette limite.` 
+        : '';
+
     const prompt = `Crée une valise optimisée pour ${days} jours. Contexte : ${context}.
+    ${weightInstruction}
+    
     Utilise ces vêtements :
     ${availableClothes}
     
-    Renvoie un titre, un résumé et la liste des articles (id et description).`;
+    Renvoie un titre, un résumé (mentionne si la limite de poids est respectée) et la liste des articles (id et description).`;
 
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
