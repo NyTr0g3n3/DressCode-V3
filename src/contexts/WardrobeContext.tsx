@@ -28,6 +28,7 @@ interface WardrobeContextType {
   deleteClothingSet: (setId: string) => Promise<void>;
   addFavoriteOutfit: (outfit: OutfitSuggestion) => Promise<void>;
   deleteFavoriteOutfit: (outfitId: string) => Promise<void>;
+  loading: boolean;
 }
 
 const WardrobeContext = createContext<WardrobeContextType | undefined>(undefined);
@@ -42,11 +43,13 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
   const [clothingSets, setClothingSets] = useState<ClothingSet[]>([]);
   const [favoriteOutfits, setFavoriteOutfits] = useState<FavoriteOutfit[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       const unsubscribeItems = listenToClothingItems(user.uid, (items) => {
         setClothingItems(items);
+        setLoading(false);
       });
       
       const unsubscribeSets = listenToClothingSets(user.uid, (sets) => {
@@ -66,6 +69,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
       setClothingItems([]);
       setClothingSets([]);
       setFavoriteOutfits([]);
+      setLoading(false);
     }
   }, [user]);
 
@@ -189,6 +193,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
     deleteClothingSet: deleteClothingSetCallback,
     addFavoriteOutfit: addFavoriteOutfitCallback, 
     deleteFavoriteOutfit: deleteFavoriteOutfitCallback 
+    loading,
   };
 
   return (
