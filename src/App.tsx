@@ -149,7 +149,7 @@ const AppContent: React.FC = () => {
     }
   }, [safeClothingItems, safeClothingSets, weatherInfo]);
 
-  const handleGenerateVacationPlan = useCallback(async (days: number, context: string) => {
+  const handleGenerateVacationPlan = useCallback(async (days: number, context: string, maxWeight?: number) => {
     if (safeClothingItems.length === 0) {
       setError("Veuillez d'abord ajouter des vêtements.");
       return;
@@ -157,14 +157,15 @@ const AppContent: React.FC = () => {
     setIsGeneratingPlan(true);
     setError(null);
     try {
-      const plan = await generateVacationPlan(safeClothingItems, safeClothingSets, days, context);
+      // Passer maxWeight à la fonction du service
+      const plan = await generateVacationPlan(safeClothingItems, safeClothingSets, days, context, maxWeight);
       setVacationPlan(plan);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setIsGeneratingPlan(false);
     }
-  }, [safeClothingItems, safeClothingSets]);
+}, [safeClothingItems, safeClothingSets]);
 
   const handleAnalyzeWardrobe = useCallback(async () => {
     if (safeClothingItems.length < 3) {
