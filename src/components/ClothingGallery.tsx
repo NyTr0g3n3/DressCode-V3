@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { ClothingItem as ClothingItemType, ClothingSet, Category } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SkeletonCard } from './SkeletonCard';
 import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, HeartIconSolid } from './icons.tsx';
 
 interface CardProps {
@@ -50,6 +51,7 @@ interface ClothingGalleryProps {
   onItemClick: (item: ClothingItemType) => void;
   onDeleteItem: (id: string) => void;
   onCreateSet: (name: string, itemIds: string[]) => void;
+  isLoading: boolean;
 }
 
 const initialFilters: Record<Category, { color: string; material: string }> = {
@@ -59,7 +61,7 @@ const initialFilters: Record<Category, { color: string; material: string }> = {
   Accessoires: { color: 'Toutes', material: 'Toutes' },
 };
 
-const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothingSets = [], onItemClick, onDeleteItem, onCreateSet }) => {
+const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoading, clothingSets = [], onItemClick, onDeleteItem, onCreateSet }) => {
   const [openCategory, setOpenCategory] = useState<Category | null>('Hauts');
   const [filters, setFilters] = useState(initialFilters);
   
@@ -164,6 +166,23 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothi
       handleToggleSetMode();
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white dark:bg-raisin-black rounded-xl shadow-2xl p-6 lg:p-8">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+          <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {[...Array(10)].map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (totalItemsCount === 0) {
     return (
