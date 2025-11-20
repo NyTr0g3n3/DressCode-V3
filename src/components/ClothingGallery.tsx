@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { ClothingItem as ClothingItemType, ClothingSet, Category } from '../types';
+import { motion, AnimatePresence } from 'framer-motion';
 import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, HeartIconSolid } from './icons.tsx';
 
 interface CardProps {
@@ -271,20 +272,27 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, clothi
                   </div>
 
                   {filteredItems.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                      {filteredItems.map(item => (
-                        <Card
-                          key={item.id}
-                          imageSrc={item.imageSrc}
-                          analysis={item.analysis}
-                          onClick={() => handleCardClick(item)}
-                          onRemove={(e) => handleRemoveItem(e, item.id)}
-                          isSelected={selectedItemIds.has(item.id)}
-                          isSet={itemIdsInSets.has(item.id)}
-                          isFavorite={item.isFavorite} // <-- AJOUTEZ CETTE LIGNE
-                        />
-                      ))}
-                    </div>
+                   <div className="grid grid-cols-2 sm:grid-cols-3 ... gap-4">
+  <AnimatePresence mode='popLayout'>
+    {filteredItems.map((item, index) => (
+      <motion.div
+        key={item.id}
+        layout // <-- Magique : anime le mouvement quand on filtre !
+        initial={{ opacity: 0, scale: 0.8, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+        transition={{ 
+          duration: 0.4, 
+          delay: index * 0.05, // <-- L'effet cascade (0.05s de décalage par item)
+          type: "spring",
+          bounce: 0.3
+        }}
+      >
+        <Card ... />
+      </motion.div>
+    ))}
+  </AnimatePresence>
+</div>
                   ) : (
                     <p className="text-center text-gray-500 dark:text-gray-400 py-8">
                       Aucun vêtement ne correspond aux filtres sélectionnés.
