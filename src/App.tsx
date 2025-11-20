@@ -68,7 +68,8 @@ const AppContent: React.FC = () => {
     deleteClothingSet,
     favoriteOutfits,     
     addFavoriteOutfit,   
-    deleteFavoriteOutfit 
+    deleteFavoriteOutfit,
+    loading
   } = useWardrobe();
 
  
@@ -316,6 +317,7 @@ const AppContent: React.FC = () => {
               onItemClick={handleItemClick}
               onDeleteItem={handleDeleteItem}
               onCreateSet={handleCreateSet}
+              isLoading={loading}
             />
           </div>
 
