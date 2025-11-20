@@ -38,6 +38,36 @@ interface WardrobeProviderProps {
   user: User | null;
 }
 
+// --- FONCTION UTILITAIRE DE REDIMENSIONNEMENT ---
+const resizeImage = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        // On limite la taille à 800px de large max (suffisant pour l'affichage et l'IA)
+        const MAX_WIDTH = 800;
+        const scaleSize = MAX_WIDTH / img.width;
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scaleSize;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            // Compression JPEG à 70% de qualité
+            resolve(canvas.toDataURL('image/jpeg', 0.7)); 
+        } else {
+            reject(new Error("Canvas context error"));
+        }
+      };
+      img.onerror = (error) => reject(error);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, user }) => {
   const [clothingItems, setClothingItems] = useState<ClothingItem[]>([]);
   const [clothingSets, setClothingSets] = useState<ClothingSet[]>([]);
@@ -73,21 +103,17 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
     }
   }, [user]);
 
-  
   const analyzeClothingItems = useCallback(async (files: File[]) => {
     if (files.length === 0 || !user) return;
     setIsAnalyzing(true);
     
     try {
-      const imagePromises = files.map(file => {
-        return new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      });
+      // OPTIMISATION : On redimensionne les images AVANT de les envoyer
+      // Cela rend l'upload et l'analyse beaucoup plus rapides
+      const imagePromises = files.map(file => resizeImage(file));
       const imageDataUrls = await Promise.all(imagePromises);
+      
+      // On retire le préfixe 'data:image/jpeg;base64,' pour l'envoi à Gemini
       const base64Images = imageDataUrls.map(url => url.split(',')[1]);
       
       const analysisResults = await analyzeClothingImages(base64Images);
@@ -100,6 +126,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
         
         try {
           newItemId = await addClothingItem(user.uid, itemAnalysis);
+          // On upload l'image redimensionnée, pas l'originale !
           const imageUrl = await uploadClothingImage(user.uid, imageDataUrls[i], newItemId);
           await updateClothingItem(user.uid, newItemId, { imageSrc: imageUrl });
           
@@ -107,12 +134,10 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
           console.error(`Échec de création/upload pour ${files[i].name}.`, uploadError);
           
           if (newItemId) {
-            console.log(`Tentative de suppression de l'article orphelin: ${newItemId}`);
             try {
               await deleteClothingItem(user.uid, newItemId);
-              console.log(`Article orphelin ${newItemId} supprimé avec succès.`);
             } catch (deleteError) {
-              console.error(`Échec de la suppression de l'article orphelin ${newItemId}:`, deleteError);
+              console.error(`Échec suppression orphelin ${newItemId}:`, deleteError);
             }
           }
         }
