@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-
 import type { OutfitSuggestion, ClothingItem, ClothingSet, OutfitItem, FavoriteOutfit } from '../types.ts';
 import { QuestionMarkIcon, XIcon, HeartIcon, HeartIconSolid, MagicWandIcon, LoadingSpinner } from './icons.tsx';
-
 
 interface OutfitDisplayProps {
   outfits: OutfitSuggestion[] | FavoriteOutfit[];
@@ -13,7 +11,6 @@ interface OutfitDisplayProps {
   onGenerateVisual: (outfit: OutfitSuggestion) => void;
   generatingVisualFor: string | null;
 }
-
 
 const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ 
   outfits, 
@@ -29,49 +26,53 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
 
   useEffect(() => {
     if (!selectedImage) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setSelectedImage(null);
-      }
+      if (e.key === 'Escape') setSelectedImage(null);
     };
     window.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden'; 
-
-
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'auto';
     };
   }, [selectedImage]);
 
-
-
+  // --- FONCTION DE RECHERCHE CORRIGÉE ---
   const findItemByIdOrDescription = (item: OutfitItem) => {
     const { id, description } = item;
-    
-    let foundItem = allClothingItems.find(ci => ci.id === id);
+    const cleanId = id ? id.trim() : '';
+    // On nettoie la description pour la recherche
+    const cleanDesc = description ? description.trim().toLowerCase() : '';
+
+    // 1. Recherche par ID Exact (Priorité absolue)
+    let foundItem = allClothingItems.find(ci => ci.id === cleanId);
     if (foundItem) return foundItem;
 
-    let foundSet = allClothingSets.find(cs => cs.id === id);
+    // 2. Recherche dans les Sets par ID
+    let foundSet = allClothingSets.find(cs => cs.id === cleanId);
     if (foundSet) return foundSet;
 
-  
-    foundItem = allClothingItems.find(ci => ci.analysis === id);
-    if (foundItem) return foundItem;
-    
- 
-    foundItem = allClothingItems.find(ci => ci.analysis === description);
-    if (foundItem) return foundItem;
+    // 3. Recherche inversée : L'IA a mis la description dans le champ ID
+    if (cleanId) {
+        foundItem = allClothingItems.find(ci => ci.analysis.toLowerCase().includes(cleanId.toLowerCase()));
+        if (foundItem) return foundItem;
+    }
+
+    // 4. Recherche floue par Description
+    if (cleanDesc) {
+        foundItem = allClothingItems.find(ci => {
+            const analysis = ci.analysis.toLowerCase();
+            return analysis.includes(cleanDesc) || cleanDesc.includes(analysis);
+        });
+        if (foundItem) return foundItem;
+    }
 
     return undefined; 
   };
 
-
   return (
     <>
       <div className="mt-10 space-y-8">
-        
         {outfits.map((outfit, index) => {
           const isFavorite = favoriteOutfits.some(
             (fav) => fav.titre === outfit.titre && fav.description === outfit.description
@@ -90,25 +91,17 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
                       aria-label="Générer un rendu visuel"
                       title="Générer un rendu visuel"
                     >
-                      {isLoadingVisual ? (
-                        <LoadingSpinner className="h-5 w-5" />
-                      ) : (
-                        <MagicWandIcon />
-                      )}
+                      {isLoadingVisual ? <LoadingSpinner className="h-5 w-5" /> : <MagicWandIcon />}
                     </button>
                     <button 
                       onClick={() => onToggleFavorite(outfit)}
                       className="p-1.5 text-gray-400 hover:text-gold dark:hover:text-gold transition-colors"
                       aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
                     >
-                      {isFavorite ? (
-                        <HeartIconSolid className="w-6 h-6 text-gold" />
-                      ) : (
-                        <HeartIcon className="w-6 h-6" />
-                      )}
+                      {isFavorite ? <HeartIconSolid className="w-6 h-6 text-gold" /> : <HeartIcon className="w-6 h-6" />}
                     </button>
                   </div>
-              </div> {/* <--- ▼▼▼ CETTE BALISE ÉTAIT MANQUANTE ▼▼▼ */}
+              </div>
               
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-5">{outfit.description}</p>
               
@@ -120,9 +113,10 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
                     <button 
                       key={itemIndex} 
                       onClick={() => imgSrc && setSelectedImage(imgSrc)}
-                      className="w-20 h-20 bg-gray-200 dark:bg-gray-800 rounded-md shadow-md border-2 border-white dark:border-raisin-black overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold dark:focus:ring-offset-onyx disabled:cursor-default disabled:hover:scale-100"
+                      className="w-20 h-20 bg-gray-200 dark:bg-gray-800 rounded-md shadow-md border-2 border-white dark:border-raisin-black overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold dark:focus:ring-offset-onyx disabled:cursor-default disabled:hover:scale-100 relative group"
                       disabled={!imgSrc}
                       aria-label={`Agrandir l'image de : ${item.description}`}
+                      title={item.description}
                     >
                       {imgSrc ? (
                         <img src={imgSrc} alt={item.description} className="w-full h-full object-cover" />
