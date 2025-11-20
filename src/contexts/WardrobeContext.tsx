@@ -192,7 +192,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
     createClothingSet: createClothingSetCallback,
     deleteClothingSet: deleteClothingSetCallback,
     addFavoriteOutfit: addFavoriteOutfitCallback, 
-    deleteFavoriteOutfit: deleteFavoriteOutfitCallback 
+    deleteFavoriteOutfit: deleteFavoriteOutfitCallback,
     loading,
   };
 
