@@ -127,13 +127,18 @@ export async function generateOutfits(
     ${availableClothes}
     ${anchorInstruction}
 
-    Règles :
+    Règles IMPÉRATIVES de style :
     1. Utilise UNIQUEMENT les articles listés.
     2. Chaque tenue doit être complète (Haut + Bas + Chaussures si dispo).
-    3. IMPORTANT : Renvoie l'ID EXACT et la description EXACTE pour chaque article.
+    3. **ACCESSOIRES :** Chaque tenue DOIT être accompagnée d'une montre (si une montre est disponible dans les accessoires).
+    4. **SUPERPOSITION (LAYERING) :**
+       - Si tu utilises un **pull à col V**, tu DOIS lui associer une **chemise** en dessous.
+       - Si tu utilises un **pull à col camionneur (zippé)**, tu DOIS lui associer un **t-shirt** ou une **chemise** en dessous.
+    5. IMPORTANT : Renvoie l'ID EXACT et la description EXACTE pour chaque article.
 
     Réponds en JSON avec une liste "tenues".
   `;
+    // ▲▲▲ FIN DE LA MODIFICATION ▲▲▲
 
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
