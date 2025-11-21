@@ -120,25 +120,42 @@ export async function generateOutfits(
         ? `\n**RÈGLE D'ANCRAGE : La tenue DOIT inclure : "${'name' in anchorItemOrSet ? anchorItemOrSet.name : anchorItemOrSet.analysis} (ID: ${anchorItemOrSet.id})".**\n`
         : '';
  
-    const prompt = `
-    Tu es un styliste expert. Crée 3 tenues complètes et harmonieuses basées sur le contexte : "${context}".
+  const prompt = `
+    Tu es un styliste expert reconnu pour ton goût impeccable. Crée 3 tenues complètes et harmonieuses basées sur le contexte : "${context}".
     
     Vêtements disponibles :
     ${availableClothes}
     ${anchorInstruction}
 
-    Règles IMPÉRATIVES de style :
-    1. Utilise UNIQUEMENT les articles listés.
-    2. Chaque tenue doit être complète (Haut + Bas + Chaussures si dispo).
-    3. **ACCESSOIRES :** Chaque tenue DOIT être accompagnée d'une montre (si une montre est disponible dans les accessoires).
-    4. **SUPERPOSITION (LAYERING) :**
+    Règles IMPÉRATIVES de style, de CONFORT et d'ESTHÉTIQUE :
+
+    1. **BASE :** Utilise UNIQUEMENT les articles listés. Chaque tenue doit être complète (Haut + Bas + Chaussures).
+    
+    2. **ACCESSOIRES :** Chaque tenue DOIT être accompagnée d'une montre (si disponible).
+    
+    3. **SUPERPOSITION (LAYERING) :**
        - Si tu utilises un **pull à col V**, tu DOIS lui associer une **chemise** en dessous.
        - Si tu utilises un **pull à col camionneur (zippé)**, tu DOIS lui associer un **t-shirt** ou une **chemise** en dessous.
-    5. IMPORTANT : Renvoie l'ID EXACT et la description EXACTE pour chaque article.
+
+    4. **LOGIQUE THERMIQUE (CRITIQUE) :**
+       - Analyse la météo dans le contexte.
+       - **FROID (< 10°C)** : Layering OBLIGATOIRE (ex: T-shirt + Pull + Manteau). Ne laisse jamais une simple chemise seule sous un manteau.
+       - **DOUX (10-20°C)** : Veste légère ou Pull/Sweat.
+       - **CHAUD (> 20°C)** : Une seule couche (T-shirt ou Chemise), pas de grosses épaisseurs.
+
+    5. **HARMONIE DES COULEURS & MOTIFS (STYLE) :**
+       - **Règle des 3 couleurs :** Ne combine pas plus de 3 couleurs fortes différentes dans une même tenue.
+       - **Équilibre :** Si le haut est à motifs (rayures, carreaux, imprimé), le bas DOIT être uni (et inversement). Jamais deux motifs différents ensemble.
+       - **Contraste :** Évite les tons trop proches qui jurent (ex: bleu marine avec noir, sauf si c'est un choix délibéré "chic").
+
+    6. **VARIÉTÉ DES PROPOSITIONS :**
+       - Les 3 tenues proposées doivent être VISUELLEMENT différentes.
+       - Évite de proposer le même pantalon pour les 3 tenues si tu as d'autres options valides.
+
+    7. **SORTIE :** Renvoie l'ID EXACT et la description EXACTE pour chaque article sélectionné.
 
     Réponds en JSON avec une liste "tenues".
   `;
-    // ▲▲▲ FIN DE LA MODIFICATION ▲▲▲
 
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
