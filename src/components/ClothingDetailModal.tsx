@@ -47,6 +47,10 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
         };
         document.body.style.overflow = 'hidden';
         window.addEventListener('keydown', handleKeyDown);
+      // Focus le premier élément interactif
+const modal = document.querySelector('[role="dialog"]');
+const firstFocusable = modal?.querySelector('button, input, textarea, select') as HTMLElement;
+firstFocusable?.focus();
         return () => {
             document.body.style.overflow = 'auto';
             window.removeEventListener('keydown', handleKeyDown);
