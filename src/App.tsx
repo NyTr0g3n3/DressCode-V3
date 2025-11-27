@@ -615,7 +615,7 @@ const App: React.FC = () => {
         </div>
       ) : (
         <>
-          <Header theme={theme} toggleTheme={toggleTheme} isModalOpen={showOutfitModal || showVacationModal || showSetModal || showFavoriteModal}>
+          <Header theme={theme} toggleTheme={toggleTheme}>
               <Auth user={user} />
           </Header>
           <WardrobeProvider user={user}>
