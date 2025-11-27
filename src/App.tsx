@@ -55,6 +55,12 @@ const AppContent: React.FC = () => {
   const [generatingVisualFor, setGeneratingVisualFor] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+    useEffect(() => {
+    if (error) {
+    const timer = setTimeout(() => setError(null), 5000);
+    return () => clearTimeout(timer);
+  }
+  }, [error]);
 
   
   const { 
@@ -276,11 +282,22 @@ const AppContent: React.FC = () => {
   return (
     <main className="container mx-auto px-4 lg:px-8 py-10">
       {error && (
-        <div className="bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-lg relative mb-8" role="alert">
-          <strong className="font-bold">Erreur: </strong>
-          <span className="block sm:inline">{error}</span>
-        </div>
-      )}
+  <div className="bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-lg relative mb-8 flex items-center justify-between" role="alert">
+    <div>
+      <strong className="font-bold">Erreur: </strong>
+      <span className="inline">{error}</span>
+    </div>
+    <button 
+      onClick={() => setError(null)}
+      className="p-1 hover:bg-red-500/30 rounded-full transition-colors"
+      aria-label="Fermer"
+    >
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+)}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         
