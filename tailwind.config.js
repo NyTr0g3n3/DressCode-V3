@@ -11,7 +11,7 @@ export default {
         'slide-up': {
           '0%': { transform: 'translateY(100%)' },
           '100%': { transform: 'translateY(0)' }
-        }
+        },
     shimmer: {
           '100%': { transform: 'translateX(100%)' },
         }    
