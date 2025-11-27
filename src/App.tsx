@@ -62,6 +62,14 @@ const AppContent: React.FC = () => {
   }
   }, [error]);
 
+  const isModalOpen = showOutfitModal || showVacationModal || showSetModal || showFavoriteModal || !!selectedItem || !!wardrobeAnalysis || !!generatedImageUrl;
+
+  useEffect(() => {
+  const header = document.querySelector('header');
+  if (header) {
+    header.style.zIndex = isModalOpen ? '10' : '50';
+  }
+}, [isModalOpen]);
   
   const { 
     clothingItems, 
