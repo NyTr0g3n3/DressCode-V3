@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import type { OutfitSuggestion, ClothingItem, ClothingSet, OutfitItem, FavoriteOutfit } from '../types.ts';
 import { QuestionMarkIcon, XIcon, HeartIcon, HeartIconSolid, MagicWandIcon, LoadingSpinner } from './icons.tsx';
 
@@ -163,4 +163,4 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
   );
 };
 
-export default OutfitDisplay;
+export default memo(OutfitDisplay);
