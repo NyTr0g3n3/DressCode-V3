@@ -78,26 +78,30 @@ const AppContent: React.FC = () => {
     loading
   } = useWardrobe();
 
- 
+  const [toast, setToast] = useState<string | null>(null);
   const safeClothingItems = React.useMemo(() => {
-    const items = clothingItems || [];
-    return items.sort((a, b) => 
+  const items = clothingItems || [];
+  return items.sort((a, b) => 
       (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0)
     );
   }, [clothingItems]);
 
 
   const handleToggleFavorite = useCallback((outfit: OutfitSuggestion) => {
-    const existingFavorite = favoriteOutfits.find(
-      (fav) => fav.titre === outfit.titre && fav.description === outfit.description
-    );
+  const existingFavorite = favoriteOutfits.find(
+    (fav) => fav.titre === outfit.titre && fav.description === outfit.description
+  );
 
-    if (existingFavorite) {
-      deleteFavoriteOutfit(existingFavorite.id);
-    } else {
-      addFavoriteOutfit(outfit);
-    }
-  }, [favoriteOutfits, addFavoriteOutfit, deleteFavoriteOutfit]);
+  if (existingFavorite) {
+    deleteFavoriteOutfit(existingFavorite.id);
+    setToast('Retiré des favoris');
+  } else {
+    addFavoriteOutfit(outfit);
+    setToast('Ajouté aux favoris ❤️');
+  }
+  
+  setTimeout(() => setToast(null), 2000);
+}, [favoriteOutfits, addFavoriteOutfit, deleteFavoriteOutfit]);
   const safeClothingSets = React.useMemo(() => clothingSets || [], [clothingSets]);
   const itemIdsInSets = React.useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
 
@@ -564,6 +568,15 @@ const AppContent: React.FC = () => {
         onGenerateVisual={handleGenerateVisual}
         generatingVisualFor={generatingVisualFor}
       />
+
+    
+{toast && (
+  <div className="fixed bottom-32 md:bottom-8 left-1/2 -translate-x-1/2 z-[100] animate-slide-up">
+    <div className="bg-raisin-black dark:bg-white text-white dark:text-raisin-black px-6 py-3 rounded-full shadow-2xl font-medium">
+      {toast}
+    </div>
+  </div>
+)}
     </main>
   );
 }
