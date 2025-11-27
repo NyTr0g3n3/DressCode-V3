@@ -125,8 +125,11 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
         let newItemId = '';
         
         try {
-          newItemId = await addClothingItem(user.uid, itemAnalysis);
-          // On upload l'image redimensionnée, pas l'originale !
+          newItemId = await addClothingItem(user.uid, {
+            ...itemAnalysis,
+            createdAt: Date.now()
+          });
+      
           const imageUrl = await uploadClothingImage(user.uid, imageDataUrls[i], newItemId);
           await updateClothingItem(user.uid, newItemId, { imageSrc: imageUrl });
           
