@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
 import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, FavoriteOutfit } from './types.ts';
@@ -20,7 +20,7 @@ import WardrobeSuggestions from './components/WardrobeSuggestions.tsx';
 import OutfitModal from './components/OutfitModal.tsx';  
 import VacationModal from './components/VacationModal.tsx'; 
 import SetCreatorModal from './components/SetCreatorModal.tsx';
-import { LinkIcon, HeartIconSolid, ChevronDownIcon } from './components/icons.tsx'; 
+import { LinkIcon, HeartIconSolid, ChevronDownIcon, SearchIcon, SortIcon } from './components/icons.tsx';
 import { config } from './config.ts';
 
 
@@ -55,6 +55,8 @@ const AppContent: React.FC = () => {
   const [generatingVisualFor, setGeneratingVisualFor] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+  const [mobileSearchQuery, setMobileSearchQuery] = useState('');
+  const [mobileSortBy, setMobileSortBy] = useState<'favorites' | 'newest' | 'oldest' | 'color'>('favorites');
     useEffect(() => {
     if (error) {
     const timer = setTimeout(() => setError(null), 5000);
@@ -264,15 +266,44 @@ const AppContent: React.FC = () => {
     accessoires: safeClothingItems.filter(item => item.category === 'Accessoires').length,
   };
 
-  const filteredItems = activeTab === 'home' 
-    ? [] 
-    : safeClothingItems.filter(item => {
-        if (activeTab === 'hauts') return item.category === 'Hauts';
-        if (activeTab === 'bas') return item.category === 'Bas';
-        if (activeTab === 'chaussures') return item.category === 'Chaussures';
-        if (activeTab === 'accessoires') return item.category === 'Accessoires';
-        return false;
-      });
+  const filteredItems = useMemo(() => {
+  if (activeTab === 'home') return [];
+  
+  // Filtrer par catégorie
+  let items = safeClothingItems.filter(item => {
+    if (activeTab === 'hauts') return item.category === 'Hauts';
+    if (activeTab === 'bas') return item.category === 'Bas';
+    if (activeTab === 'chaussures') return item.category === 'Chaussures';
+    if (activeTab === 'accessoires') return item.category === 'Accessoires';
+    return false;
+  });
+  
+  // Filtrer par recherche
+  if (mobileSearchQuery.trim()) {
+    const query = mobileSearchQuery.toLowerCase();
+    items = items.filter(item =>
+      item.analysis.toLowerCase().includes(query) ||
+      item.color.toLowerCase().includes(query) ||
+      item.material.toLowerCase().includes(query)
+    );
+  }
+  
+  // Trier
+  return [...items].sort((a, b) => {
+    switch (mobileSortBy) {
+      case 'favorites':
+        return (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0);
+      case 'newest':
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      case 'oldest':
+        return (a.createdAt || 0) - (b.createdAt || 0);
+      case 'color':
+        return a.color.localeCompare(b.color);
+      default:
+        return 0;
+    }
+  });
+}, [activeTab, safeClothingItems, mobileSearchQuery, mobileSortBy]);
 
   const isModalOpen = 
     showOutfitModal || 
@@ -362,55 +393,116 @@ const AppContent: React.FC = () => {
                 favoriteOutfitCount={favoriteOutfits.length}
               />
             )}
-            {activeTab !== 'home' && (
-              <div className="pb-24">
-                <div className="text-center py-6 px-4">
-                  <h2 className="text-2xl font-bold mb-2 capitalize">{activeTab}</h2>
-                  <p className="text-sm text-gray-500">
-                    {filteredItems.length} vêtement{filteredItems.length > 1 ? 's' : ''}
-                  </p>
-                </div>
-                {filteredItems.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-3 px-4">
-                    {filteredItems.map(item => (
-                      <div
-                        key={item.id}
-                        onClick={() => handleItemClick(item)}
-                        className="relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform"
-                      >
-                        {item.isFavorite ? (
-                          <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-red-500 z-10">
-                            <HeartIconSolid />
-                          </span>
-                        ) : itemIdsInSets.has(item.id) ? (
-                          <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white z-10">
-                            <LinkIcon />
-                          </span>
-                        ) : null}
+           {activeTab !== 'home' && (
+  <div className="pb-24">
+    {/* Header avec titre */}
+    <div className="text-center py-4 px-4">
+      <h2 className="text-2xl font-bold mb-1 capitalize">{activeTab}</h2>
+      <p className="text-sm text-gray-500">
+        {filteredItems.length} vêtement{filteredItems.length > 1 ? 's' : ''}
+      </p>
+    </div>
 
-                        <div className="aspect-square">
-                          <img
-                            src={item.imageSrc}
-                            alt={item.analysis}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="p-3">
-                          <p className="text-sm font-medium line-clamp-2">{item.analysis}</p>
-                          <p className="text-xs text-gray-500 mt-1">{item.color}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 px-4">
-  <div className="text-6xl mb-4">👕</div>
-  <p className="text-gray-500 font-medium">Aucun vêtement dans cette catégorie</p>
-  <p className="text-sm text-gray-400 mt-2">Appuyez sur + pour en ajouter</p>
-</div>
-                )}
-              </div>
-            )}
+    {/* Barre de recherche et tri */}
+    <div className="px-4 pb-4 space-y-3">
+      {/* Recherche */}
+      <div className="relative">
+        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <input
+          type="text"
+          value={mobileSearchQuery}
+          onChange={(e) => setMobileSearchQuery(e.target.value)}
+          placeholder="Rechercher..."
+          className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-raisin-black border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all"
+        />
+        {mobileSearchQuery && (
+          <button
+            onClick={() => setMobileSearchQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+            aria-label="Effacer"
+          >
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* Tri */}
+      <div className="relative">
+        <SortIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+        <select
+          value={mobileSortBy}
+          onChange={(e) => setMobileSortBy(e.target.value as typeof mobileSortBy)}
+          className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-raisin-black border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent appearance-none cursor-pointer transition-all"
+        >
+          <option value="favorites">Favoris d'abord</option>
+          <option value="newest">Plus récents</option>
+          <option value="oldest">Plus anciens</option>
+          <option value="color">Couleur (A-Z)</option>
+        </select>
+        <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+      </div>
+    </div>
+
+    {/* Résultats */}
+    {filteredItems.length > 0 ? (
+      <div className="grid grid-cols-2 gap-3 px-4">
+        {filteredItems.map(item => (
+          <div
+            key={item.id}
+            onClick={() => handleItemClick(item)}
+            className="relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform"
+          >
+            {item.isFavorite ? (
+              <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-red-500 z-10">
+                <HeartIconSolid className="w-4 h-4" />
+              </span>
+            ) : itemIdsInSets.has(item.id) ? (
+              <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white z-10">
+                <LinkIcon />
+              </span>
+            ) : null}
+
+            <div className="aspect-square">
+              <img
+                src={item.imageSrc}
+                alt={item.analysis}
+                loading="lazy"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="p-3">
+              <p className="text-sm font-medium line-clamp-2">{item.analysis}</p>
+              <p className="text-xs text-gray-500 mt-1">{item.color}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div className="text-center py-12 px-4">
+        {mobileSearchQuery ? (
+          <>
+            <div className="text-6xl mb-4">🔍</div>
+            <p className="text-gray-500 font-medium">Aucun résultat pour "{mobileSearchQuery}"</p>
+            <button 
+              onClick={() => setMobileSearchQuery('')}
+              className="mt-3 text-gold font-medium"
+            >
+              Effacer la recherche
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="text-6xl mb-4">👕</div>
+            <p className="text-gray-500 font-medium">Aucun vêtement dans cette catégorie</p>
+            <p className="text-sm text-gray-400 mt-2">Appuyez sur + pour en ajouter</p>
+          </>
+        )}
+      </div>
+    )}
+  </div>
+)}
           </div>
           
         </div>
