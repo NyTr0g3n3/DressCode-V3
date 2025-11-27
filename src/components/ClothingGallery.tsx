@@ -77,12 +77,12 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
   const itemIdsInSets = useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
   const totalItemsCount = clothingItems.length;
 
-  const categories: { name: Category; icon: React.FC }[] = [
-    { name: 'Hauts', icon: TshirtIcon },
-    { name: 'Bas', icon: PantIcon },
-    { name: 'Chaussures', icon: ShoeIcon },
-    { name: 'Accessoires', icon: AccessoryIcon },
-  ];
+  const categories: { name: Category; icon: JSX.Element }[] = [
+  { name: 'Hauts', icon: <TshirtIcon /> },
+  { name: 'Bas', icon: <PantIcon /> },
+  { name: 'Chaussures', icon: <ShoeIcon /> },
+  { name: 'Accessoires', icon: <AccessoryIcon /> },
+];
 
   const handleCardClick = (item: ClothingItemType) => {
     if (isSetCreationMode) {
@@ -247,7 +247,7 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
       )}
 
       <div className="space-y-6">
-        {categories.map(({ name, icon: Icon }) => {
+        {categories.map(({ name, icon }) => {
           const itemsInCategory = clothingItems.filter(item => item.category === name);
           const isOpen = openCategory === name;
 
@@ -258,7 +258,7 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
                 className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <Icon className="w-5 h-5 text-gold" />
+                  <span className="w-5 h-5 text-gold">{icon}</span>
                   <span className="font-semibold text-lg">{name}</span>
                   <span className="text-sm text-gray-500 dark:text-gray-400">({itemsInCategory.length})</span>
                 </div>
