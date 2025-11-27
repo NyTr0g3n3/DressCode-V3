@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import type { ClothingItem as ClothingItemType, ClothingSet, Category } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SkeletonCard } from './SkeletonCard';
-import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, HeartIconSolid } from './icons.tsx';
+import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, HeartIconSolid, SearchIcon, SortIcon } from './icons.tsx';
 
 interface CardProps {
   imageSrc: string;
@@ -11,27 +11,25 @@ interface CardProps {
   onRemove: (e: React.MouseEvent) => void;
   isSelected: boolean;
   isSet?: boolean;
-  isFavorite?: boolean; // <-- AJOUTER CETTE LIGNE
+  isFavorite?: boolean;
 }
 
-// ▼▼▼ MODIFICATION ICI (JSX de la Card) ▼▼▼
 const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onRemove, isSelected, isSet, isFavorite }) => (
   <div onClick={onClick} className="group relative aspect-square bg-raisin-black rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer">
     <img 
-  src={imageSrc} 
-  alt={analysis} 
-  loading="lazy"
-  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
-/>
+      src={imageSrc} 
+      alt={analysis} 
+      loading="lazy"
+      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
+    />
     
     <div className={`absolute inset-0 transition-all duration-300 ${isSelected ? 'ring-4 ring-gold' : 'ring-2 ring-transparent'} rounded-lg`}></div>
     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
     
-    {/* Logique d'icône priorisée */}
     {isSelected ? (
       <span className="absolute top-2 left-2 p-1.5 bg-gold rounded-full text-onyx z-10"><CheckCircleIcon /></span>
     ) : isFavorite ? (
-      <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-red-500 z-10"><HeartIconSolid /></span>
+      <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-red-500 z-10"><HeartIconSolid className="w-4 h-4" /></span>
     ) : isSet ? (
       <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white z-10"><LinkIcon /></span>
     ) : null}
@@ -48,7 +46,8 @@ const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onRemove, isSe
     </button>
   </div>
 );
-// ▲▲▲ FIN DE LA MODIFICATION ▲▲▲
+
+type SortOption = 'favorites' | 'newest' | 'oldest' | 'color' | 'category';
 
 interface ClothingGalleryProps {
   clothingItems: ClothingItemType[];
@@ -69,6 +68,8 @@ const initialFilters: Record<Category, { color: string; material: string }> = {
 const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoading, clothingSets = [], onItemClick, onDeleteItem, onCreateSet }) => {
   const [openCategory, setOpenCategory] = useState<Category | null>('Hauts');
   const [filters, setFilters] = useState(initialFilters);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('favorites');
   
   const [isSetCreationMode, setIsSetCreationMode] = useState(false);
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
@@ -78,11 +79,19 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
   const totalItemsCount = clothingItems.length;
 
   const categories: { name: Category; icon: JSX.Element }[] = [
-  { name: 'Hauts', icon: <TshirtIcon /> },
-  { name: 'Bas', icon: <PantIcon /> },
-  { name: 'Chaussures', icon: <ShoeIcon /> },
-  { name: 'Accessoires', icon: <AccessoryIcon /> },
-];
+    { name: 'Hauts', icon: <TshirtIcon /> },
+    { name: 'Bas', icon: <PantIcon /> },
+    { name: 'Chaussures', icon: <ShoeIcon /> },
+    { name: 'Accessoires', icon: <AccessoryIcon /> },
+  ];
+
+  const sortOptions: { value: SortOption; label: string }[] = [
+    { value: 'favorites', label: 'Favoris d\'abord' },
+    { value: 'newest', label: 'Plus récents' },
+    { value: 'oldest', label: 'Plus anciens' },
+    { value: 'color', label: 'Couleur (A-Z)' },
+    { value: 'category', label: 'Catégorie' },
+  ];
 
   const handleCardClick = (item: ClothingItemType) => {
     if (isSetCreationMode) {
@@ -112,34 +121,80 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
     onDeleteItem(itemId);
   };
 
-  const filteredItems = useMemo(() => {
-    return clothingItems.filter(item => {
-      const categoryMatch = item.category === openCategory;
-      if (!categoryMatch) return false;
+  // Fonction de tri
+  const sortItems = (items: ClothingItemType[]): ClothingItemType[] => {
+    return [...items].sort((a, b) => {
+      switch (sortBy) {
+        case 'favorites':
+          return (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0);
+        case 'newest':
+          return (b.createdAt || 0) - (a.createdAt || 0);
+        case 'oldest':
+          return (a.createdAt || 0) - (b.createdAt || 0);
+        case 'color':
+          return a.color.localeCompare(b.color);
+        case 'category':
+          return a.category.localeCompare(b.category);
+        default:
+          return 0;
+      }
+    });
+  };
 
-      const categoryFilters = openCategory ? filters[openCategory] : { color: 'Toutes', material: 'Toutes' };
+  // Filtrage global par recherche
+  const searchFilteredItems = useMemo(() => {
+    if (!searchQuery.trim()) return clothingItems;
+    
+    const query = searchQuery.toLowerCase();
+    return clothingItems.filter(item => 
+      item.analysis.toLowerCase().includes(query) ||
+      item.color.toLowerCase().includes(query) ||
+      item.material.toLowerCase().includes(query) ||
+      item.category.toLowerCase().includes(query)
+    );
+  }, [clothingItems, searchQuery]);
+
+  // Filtrage par catégorie, couleur et matière
+  const filteredItems = useMemo(() => {
+    const itemsInCategory = searchFilteredItems.filter(item => item.category === openCategory);
+    
+    if (!openCategory) return [];
+    
+    const categoryFilters = filters[openCategory];
+    
+    return itemsInCategory.filter(item => {
       const colorMatch = categoryFilters.color === 'Toutes' || item.color === categoryFilters.color;
       const materialMatch = categoryFilters.material === 'Toutes' || item.material === categoryFilters.material;
-
       return colorMatch && materialMatch;
     });
-  }, [clothingItems, openCategory, filters]);
+  }, [searchFilteredItems, openCategory, filters]);
+
+  // Appliquer le tri
+  const sortedFilteredItems = useMemo(() => sortItems(filteredItems), [filteredItems, sortBy]);
+
+  // Compter les items par catégorie (après recherche)
+  const categoryCounts = useMemo(() => {
+    return categories.reduce((acc, { name }) => {
+      acc[name] = searchFilteredItems.filter(item => item.category === name).length;
+      return acc;
+    }, {} as Record<Category, number>);
+  }, [searchFilteredItems]);
 
   const availableColors = useMemo(() => {
     if (!openCategory) return [];
-    const colorsInCategory = clothingItems
+    const colorsInCategory = searchFilteredItems
       .filter(item => item.category === openCategory)
       .map(item => item.color);
     return ['Toutes', ...Array.from(new Set(colorsInCategory))];
-  }, [clothingItems, openCategory]);
+  }, [searchFilteredItems, openCategory]);
 
   const availableMaterials = useMemo(() => {
     if (!openCategory) return [];
-    const materialsInCategory = clothingItems
+    const materialsInCategory = searchFilteredItems
       .filter(item => item.category === openCategory)
       .map(item => item.material);
     return ['Toutes', ...Array.from(new Set(materialsInCategory))];
-  }, [clothingItems, openCategory]);
+  }, [searchFilteredItems, openCategory]);
 
   const handleColorChange = (color: string) => {
     if (!openCategory) return;
@@ -172,6 +227,10 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
     }
   };
 
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
+
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-raisin-black rounded-xl shadow-2xl p-6 lg:p-8">
@@ -179,7 +238,6 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
           <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
           <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
         </div>
-
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {[...Array(10)].map((_, i) => (
             <SkeletonCard key={i} />
@@ -201,7 +259,8 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
 
   return (
     <div className="bg-white dark:bg-raisin-black rounded-xl shadow-2xl shadow-black/10 dark:shadow-black/20 ring-1 ring-black/5 dark:ring-white/10 p-6 lg:p-8">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-3">
           <WardrobeIcon className="w-8 h-8 text-gold" />
           <div>
@@ -239,6 +298,52 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
         )}
       </div>
 
+      {/* Barre de recherche et tri */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        {/* Recherche */}
+        <div className="relative flex-1">
+          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Rechercher par description, couleur, matière..."
+            className="w-full pl-10 pr-10 py-2.5 bg-snow dark:bg-onyx border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+              aria-label="Effacer la recherche"
+            >
+              <RemoveIcon />
+            </button>
+          )}
+        </div>
+
+        {/* Tri */}
+        <div className="relative sm:w-48">
+          <SortIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            className="w-full pl-10 pr-4 py-2.5 bg-snow dark:bg-onyx border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent appearance-none cursor-pointer transition-all"
+          >
+            {sortOptions.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+          <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+        </div>
+      </div>
+
+      {/* Résultats de recherche */}
+      {searchQuery && (
+        <div className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+          {searchFilteredItems.length} résultat{searchFilteredItems.length > 1 ? 's' : ''} pour "{searchQuery}"
+        </div>
+      )}
+
       {isSetCreationMode && (
         <div className="bg-gold/10 border border-gold/30 text-gold-dark dark:text-gold p-4 rounded-lg mb-6 text-center">
           <p className="font-semibold">Mode Création d'Ensemble</p>
@@ -246,9 +351,10 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
         </div>
       )}
 
+      {/* Catégories */}
       <div className="space-y-6">
         {categories.map(({ name, icon }) => {
-          const itemsInCategory = clothingItems.filter(item => item.category === name);
+          const itemsInCategory = categoryCounts[name] || 0;
           const isOpen = openCategory === name;
 
           return (
@@ -260,15 +366,16 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
                 <div className="flex items-center gap-3">
                   <span className="w-5 h-5 text-gold">{icon}</span>
                   <span className="font-semibold text-lg">{name}</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">({itemsInCategory.length})</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">({itemsInCategory})</span>
                 </div>
                 <ChevronDownIcon className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {isOpen && (
                 <div className="p-6 space-y-6">
+                  {/* Filtres couleur/matière */}
                   <div className="flex flex-wrap gap-4">
-                    <div className="flex-1 min-w-[200px]">
+                    <div className="flex-1 min-w-[150px]">
                       <label className="block text-sm font-medium mb-2">Couleur</label>
                       <select
                         value={filters[name].color}
@@ -281,7 +388,7 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
                       </select>
                     </div>
 
-                    <div className="flex-1 min-w-[200px]">
+                    <div className="flex-1 min-w-[150px]">
                       <label className="block text-sm font-medium mb-2">Matière</label>
                       <select
                         value={filters[name].material}
@@ -295,37 +402,38 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
                     </div>
                   </div>
 
-                  {filteredItems.length > 0 ? (
-  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-    <AnimatePresence mode='popLayout'>
-      {filteredItems.map((item, index) => (
-        <motion.div
-          key={item.id}
-          layout
-          initial={{ opacity: 0, scale: 0.8, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
-          transition={{ 
-            duration: 0.4, 
-            delay: index * 0.05, 
-            type: "spring",
-            bounce: 0.3
-          }}
-        >
-          <Card
-            imageSrc={item.imageSrc}
-            analysis={item.analysis}
-            onClick={() => handleCardClick(item)}
-            onRemove={(e) => handleRemoveItem(e, item.id)}
-            isSelected={selectedItemIds.has(item.id)}
-            isSet={itemIdsInSets.has(item.id)}
-            isFavorite={item.isFavorite}
-          />
-        </motion.div>
-      ))}
-    </AnimatePresence>
-  </div>
-) : (
+                  {/* Grille des vêtements */}
+                  {sortedFilteredItems.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                      <AnimatePresence mode='popLayout'>
+                        {sortedFilteredItems.map((item, index) => (
+                          <motion.div
+                            key={item.id}
+                            layout
+                            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+                            transition={{ 
+                              duration: 0.4, 
+                              delay: index * 0.05, 
+                              type: "spring",
+                              bounce: 0.3
+                            }}
+                          >
+                            <Card
+                              imageSrc={item.imageSrc}
+                              analysis={item.analysis}
+                              onClick={() => handleCardClick(item)}
+                              onRemove={(e) => handleRemoveItem(e, item.id)}
+                              isSelected={selectedItemIds.has(item.id)}
+                              isSet={itemIdsInSets.has(item.id)}
+                              isFavorite={item.isFavorite}
+                            />
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  ) : (
                     <p className="text-center text-gray-500 dark:text-gray-400 py-8">
                       Aucun vêtement ne correspond aux filtres sélectionnés.
                     </p>
