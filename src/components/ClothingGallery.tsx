@@ -17,7 +17,12 @@ interface CardProps {
 // ▼▼▼ MODIFICATION ICI (JSX de la Card) ▼▼▼
 const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onRemove, isSelected, isSet, isFavorite }) => (
   <div onClick={onClick} className="group relative aspect-square bg-raisin-black rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer">
-    <img src={imageSrc} alt={analysis} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+    <img 
+  src={imageSrc} 
+  alt={analysis} 
+  loading="lazy"
+  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
+/>
     
     <div className={`absolute inset-0 transition-all duration-300 ${isSelected ? 'ring-4 ring-gold' : 'ring-2 ring-transparent'} rounded-lg`}></div>
     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
