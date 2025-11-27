@@ -398,8 +398,10 @@ const AppContent: React.FC = () => {
                   </div>
                 ) : (
                   <div className="text-center py-12 px-4">
-                    <p className="text-gray-500">Aucun vêtement dans cette catégorie</p>
-                  </div>
+  <div className="text-6xl mb-4">👕</div>
+  <p className="text-gray-500 font-medium">Aucun vêtement dans cette catégorie</p>
+  <p className="text-sm text-gray-400 mt-2">Appuyez sur + pour en ajouter</p>
+</div>
                 )}
               </div>
             )}
