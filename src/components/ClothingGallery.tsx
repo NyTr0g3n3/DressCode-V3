@@ -154,20 +154,21 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
     );
   }, [clothingItems, searchQuery]);
 
-  // Filtrage par catégorie, couleur et matière
-  const filteredItems = useMemo(() => {
-    const itemsInCategory = searchFilteredItems.filter(item => item.category === openCategory);
-    
-    if (!openCategory) return [];
-    
-    const categoryFilters = filters[openCategory];
-    
-    return itemsInCategory.filter(item => {
-      const colorMatch = categoryFilters.color === 'Toutes' || item.color === categoryFilters.color;
-      const materialMatch = categoryFilters.material === 'Toutes' || item.material === categoryFilters.material;
-      return colorMatch && materialMatch;
-    });
-  }, [searchFilteredItems, openCategory, filters]);
+ // Filtrage par catégorie, couleur et matière
+const filteredItems = useMemo(() => {
+  if (!openCategory) return [];
+  
+  const itemsInCategory = searchFilteredItems.filter(item => item.category === openCategory);
+  const categoryFilters = filters[openCategory];
+  
+  if (!categoryFilters) return itemsInCategory;
+  
+  return itemsInCategory.filter(item => {
+    const colorMatch = categoryFilters.color === 'Toutes' || item.color === categoryFilters.color;
+    const materialMatch = categoryFilters.material === 'Toutes' || item.material === categoryFilters.material;
+    return colorMatch && materialMatch;
+  });
+}, [searchFilteredItems, openCategory, filters[openCategory]?.color, filters[openCategory]?.material]);
 
   // Appliquer le tri
   const sortedFilteredItems = useMemo(() => sortItems(filteredItems), [filteredItems, sortBy]);
