@@ -62,7 +62,6 @@ const AppContent: React.FC = () => {
   }
   }, [error]);
 
-  const isModalOpen = showOutfitModal || showVacationModal || showSetModal || showFavoriteModal || !!selectedItem || !!wardrobeAnalysis || !!generatedImageUrl;
   const { 
     clothingItems, 
     clothingSets, 
