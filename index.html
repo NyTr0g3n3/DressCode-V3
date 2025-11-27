@@ -34,11 +34,34 @@
     font-family: 'Inter', sans-serif;
   }
   
+  /* Fix z-index pour react-spring-bottom-sheet */
   [data-rsbs-overlay] {
     z-index: 60 !important;
   }
   [data-rsbs-backdrop] {
     z-index: 59 !important;
+  }
+  
+  /* Dark mode pour react-spring-bottom-sheet */
+  .dark [data-rsbs-overlay] {
+    background-color: #1a1a1a !important;
+  }
+  .dark [data-rsbs-header] {
+    background-color: #1a1a1a !important;
+  }
+  .dark [data-rsbs-header]::before {
+    background-color: #666 !important;
+  }
+  .dark [data-rsbs-content] {
+    background-color: #1a1a1a !important;
+  }
+  
+  /* Supprimer la zone blanche en bas */
+  [data-rsbs-overlay] {
+    background-color: #FBFBFB;
+  }
+  [data-rsbs-footer] {
+    background-color: inherit !important;
   }
 </style>
     <script type="module" crossorigin src="/DressCode-V3/assets/index-DLiQQvkL.js"></script>
