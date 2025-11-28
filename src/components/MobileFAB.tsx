@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { hapticFeedback } from '../utils/haptics';
 
 interface MobileFABProps {
   onFilesSelected: (files: File[]) => void;
