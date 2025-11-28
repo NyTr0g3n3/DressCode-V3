@@ -53,6 +53,7 @@ const AppContent: React.FC = () => {
   const [weatherInfo, setWeatherInfo] = useState<string | null>(null);
   const [weatherError, setWeatherError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [prevItemCount, setPrevItemCount] = useState(0);
 
   const [generatingVisualFor, setGeneratingVisualFor] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
@@ -334,6 +335,15 @@ const AppContent: React.FC = () => {
     header.style.zIndex = isModalOpen ? '10' : '50';
   }
 }, [isModalOpen]);
+  // Toast de succès après ajout de vêtements
+useEffect(() => {
+  if (!isAnalyzing && safeClothingItems.length > prevItemCount && prevItemCount > 0) {
+    const addedCount = safeClothingItems.length - prevItemCount;
+    setToast(`${addedCount} vêtement${addedCount > 1 ? 's' : ''} ajouté${addedCount > 1 ? 's' : ''} ✨`);
+    setTimeout(() => setToast(null), 2000);
+  }
+  setPrevItemCount(safeClothingItems.length);
+}, [isAnalyzing, safeClothingItems.length]);
   
   return (
     <main className="container mx-auto px-4 lg:px-8 py-10">
@@ -697,10 +707,14 @@ const AppContent: React.FC = () => {
   <OnboardingModal onComplete={() => setShowOnboarding(false)} />
 )}
       
+{/* Toast notification amélioré */}
 {toast && (
-  <div className="fixed bottom-32 md:bottom-8 left-1/2 -translate-x-1/2 z-[100] animate-slide-up">
-    <div className="bg-raisin-black dark:bg-white text-white dark:text-raisin-black px-6 py-3 rounded-full shadow-2xl font-medium">
-      {toast}
+  <div className="fixed bottom-32 md:bottom-8 left-1/2 -translate-x-1/2 z-[100]">
+    <div className="bg-raisin-black dark:bg-white text-white dark:text-raisin-black px-6 py-3 rounded-full shadow-2xl font-medium flex items-center gap-2 animate-slide-up">
+      {toast.includes('❤️') && <span className="animate-pulse">❤️</span>}
+      {toast.includes('Retiré') && <span>💔</span>}
+      {toast.includes('ajouté') && !toast.includes('❤️') && <span>✅</span>}
+      <span>{toast.replace('❤️', '').trim()}</span>
     </div>
   </div>
 )}
