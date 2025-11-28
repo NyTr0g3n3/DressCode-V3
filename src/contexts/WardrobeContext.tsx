@@ -143,6 +143,10 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
               console.error(`Échec suppression orphelin ${newItemId}:`, deleteError);
             }
           }
+          // Notifier le succès
+          if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+            navigator.vibrate([10, 50, 10]);
+          }
         }
       }
     } catch (err) {
@@ -200,6 +204,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
     }
   }, [user, clothingItems]);
 
+  const [successToast, setSuccessToast] = useState<string | null>(null);
   const deleteClothingSetCallback = useCallback(async (setId: string) => {
     if (!user) return;
     try {
