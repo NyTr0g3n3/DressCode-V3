@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import OnboardingModal from './components/OnboardingModal.tsx';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
 import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, FavoriteOutfit } from './types.ts';
@@ -63,6 +64,10 @@ const AppContent: React.FC = () => {
     return () => clearTimeout(timer);
   }
   }, [error]);
+
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return !localStorage.getItem('dressmup_onboarding_complete');
+  });
 
   const { 
     clothingItems, 
@@ -672,7 +677,10 @@ const AppContent: React.FC = () => {
         generatingVisualFor={generatingVisualFor}
       />
 
-    
+    {showOnboarding && (
+  <OnboardingModal onComplete={() => setShowOnboarding(false)} />
+)}
+      
 {toast && (
   <div className="fixed bottom-32 md:bottom-8 left-1/2 -translate-x-1/2 z-[100] animate-slide-up">
     <div className="bg-raisin-black dark:bg-white text-white dark:text-raisin-black px-6 py-3 rounded-full shadow-2xl font-medium">
