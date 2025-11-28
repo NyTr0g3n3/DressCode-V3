@@ -49,6 +49,7 @@ const MobileFAB: React.FC<MobileFABProps> = ({
       : 'opacity-0 scale-75 translate-y-4 pointer-events-none'
   }`}
   style={{ zIndex: 41 }}
+  onClick={(e) => e.stopPropagation()}
 >
         <div className="bg-white dark:bg-raisin-black rounded-2xl shadow-2xl border border-black/10 dark:border-white/10 overflow-hidden w-56">
           {/* Option Appareil Photo */}
