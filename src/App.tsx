@@ -52,6 +52,7 @@ const AppContent: React.FC = () => {
   const [showFavoriteModal, setShowFavoriteModal] = useState(false);
   const [weatherInfo, setWeatherInfo] = useState<string | null>(null);
   const [weatherError, setWeatherError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [generatingVisualFor, setGeneratingVisualFor] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
@@ -265,7 +266,13 @@ const AppContent: React.FC = () => {
     deleteClothingSet(setId).catch(setError); 
   }, [deleteClothingSet]);
 
-  
+  const handlePullToRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    hapticFeedback.medium();
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsRefreshing(false);
+    hapticFeedback.success();
+  }, []);
 
   const categoryCounts = {
     hauts: safeClothingItems.filter(item => item.category === 'Hauts').length,
@@ -403,6 +410,15 @@ const AppContent: React.FC = () => {
             )}
            {activeTab !== 'home' && (
   <div className="pb-24">
+    {/* Pull to refresh indicator */}
+{isRefreshing && (
+  <div className="flex justify-center py-4">
+    <svg className="animate-spin h-6 w-6 text-gold" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  </div>
+)}
     {/* Header avec titre */}
     <div className="text-center py-4 px-4">
       <h2 className="text-2xl font-bold mb-1 capitalize">{activeTab}</h2>
