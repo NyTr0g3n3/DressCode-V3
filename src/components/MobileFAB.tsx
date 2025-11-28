@@ -27,7 +27,10 @@ const MobileFAB: React.FC<MobileFABProps> = ({
   
       {!isOtherModalOpen && (
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            hapticFeedback.medium();
+            setShowModal(true);
+          }}
           disabled={isAnalyzing}
           className="md:hidden fixed bottom-24 right-6 w-16 h-16 bg-gradient-to-r from-gold to-gold-dark text-onyx rounded-full shadow-2xl hover:shadow-gold/50 transition-all duration-300 flex items-center justify-center z-40 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
           aria-label="Ajouter un vêtement"
