@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Category } from '../types';
+import { hapticFeedback } from '../utils/haptics';
 
 type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
 
