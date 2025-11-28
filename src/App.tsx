@@ -96,13 +96,16 @@ const AppContent: React.FC = () => {
   if (existingFavorite) {
     deleteFavoriteOutfit(existingFavorite.id);
     setToast('Retiré des favoris');
+    hapticFeedback.light();
   } else {
     addFavoriteOutfit(outfit);
     setToast('Ajouté aux favoris ❤️');
+    hapticFeedback.success();
   }
   
   setTimeout(() => setToast(null), 2000);
 }, [favoriteOutfits, addFavoriteOutfit, deleteFavoriteOutfit]);
+  
   const safeClothingSets = React.useMemo(() => clothingSets || [], [clothingSets]);
   const itemIdsInSets = React.useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
 
