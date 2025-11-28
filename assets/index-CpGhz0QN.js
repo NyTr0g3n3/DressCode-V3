@@ -3824,7 +3824,12 @@ ${d}
 `),f=e.map(x=>`- ${x.name} (Ensemble, ID: ${x.id})`).join(`
 `),d=[c,f].filter(Boolean).join(`
 `),p=r?`
-**CONTRAINTE POIDS** : Le poids total NE DOIT PAS dépasser ${r} kg. Estime le poids moyen (t-shirt ~150g, jean ~600g, pull ~400g, chaussures ~800g).`:"",v=`Tu es un expert en préparation de valise. Crée une **CAPSULE WARDROBE** optimisée pour ${n} jours.
+**CONTRAINTE POIDS (${r} kg max)** :
+- C'est une LIMITE MAXIMALE, pas un objectif à minimiser
+- Tu DOIS préparer une valise COMPLÈTE pour ${n} jours
+- Estime les poids moyens : t-shirt ~150g, chemise ~200g, jean ~600g, pantalon léger ~400g, pull ~400g, veste ~700g, chaussures ~800g
+- Vérifie que le total ne DÉPASSE PAS ${r} kg, mais n'hésite pas à t'en approcher
+- Si tu es largement en dessous de la limite, AJOUTE des vêtements utiles`:"",v=`Tu es un expert en préparation de valise. Crée une **CAPSULE WARDROBE** optimisée pour ${n} jours.
 
 **DESTINATION & CONTEXTE** : ${i}
 
