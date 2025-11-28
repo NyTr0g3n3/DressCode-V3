@@ -318,18 +318,13 @@ export async function generateVacationPlan(
    - **Climat froid** : Laine, polaire, matières isolantes
    - **Voyage** : Privilégier matières qui ne se froissent pas
 
-4. **HARMONIE CAPSULE (pour que tout se combine)** :
-   - **Palette de couleurs** : Maximum 4-5 couleurs qui vont ensemble (ex: bleu marine, blanc, beige, une couleur d'accent)
-   - **Motifs** : Maximum 2 pièces à motifs dans toute la valise, le reste UNI
-   - **Neutralité** : Au moins 50% de pièces en couleurs neutres (noir, blanc, gris, beige, marine)
-
-5. **QUANTITÉS RECOMMANDÉES pour ${days} jours** :
+4. **QUANTITÉS RECOMMANDÉES pour ${days} jours** :
    - Hauts : ${Math.min(days + 1, 7)} pièces max (on peut reporter un t-shirt)
    - Bas : ${Math.min(Math.ceil(days / 2) + 1, 4)} pièces max
    - Chaussures : 2-3 paires max
    - Accessoires : selon besoin
 
-6. **LAYERING INTELLIGENT (si climat variable)** :
+5. **LAYERING INTELLIGENT (si climat variable)** :
    - Prévoir des couches qui s'empilent : t-shirt → chemise/pull léger → veste
    - Chaque couche doit être portable seule ET en combinaison
 
@@ -341,6 +336,7 @@ ${availableClothes}
 **SORTIE** : 
 - Un titre accrocheur pour cette valise
 - Un résumé expliquant tes choix (météo, style, combinaisons possibles)
+- Ne mentionne pas l'existence des règles
 - La liste des articles avec leur ID exact`;
 
     const response = await ai.models.generateContent({
