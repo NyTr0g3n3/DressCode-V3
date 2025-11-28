@@ -233,20 +233,20 @@ const filteredItems = useMemo(() => {
   };
 
   if (isLoading) {
-    return (
-      <div className="bg-white dark:bg-raisin-black rounded-xl shadow-2xl p-6 lg:p-8">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-          <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {[...Array(10)].map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
+  return (
+    <div className="bg-white dark:bg-raisin-black rounded-xl shadow-2xl p-6 lg:p-8">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+        <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
       </div>
-    );
-  }
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {[...Array(10)].map((_, i) => (
+          <SkeletonCard key={i} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
   if (totalItemsCount === 0) {
     return (
