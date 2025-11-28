@@ -32,20 +32,24 @@ const MobileFAB: React.FC<MobileFABProps> = ({
 
   return (
     <div className="md:hidden fixed bottom-24 right-6 z-40">
-      {/* Backdrop pour fermer le menu */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 z-30"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
 
-      {/* Menu flottant */}
-      <div className={`absolute bottom-20 right-0 transition-all duration-300 origin-bottom-right ${
-        isOpen 
-          ? 'opacity-100 scale-100 translate-y-0' 
-          : 'opacity-0 scale-75 translate-y-4 pointer-events-none'
-      }`}>
+{isOpen && (
+  <div 
+    className="fixed inset-0"
+    style={{ zIndex: 39 }}
+    onClick={() => setIsOpen(false)}
+  />
+)}
+
+{/* Menu flottant */}
+<div 
+  className={`absolute bottom-20 right-0 transition-all duration-300 origin-bottom-right ${
+    isOpen 
+      ? 'opacity-100 scale-100 translate-y-0' 
+      : 'opacity-0 scale-75 translate-y-4 pointer-events-none'
+  }`}
+  style={{ zIndex: 41 }}
+>
         <div className="bg-white dark:bg-raisin-black rounded-2xl shadow-2xl border border-black/10 dark:border-white/10 overflow-hidden w-56">
           {/* Option Appareil Photo */}
           <label className="block">
