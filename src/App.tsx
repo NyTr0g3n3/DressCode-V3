@@ -7,7 +7,7 @@ import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps, generateVis
 // Imports des composants
 import Header from './components/Header.tsx';
 import Auth from './components/Auth.tsx';
-import LandingPage from './components/LandingPage.tsx'; // Import de la Landing Page
+import LandingPage from './components/LandingPage.tsx'; 
 import ClothingUpload from './components/ClothingUpload.tsx';
 import ClothingGallery from './components/ClothingGallery.tsx';
 import OutfitGenerator from './components/OutfitGenerator.tsx';
@@ -38,6 +38,28 @@ import 'react-spring-bottom-sheet/dist/style.css';
 
 type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
 
+// --- UTILITAIRE DE GESTION D'ERREURS AMÉLIORÉ ---
+const getUserFriendlyError = (error: unknown): string => {
+  const message = error instanceof Error ? error.message : String(error);
+  
+  if (message.includes('API_KEY_HTTP_REFERRER_BLOCKED') || message.includes('403')) {
+    return "🚫 Accès refusé par Google : Domaine non autorisé. Vérifiez la console Google Cloud.";
+  }
+  if (message.includes('429') || message.includes('payment method') || message.includes('throttled')) {
+    return "⏳ Limite de génération atteinte. Veuillez attendre quelques secondes ou ajouter un moyen de paiement sur Replicate.";
+  }
+  if (message.includes('prediction')) {
+    return "⚠️ Erreur lors de la génération visuelle. Le service est peut-être surchargé.";
+  }
+  if (message.includes('404')) {
+    return "⚠️ Modèle introuvable. Veuillez réessayer plus tard.";
+  }
+  if (message.includes('API_KEY_INVALID')) {
+    return "🚫 Clé API invalide. Vérifiez votre configuration.";
+  }
+  
+  return message;
+};
 
 const AppContent: React.FC = () => {
   
@@ -54,6 +76,7 @@ const AppContent: React.FC = () => {
   const [showVacationModal, setShowVacationModal] = useState(false);
   const [showSetModal, setShowSetModal] = useState(false);
   const [showFavoriteModal, setShowFavoriteModal] = useState(false);
+  const [showModelProfileModal, setShowModelProfileModal] = useState(false); // État pour la modale profil
   const [weatherInfo, setWeatherInfo] = useState<string | null>(null);
   const [weatherError, setWeatherError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -64,11 +87,13 @@ const AppContent: React.FC = () => {
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [mobileSearchQuery, setMobileSearchQuery] = useState('');
   const [mobileSortBy, setMobileSortBy] = useState<'favorites' | 'newest' | 'oldest' | 'color'>('favorites');
-    useEffect(() => {
+    
+  useEffect(() => {
     if (error) {
-    const timer = setTimeout(() => setError(null), 5000);
-    return () => clearTimeout(timer);
-  }
+      const timeout = error.includes('Accès refusé') ? 10000 : 5000;
+      const timer = setTimeout(() => setError(null), timeout);
+      return () => clearTimeout(timer);
+    }
   }, [error]);
 
   const [showOnboarding, setShowOnboarding] = useState(() => {
@@ -87,6 +112,7 @@ const AppContent: React.FC = () => {
     favoriteOutfits,     
     addFavoriteOutfit,   
     deleteFavoriteOutfit,
+    userModelImage, // <--- AJOUTÉ ICI
     loading
   } = useWardrobe();
 
@@ -170,7 +196,7 @@ const AppContent: React.FC = () => {
       const outfits = await generateOutfits(safeClothingItems, safeClothingSets, fullContext, anchorItem);
       setSuggestedOutfits(outfits);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
+      setError(getUserFriendlyError(err));
     } finally {
       setIsGenerating(false);
     }
@@ -188,7 +214,7 @@ const AppContent: React.FC = () => {
       const plan = await generateVacationPlan(safeClothingItems, safeClothingSets, days, context, maxWeight);
       setVacationPlan(plan);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
+      setError(getUserFriendlyError(err));
     } finally {
       setIsGeneratingPlan(false);
     }
@@ -205,7 +231,7 @@ const AppContent: React.FC = () => {
       const analysis = await analyzeWardrobeGaps(safeClothingItems, safeClothingSets);
       setWardrobeAnalysis(analysis);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
+      setError(getUserFriendlyError(err));
     } finally {
       setIsAnalyzingWardrobe(false);
     }
@@ -216,7 +242,7 @@ const AppContent: React.FC = () => {
     setGeneratingVisualFor(outfit.titre);
     setError(null);
 
-
+    // VÉRIFICATION CLÉ : Si pas de photo de profil, on demande à l'utilisateur d'en ajouter une
     if (!userModelImage) {
       setGeneratingVisualFor(null);
       setShowModelProfileModal(true);
@@ -233,6 +259,7 @@ const AppContent: React.FC = () => {
         throw new Error("Impossible de retrouver les articles originaux pour le rendu.");
       }
 
+      // On envoie l'image de profil de l'utilisateur à l'IA
       const imageUrl = await generateVisualOutfit(itemsInOutfit, userModelImage);
 
       setGeneratedImageUrl(imageUrl);
@@ -252,12 +279,12 @@ const AppContent: React.FC = () => {
 
 
   const handleDeleteItem = (itemId: string) => {
-    deleteClothingItem(itemId).catch(setError); 
+    deleteClothingItem(itemId).catch(err => setError(getUserFriendlyError(err))); 
     setSelectedItem(null); 
   };
 
   const handleUpdateItem = (updatedItem: ClothingItem) => {
-    updateClothingItem(updatedItem).catch(setError); 
+    updateClothingItem(updatedItem).catch(err => setError(getUserFriendlyError(err))); 
     setSelectedItem(updatedItem); 
   };
   
@@ -270,11 +297,11 @@ const AppContent: React.FC = () => {
   
 
   const handleCreateSet = useCallback((name: string, itemIds: string[]) => {
-    createClothingSet(name, itemIds).catch(setError); 
+    createClothingSet(name, itemIds).catch(err => setError(getUserFriendlyError(err))); 
   }, [createClothingSet]);
   
   const handleRemoveSet = useCallback((setId: string) => {
-    deleteClothingSet(setId).catch(setError); 
+    deleteClothingSet(setId).catch(err => setError(getUserFriendlyError(err))); 
   }, [deleteClothingSet]);
 
   const handlePullToRefresh = useCallback(async () => {
@@ -337,7 +364,8 @@ const AppContent: React.FC = () => {
     showSetModal || 
     !!selectedItem ||  
     !!wardrobeAnalysis ||
-    !!generatedImageUrl; 
+    !!generatedImageUrl ||
+    showModelProfileModal; // Ajout de la modale profil
 
   useEffect(() => {
   const header = document.querySelector('header');
@@ -357,15 +385,28 @@ useEffect(() => {
   
   return (
     <main className="container mx-auto px-4 lg:px-8 py-10">
+      {/* BOUTON PROFIL MOBILE FLOTTANT */}
+      <button 
+        onClick={() => setShowModelProfileModal(true)}
+        className="fixed top-24 right-4 z-40 bg-white dark:bg-onyx p-2 rounded-full shadow-lg border border-gold/30 md:hidden"
+        title="Mon mannequin"
+      >
+        {userModelImage ? (
+          <img src={userModelImage} alt="Profil" className="w-8 h-8 rounded-full object-cover" />
+        ) : (
+          <div className="w-8 h-8 bg-gold/20 rounded-full flex items-center justify-center text-xs">👤</div>
+        )}
+      </button>
+
       {error && (
-  <div className="bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-lg relative mb-8 flex items-center justify-between" role="alert">
-    <div>
-      <strong className="font-bold">Erreur: </strong>
-      <span className="inline">{error}</span>
+  <div className="bg-red-500/20 border border-red-500 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative mb-8 flex items-center justify-between shadow-sm animate-pulse" role="alert">
+    <div className="flex-1 mr-2">
+      <strong className="font-bold block mb-1">Attention :</strong>
+      <span className="block text-sm leading-relaxed">{error}</span>
     </div>
     <button 
       onClick={() => setError(null)}
-      className="p-1 hover:bg-red-500/30 rounded-full transition-colors"
+      className="p-1.5 hover:bg-red-500/30 rounded-full transition-colors flex-shrink-0"
       aria-label="Fermer"
     >
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -379,6 +420,20 @@ useEffect(() => {
         
         <div className="lg:col-span-2 space-y-10">
           
+          {/* BOUTON PROFIL DESKTOP */}
+          <div className="hidden md:flex justify-end mb-4">
+             <button 
+                onClick={() => setShowModelProfileModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-onyx border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gold transition-colors"
+             >
+                {userModelImage ? (
+                  <img src={userModelImage} alt="Profil" className="w-8 h-8 rounded-full object-cover" />
+                ) : (
+                  <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                )}
+                <span className="text-sm font-medium">Mon Mannequin Virtuel</span>
+             </button>
+          </div>
          
           {safeClothingItems.length >= 3 && (
             <div className="hidden md:block bg-gradient-to-r from-gold/10 to-gold-dark/10 border-2 border-gold/30 rounded-xl p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4 md:justify-between">
@@ -712,8 +767,13 @@ useEffect(() => {
         onGenerateVisual={handleGenerateVisual}
         generatingVisualFor={generatingVisualFor}
       />
+      
+      {/* NOUVELLE MODALE PROFIL (s'affiche si activée par l'utilisateur ou automatiquement si pas de photo) */}
+      {showModelProfileModal && (
+        <ModelProfileModal onClose={() => setShowModelProfileModal(false)} />
+      )}
 
-    {showOnboarding && (
+      {showOnboarding && (
   <OnboardingModal onComplete={() => setShowOnboarding(false)} />
 )}
       
