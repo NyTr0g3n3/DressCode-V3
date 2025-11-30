@@ -7,6 +7,7 @@ import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps, generateVis
 // Imports des composants
 import Header from './components/Header.tsx';
 import Auth from './components/Auth.tsx';
+import LandingPage from './components/LandingPage.tsx';
 import ClothingUpload from './components/ClothingUpload.tsx';
 import ClothingGallery from './components/ClothingGallery.tsx';
 import OutfitGenerator from './components/OutfitGenerator.tsx';
@@ -749,9 +750,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-snow dark:bg-onyx text-raisin-black dark:text-snow transition-colors duration-300">
       {!user ? (
-        <div className="flex items-center justify-center min-h-screen p-4">
-          <Auth user={user} />
-        </div>
+        <LandingPage onShowAuth={() => {}} />
       ) : (
         <>
           <Header theme={theme} toggleTheme={toggleTheme}>
