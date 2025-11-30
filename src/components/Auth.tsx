@@ -7,7 +7,7 @@ interface AuthProps {
   user: any;
 }
 
-const BETA_CODE = 'DRESSMEUP2024'; // Change ce code comme tu veux
+const BETA_CODE = 'DRESSMEUP2025'; // Change ce code comme tu veux
 
 const Auth: React.FC<AuthProps> = ({ user }) => {
   const [email, setEmail] = useState('');
