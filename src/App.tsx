@@ -22,6 +22,7 @@ import WardrobeSuggestions from './components/WardrobeSuggestions.tsx';
 import OutfitModal from './components/OutfitModal.tsx';  
 import VacationModal from './components/VacationModal.tsx'; 
 import SetCreatorModal from './components/SetCreatorModal.tsx';
+import ModelProfileModal from './components/ModelProfileModal.tsx';
 import { LinkIcon, HeartIconSolid, ChevronDownIcon, SearchIcon, SortIcon } from './components/icons.tsx';
 import { config } from './config.ts';
 
@@ -215,27 +216,33 @@ const AppContent: React.FC = () => {
     setGeneratingVisualFor(outfit.titre);
     setError(null);
 
+
+    if (!userModelImage) {
+      setGeneratingVisualFor(null);
+      setShowModelProfileModal(true);
+      setToast("Ajoutez une photo de vous pour l'essayage 📸");
+      return;
+    }
+
     try {
       const itemsInOutfit: ClothingItem[] = outfit.vetements.map(outfitItem => {
         return safeClothingItems.find(ci => ci.id === outfitItem.id || ci.analysis === outfitItem.description);
-      }).filter((item): item is ClothingItem => !!item); // Filtre les items non trouvés
+      }).filter((item): item is ClothingItem => !!item); 
 
       if (itemsInOutfit.length === 0) {
         throw new Error("Impossible de retrouver les articles originaux pour le rendu.");
       }
 
-
-      const imageUrl = await generateVisualOutfit(itemsInOutfit, outfit.description);
-
+      const imageUrl = await generateVisualOutfit(itemsInOutfit, userModelImage);
 
       setGeneratedImageUrl(imageUrl);
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue lors du rendu visuel");
+      setError(getUserFriendlyError(err));
     } finally {
       setGeneratingVisualFor(null);
     }
-  }, [safeClothingItems]); 
+  }, [safeClothingItems, userModelImage]); 
 
  
   const handleScrollToOutfits = useCallback(() => setShowOutfitModal(true), []);
