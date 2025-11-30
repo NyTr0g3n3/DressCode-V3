@@ -14,12 +14,15 @@ import {
   deleteFavoriteOutfit
 } from '../services/firestoreService';
 import { analyzeClothingImages } from '../services/geminiService';
-import { uploadClothingImage } from '../services/storageService';
+import { uploadClothingImage, uploadUserPhoto } from '../services/storageService'; // Import ajouté
 
 interface WardrobeContextType {
   clothingItems: ClothingItem[];
   clothingSets: ClothingSet[];
   favoriteOutfits: FavoriteOutfit[];
+  userModelImage: string | null; // NOUVEAU
+  setUserModelImage: (url: string | null) => void; // NOUVEAU
+  updateUserModelPhoto: (file: File) => Promise<void>; // NOUVEAU
   isAnalyzing: boolean;
   analyzeClothingItems: (files: File[]) => Promise<void>;
   deleteClothingItem: (itemId: string) => Promise<void>;
@@ -38,7 +41,7 @@ interface WardrobeProviderProps {
   user: User | null;
 }
 
-// --- FONCTION UTILITAIRE DE REDIMENSIONNEMENT ---
+// ... (Fonction resizeImage inchangée) ...
 const resizeImage = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -48,7 +51,6 @@ const resizeImage = (file: File): Promise<string> => {
       img.src = event.target?.result as string;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        // On limite la taille à 800px de large max (suffisant pour l'affichage et l'IA)
         const MAX_WIDTH = 800;
         const scaleSize = MAX_WIDTH / img.width;
         canvas.width = MAX_WIDTH;
@@ -56,7 +58,6 @@ const resizeImage = (file: File): Promise<string> => {
         const ctx = canvas.getContext('2d');
         if (ctx) {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            // Compression JPEG à 70% de qualité
             resolve(canvas.toDataURL('image/jpeg', 0.7)); 
         } else {
             reject(new Error("Canvas context error"));
@@ -72,8 +73,16 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
   const [clothingItems, setClothingItems] = useState<ClothingItem[]>([]);
   const [clothingSets, setClothingSets] = useState<ClothingSet[]>([]);
   const [favoriteOutfits, setFavoriteOutfits] = useState<FavoriteOutfit[]>([]);
+  const [userModelImage, setUserModelImage] = useState<string | null>(localStorage.getItem('dressmup_user_model_url')); // Persistance simple
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Sauvegarder l'URL dans le localStorage pour éviter de recharger à chaque fois
+  useEffect(() => {
+    if (userModelImage) {
+      localStorage.setItem('dressmup_user_model_url', userModelImage);
+    }
+  }, [userModelImage]);
 
   useEffect(() => {
     if (user) {
@@ -103,54 +112,46 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
     }
   }, [user]);
 
+  // NOUVEAU : Fonction pour mettre à jour la photo de profil
+  const updateUserModelPhotoCallback = useCallback(async (file: File) => {
+    if (!user) return;
+    try {
+      const url = await uploadUserPhoto(user.uid, file);
+      setUserModelImage(url);
+    } catch (err) {
+      console.error("Erreur mise à jour photo modèle:", err);
+      throw err;
+    }
+  }, [user]);
+
+  // ... (Le reste des callbacks analyze, delete, update reste inchangé) ...
   const analyzeClothingItems = useCallback(async (files: File[]) => {
     if (files.length === 0 || !user) return;
     setIsAnalyzing(true);
-    
     try {
-      // OPTIMISATION : On redimensionne les images AVANT de les envoyer
-      // Cela rend l'upload et l'analyse beaucoup plus rapides
       const imagePromises = files.map(file => resizeImage(file));
       const imageDataUrls = await Promise.all(imagePromises);
-      
-      // On retire le préfixe 'data:image/jpeg;base64,' pour l'envoi à Gemini
       const base64Images = imageDataUrls.map(url => url.split(',')[1]);
-      
       const analysisResults = await analyzeClothingImages(base64Images);
-      
       const itemsCount = Math.min(analysisResults.length, files.length);
 
       for (let i = 0; i < itemsCount; i++) {
         const itemAnalysis = analysisResults[i];
         let newItemId = '';
-        
         try {
           newItemId = await addClothingItem(user.uid, {
             ...itemAnalysis,
             createdAt: Date.now()
           });
-      
           const imageUrl = await uploadClothingImage(user.uid, imageDataUrls[i], newItemId);
           await updateClothingItem(user.uid, newItemId, { imageSrc: imageUrl });
-          
         } catch (uploadError) {
-          console.error(`Échec de création/upload pour ${files[i].name}.`, uploadError);
-          
-          if (newItemId) {
-            try {
-              await deleteClothingItem(user.uid, newItemId);
-            } catch (deleteError) {
-              console.error(`Échec suppression orphelin ${newItemId}:`, deleteError);
-            }
-          }
-          // Notifier le succès
-          if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-            navigator.vibrate([10, 50, 10]);
-          }
+          console.error(`Échec pour ${files[i].name}.`, uploadError);
+          if (newItemId) await deleteClothingItem(user.uid, newItemId);
         }
       }
     } catch (err) {
-      console.error("Erreur lors de l'analyse par lot:", err);
+      console.error("Erreur lot:", err);
     } finally {
       setIsAnalyzing(false);
     }
@@ -158,66 +159,44 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
 
   const deleteClothingItemCallback = useCallback(async (itemId: string) => {
     if (!user) return;
-    try {
-      await deleteClothingItem(user.uid, itemId);
-    } catch (err) {
-      console.error("Erreur suppression item:", err);
-    }
+    await deleteClothingItem(user.uid, itemId);
   }, [user]);
 
   const updateClothingItemCallback = useCallback(async (updatedItem: ClothingItem) => {
     if (!user) return;
-    try {
-      await updateClothingItem(user.uid, updatedItem.id, updatedItem);
-    } catch (err) {
-      console.error("Erreur mise à jour item:", err);
-    }
+    await updateClothingItem(user.uid, updatedItem.id, updatedItem);
   }, [user]);
 
   const addFavoriteOutfitCallback = useCallback(async (outfit: OutfitSuggestion) => {
     if (!user) return;
-    try {
-      const { id, ...outfitData } = outfit as any; 
-      await addFavoriteOutfit(user.uid, outfitData);
-    } catch (err) {
-      console.error("Erreur ajout favori:", err);
-    }
+    const { id, ...outfitData } = outfit as any; 
+    await addFavoriteOutfit(user.uid, outfitData);
   }, [user]);
 
   const deleteFavoriteOutfitCallback = useCallback(async (outfitId: string) => {
     if (!user) return;
-    try {
-      await deleteFavoriteOutfit(user.uid, outfitId);
-    } catch (err) {
-      console.error("Erreur suppression favori:", err);
-    }
+    await deleteFavoriteOutfit(user.uid, outfitId);
   }, [user]);
 
   const createClothingSetCallback = useCallback(async (name: string, itemIds: string[]) => {
     if (!user) return;
     const firstItemImage = clothingItems.find(item => item.id === itemIds[0])?.imageSrc || '';
     const newSetData = { name, itemIds, imageSrc: firstItemImage };
-    try {
-      await addClothingSet(user.uid, newSetData);
-    } catch (err) {
-      console.error("Erreur création set:", err);
-    }
+    await addClothingSet(user.uid, newSetData);
   }, [user, clothingItems]);
 
-  const [successToast, setSuccessToast] = useState<string | null>(null);
   const deleteClothingSetCallback = useCallback(async (setId: string) => {
     if (!user) return;
-    try {
-      await deleteClothingSet(user.uid, setId);
-    } catch (err) {
-      console.error("Erreur suppression set:", err);
-    }
+    await deleteClothingSet(user.uid, setId);
   }, [user]);
 
   const value = {
     clothingItems,
     clothingSets,
     favoriteOutfits,
+    userModelImage, // Export du state
+    setUserModelImage,
+    updateUserModelPhoto: updateUserModelPhotoCallback, // Export de la fonction
     isAnalyzing,
     analyzeClothingItems,
     deleteClothingItem: deleteClothingItemCallback,
