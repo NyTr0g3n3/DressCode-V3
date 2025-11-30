@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  base: '/DressCode-V3/',
+  base: '/',  
   plugins: [react()],
   resolve: {
     alias: {
