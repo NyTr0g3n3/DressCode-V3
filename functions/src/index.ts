@@ -43,7 +43,7 @@ export const generateVisualOutfit = onCall(
       logger.info(`Traitement : ${description || "Vetement"} (${category})`);
 
       const output = await replicate.run(
-        "cuuupid/idm-vton",
+        "lucataco/idm-vton",
         {
           input: {
             garm_img: garmentUrl,
