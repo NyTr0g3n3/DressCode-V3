@@ -31,10 +31,15 @@ jobs:
           cd functions
           npm run build
       
+      - name: Create .env file
+        run: |
+          cd functions
+          echo "REPLICATE_API_TOKEN=${{ secrets.REPLICATE_API_TOKEN }}" > .env
+
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
-          args: deploy --only functions --force --set-env-vars REPLICATE_API_TOKEN=${{ secrets.REPLICATE_API_TOKEN }}
+          args: deploy --only functions --force
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           PROJECT_ID: dresscode-ai-32c50
