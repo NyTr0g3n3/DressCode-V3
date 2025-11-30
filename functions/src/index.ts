@@ -5,12 +5,11 @@ import Replicate from "replicate";
 export const generateVisualOutfit = onCall(
   {
     cors: true,
-    timeoutSeconds: 120,
+    timeoutSeconds: 300, 
     memory: "1GiB",
-    // PAS de secrets: []
   },
   async (request) => {
-    logger.info("Demarrage VTON avec Replicate...");
+    logger.info("Demarrage VTON avec le modèle officiel Cuuupid (Version 0513734a)...");
 
     const apiToken = process.env.REPLICATE_API_TOKEN;
 
@@ -36,36 +35,42 @@ export const generateVisualOutfit = onCall(
         );
       }
 
-      const defaultModelUrl =
-        "https://replicate.delivery/pbxt/JJ8O8M5p644w2Z5p644w2Z/model.jpg";
+      const defaultModelUrl = "https://replicate.delivery/pbxt/JJ8O8M5p644w2Z5p644w2Z/model.jpg";
       const userImage = (humanImageUrl as string) || defaultModelUrl;
 
       logger.info(`Traitement : ${description || "Vetement"} (${category})`);
 
       const output = await replicate.run(
-        "lucataco/idm-vton",
+        "cuuupid/idm-vton:0513734a452173b8173e907e3a59d19a36266e55b48528559432bd21c7d7e985",
         {
           input: {
             garm_img: garmentUrl,
             human_img: userImage,
+            garment_des: description || "clothing",
             category:
-              category === "Hauts" ?
-                "upper_body" :
-                category === "Bas" ?
-                "lower_body" :
-                "dresses",
+              category === "Hauts" ? "upper_body" :
+              category === "Bas" ? "lower_body" :
+              "dresses",
+            crop: false, // Mettre à true si l'image de la personne n'est pas recadrée
+            seed: 42,
+            steps: 30
           },
         }
       );
 
-      logger.info("Image generee avec succes");
+      logger.info("Image générée avec succès !");
 
       return {
         imageUrl: output,
       };
+
     } catch (error) {
       const err = error as Error;
-      logger.error("Erreur Replicate detaillee:", err);
+      logger.error("Erreur Replicate détaillée:", err);
+
+      if (err.message.includes("payment")) {
+         throw new HttpsError("resource-exhausted", "Problème de paiement Replicate.");
+      }
 
       throw new HttpsError(
         "internal",
