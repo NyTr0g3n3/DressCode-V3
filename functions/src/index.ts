@@ -35,7 +35,7 @@ export const generateVisualOutfit = onCall(
         );
       }
 
-      const defaultModelUrl = "https://replicate.delivery/pbxt/JJ8O8M5p644w2Z5p644w2Z/model.jpg";
+      const defaultModelUrl = "https://replicate.delivery/pbxt/KgwTlhCMvDagRrcVzZJbuozNJ8esPqiNAIJS3eMgHrYuHmW4/KakaoTalk_Photo_2024-04-04-21-44-45.png";
       const userImage = (humanImageUrl as string) || defaultModelUrl;
 
       logger.info(`Traitement : ${description || "Vetement"} (${category})`);
