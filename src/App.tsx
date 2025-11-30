@@ -7,7 +7,7 @@ import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps, generateVis
 // Imports des composants
 import Header from './components/Header.tsx';
 import Auth from './components/Auth.tsx';
-import LandingPage from './components/LandingPage.tsx';
+import LandingPage from './components/LandingPage.tsx'; // Import de la Landing Page
 import ClothingUpload from './components/ClothingUpload.tsx';
 import ClothingGallery from './components/ClothingGallery.tsx';
 import OutfitGenerator from './components/OutfitGenerator.tsx';
@@ -30,6 +30,8 @@ import { WardrobeProvider, useWardrobe } from './contexts/WardrobeContext.tsx';
 import FavoriteOutfitsModal from './components/FavoriteOutfitsModal.tsx';
 
 import VisualResultModal from './components/VisualResultModal.tsx'; 
+
+import { hapticFeedback } from './utils/haptics.ts';
 
 import 'react-spring-bottom-sheet/dist/style.css';
 
@@ -727,10 +729,15 @@ useEffect(() => {
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [showAuth, setShowAuth] = useState(false); // Nouvel état pour gérer la navigation
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      // Si l'utilisateur se connecte, on n'a plus besoin d'afficher l'auth explicite
+      if (currentUser) {
+        setShowAuth(false);
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -750,8 +757,24 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-snow dark:bg-onyx text-raisin-black dark:text-snow transition-colors duration-300">
       {!user ? (
-        <LandingPage onShowAuth={() => {}} />
+        // Si pas d'utilisateur, on gère la logique Landing vs Auth
+        showAuth ? (
+          <div className="flex items-center justify-center min-h-screen p-4 animate-slide-up">
+            <div className="w-full max-w-md">
+              <button 
+                onClick={() => setShowAuth(false)}
+                className="mb-4 flex items-center gap-2 text-gray-500 hover:text-gold transition-colors text-sm font-medium"
+              >
+                ← Retour
+              </button>
+              <Auth user={user} />
+            </div>
+          </div>
+        ) : (
+          <LandingPage onGetStarted={() => setShowAuth(true)} />
+        )
       ) : (
+        // Si utilisateur connecté, on affiche l'app normalement
         <>
           <Header theme={theme} toggleTheme={toggleTheme}>
               <Auth user={user} />
