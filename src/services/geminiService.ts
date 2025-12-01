@@ -107,7 +107,6 @@ export async function generateOutfits(
     context: string,
     anchorItemOrSet?: ClothingItem | ClothingSet
 ): Promise<OutfitSuggestion[]> {
-    // ... (Code inchangé pour generateOutfits) ...
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
 
@@ -128,8 +127,44 @@ ${availableClothes}
 ${anchorInstruction}
 
 **RÈGLES CRITIQUES** :
-1. **BASE** : Utilise UNIQUEMENT les articles listés.
-2. **SORTIE** : Renvoie l'ID EXACT et la description pour chaque article sélectionné.`;
+
+1. **BASE** : Utilise UNIQUEMENT les articles listés. Chaque tenue doit être complète (Haut + Bas + Chaussures).
+
+2. **ACCESSOIRES** : Chaque tenue DOIT être accompagnée d'une montre (si disponible).
+
+3. **SUPERPOSITION (LAYERING)** :
+   - **Pull col V** → OBLIGATOIREMENT avec une chemise en dessous
+   - **Pull col camionneur/zippé** → OBLIGATOIREMENT avec un t-shirt ou chemise en dessous
+   - **Veste/Blazer** → Peut aller sur t-shirt, chemise, ou pull fin
+
+4. **LOGIQUE THERMIQUE (CRITIQUE)** :
+   - Analyse la météo mentionnée dans le contexte.
+   
+   | Température | Règle |
+   |-------------|-------|
+   | **< 10°C (FROID)** | Layering OBLIGATOIRE : T-shirt + Pull + Manteau. JAMAIS une chemise seule sous un manteau. |
+   | **10-20°C (DOUX)** | Pull, sweat ou veste légère suffisent. |
+   | **> 20°C (CHAUD)** | Une seule couche légère (t-shirt OU chemise). JAMAIS de pull ni veste. |
+   | **> 30°C (TRÈS CHAUD)** | Vêtements très légers uniquement. INTERDITS : jeans épais, matières synthétiques. |
+
+5. **INTERDICTIONS THERMIQUES ABSOLUES** :
+   - ❌ Doudoune/veste d'hiver si > 15°C
+   - ❌ Short si < 12°C
+   - ❌ Sandales si < 15°C
+   - ❌ Pull en laine si > 22°C
+
+6. **MATIÈRES ADAPTÉES** :
+   - **Chaud (> 25°C)** : Privilégier coton léger, lin, matières respirantes
+   - **Froid (< 10°C)** : Privilégier laine, polaire, matières chaudes
+   
+7. **HARMONIE DES COULEURS & MOTIFS** :
+   - **Règle des 3 couleurs** : Maximum 3 couleurs différentes par tenue
+   - **Équilibre motifs** : Si le haut est à motifs → bas UNI. Jamais 2 motifs différents ensemble.
+   - **Contraste** : Éviter les tons trop proches (bleu marine + noir) sauf choix délibéré
+
+8. **VARIÉTÉ** : Les 3 tenues doivent être VISUELLEMENT différentes. Évite de répéter le même pantalon 3 fois.
+
+**SORTIE** : Renvoie l'ID EXACT et la description pour chaque article sélectionné.`;
 
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
@@ -251,13 +286,75 @@ export async function generateVacationPlan(
     context: string,
     maxWeight?: number 
 ): Promise<VacationPlan> {
-    // ... (Code inchangé, je retourne un mock pour la compilation si besoin, mais voici le vrai)
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
-    const availableClothes = individualItems.map(item => item.analysis).join('\n');
-    const prompt = `Planifie une valise pour ${days} jours à ${context}. Vêtements: ${availableClothes}`;
-    
-     const response = await ai.models.generateContent({
+
+    const individualItemsFormatted = individualItems.map(item => 
+      `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Couleur: ${item.color}, Matière: ${item.material})`
+    ).join('\n');
+    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
+    const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
+
+    const weightInstruction = maxWeight 
+        ? `\n**CONTRAINTE POIDS** : Le poids total NE DOIT PAS dépasser ${maxWeight} kg. Estime le poids moyen (t-shirt ~150g, jean ~600g, pull ~400g, chaussures ~800g).` 
+        : '';
+
+    const prompt = `Tu es un expert en préparation de valise. Crée une **CAPSULE WARDROBE** optimisée pour ${days} jours.
+
+**DESTINATION & CONTEXTE** : ${context}
+
+**PRINCIPE CAPSULE WARDROBE** : Sélectionner peu de pièces qui se combinent TOUTES entre elles pour créer un maximum de tenues différentes.
+
+**RÈGLES CRITIQUES** :
+
+1. **LOGIQUE THERMIQUE (PRIORITÉ ABSOLUE)** :
+   
+   | Température | Vêtements adaptés |
+   |-------------|-------------------|
+   | **> 30°C (TRÈS CHAUD)** | T-shirts légers, shorts, robes, sandales. INTERDITS : jeans, pulls, vestes |
+   | **25-30°C (CHAUD)** | T-shirts, pantalons légers, une chemise, baskets légères |
+   | **15-25°C (DOUX)** | Mix léger + 1 pull fin ou veste légère |
+   | **10-15°C (FRAIS)** | Pulls, pantalons, veste, chaussures fermées |
+   | **< 10°C (FROID)** | Layering complet : sous-couche + pull + manteau chaud |
+
+2. **INTERDICTIONS ABSOLUES** :
+   - ❌ Doudoune/veste ski/polaire épaisse si > 20°C
+   - ❌ Shorts si < 15°C
+   - ❌ Sandales si < 18°C
+   - ❌ Pulls en laine si > 25°C
+   - ❌ Jeans épais si > 32°C
+
+3. **MATIÈRES ADAPTÉES** :
+   - **Climat chaud** : Coton léger, lin, matières respirantes uniquement
+   - **Climat froid** : Laine, polaire, matières isolantes
+   - **Voyage** : Privilégier matières qui ne se froissent pas
+
+4. **HARMONIE CAPSULE (pour que tout se combine)** :
+   - **Palette de couleurs** : Maximum 4-5 couleurs qui vont ensemble (ex: bleu marine, blanc, beige, une couleur d'accent)
+   - **Motifs** : Maximum 2 pièces à motifs dans toute la valise, le reste UNI
+   - **Neutralité** : Au moins 50% de pièces en couleurs neutres (noir, blanc, gris, beige, marine)
+
+5. **QUANTITÉS RECOMMANDÉES pour ${days} jours** :
+   - Hauts : ${Math.min(days + 1, 7)} pièces max (on peut reporter un t-shirt)
+   - Bas : ${Math.min(Math.ceil(days / 2) + 1, 4)} pièces max
+   - Chaussures : 2-3 paires max
+   - Accessoires : selon besoin
+
+6. **LAYERING INTELLIGENT (si climat variable)** :
+   - Prévoir des couches qui s'empilent : t-shirt → chemise/pull léger → veste
+   - Chaque couche doit être portable seule ET en combinaison
+
+${weightInstruction}
+
+**VÊTEMENTS DISPONIBLES** :
+${availableClothes}
+
+**SORTIE** : 
+- Un titre accrocheur pour cette valise
+- Un résumé expliquant tes choix (météo, style, combinaisons possibles)
+- La liste des articles avec leur ID exact`;
+
+    const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: prompt,
         config: {
@@ -283,6 +380,7 @@ export async function generateVacationPlan(
             }
         }
     });
+
     const rawText = extractText(response);
     return JSON.parse(rawText);
 }
