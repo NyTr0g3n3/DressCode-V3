@@ -9,73 +9,54 @@ export const generateVisualOutfit = onCall(
     memory: "1GiB",
   },
   async (request) => {
-    logger.info("Demarrage VTON avec le modèle officiel Cuuupid (Version 0513734a)...");
+    logger.info("Demarrage VTON...");
 
     const apiToken = process.env.REPLICATE_API_TOKEN;
+    if (!apiToken) throw new HttpsError("failed-precondition", "API Key manquante.");
 
-    if (!apiToken) {
-      logger.error("CRITIQUE: La cle REPLICATE_API_TOKEN est introuvable.");
-      throw new HttpsError(
-        "failed-precondition",
-        "Configuration serveur invalide (API Key manquante)."
-      );
-    }
-
-    const replicate = new Replicate({
-      auth: apiToken,
-    });
+    const replicate = new Replicate({ auth: apiToken });
 
     try {
       const {garmentUrl, humanImageUrl, category, description} = request.data;
 
-      if (!garmentUrl) {
-        throw new HttpsError(
-          "invalid-argument",
-          "L'image du vetement est manquante."
-        );
-      }
+      if (!garmentUrl) throw new HttpsError("invalid-argument", "Image vêtement manquante.");
 
-      const defaultModelUrl = "https://replicate.delivery/pbxt/KgwTlhCMvDagRrcVzZJbuozNJ8esPqiNAIJS3eMgHrYuHmW4/KakaoTalk_Photo_2024-04-04-21-44-45.png";
-      const userImage = (humanImageUrl as string) || defaultModelUrl;
+      // Image de secours stable (GitHub)
+      const defaultModelUrl = "https://raw.githubusercontent.com/yisol/IDM-VTON/main/inference/images/model.jpg";
+      const userImage = (humanImageUrl && humanImageUrl.startsWith("http")) ? humanImageUrl : defaultModelUrl;
 
-      logger.info(`Traitement : ${description || "Vetement"} (${category})`);
+      logger.info(`Vêtement: ${description}`);
+      logger.info(`Humain: ${userImage}`);
 
       const output = await replicate.run(
-        "cuuupid/idm-vton:0513734a452173b8173e907e3a59d19a36266e55b48528559432bd21c7d7e985",
+        "cuuupid/idm-vton:c871bb9b046607b680449ecbae55fd8c6d945e0a1948644bf2361b3d021d3ff4",
         {
           input: {
             garm_img: garmentUrl,
             human_img: userImage,
-            garment_des: description || "clothing",
-            category:
-              category === "Hauts" ? "upper_body" :
-              category === "Bas" ? "lower_body" :
-              "dresses",
-            crop: false, // Mettre à true si l'image de la personne n'est pas recadrée
-            seed: 42,
-            steps: 30
+            garment_des: description || "clothes",
+            category: category === "Hauts" ? "upper_body" : category === "Bas" ? "lower_body" : "dresses",
+            crop: false,
+            steps: 30,
+            seed: 42
           },
         }
       );
 
-      logger.info("Image générée avec succès !");
-
-      return {
-        imageUrl: output,
-      };
+      // Forcer la sortie en String unique
+      const finalUrl = Array.isArray(output) ? output[0] : String(output);
+      
+      logger.info("Succès:", finalUrl);
+      return { imageUrl: finalUrl };
 
     } catch (error) {
       const err = error as Error;
-      logger.error("Erreur Replicate détaillée:", err);
-
+      logger.error("Erreur:", err);
+      
       if (err.message.includes("payment")) {
-         throw new HttpsError("resource-exhausted", "Problème de paiement Replicate.");
+         throw new HttpsError("resource-exhausted", "Paiement Replicate requis.");
       }
-
-      throw new HttpsError(
-        "internal",
-        `Erreur de generation: ${err.message}`
-      );
+      throw new HttpsError("internal", `Erreur génération: ${err.message}`);
     }
   }
 );
