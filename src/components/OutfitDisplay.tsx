@@ -10,16 +10,20 @@ interface OutfitDisplayProps {
   onToggleFavorite: (outfit: OutfitSuggestion) => void;
   onGenerateVisual: (outfit: OutfitSuggestion) => void;
   generatingVisualFor: string | null;
+  selectedOutfit: OutfitSuggestion | null;
+  onSelectOutfit: (outfit: OutfitSuggestion) => void;
 }
 
-const OutfitDisplay: React.FC<OutfitDisplayProps> = ({ 
-  outfits, 
-  allClothingItems, 
-  allClothingSets, 
-  favoriteOutfits, 
+const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
+  outfits,
+  allClothingItems,
+  allClothingSets,
+  favoriteOutfits,
   onToggleFavorite,
   onGenerateVisual,
-  generatingVisualFor
+  generatingVisualFor,
+  selectedOutfit,
+  onSelectOutfit
 }) => {
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -78,13 +82,40 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
             (fav) => fav.titre === outfit.titre && fav.description === outfit.description
           );
           const isLoadingVisual = generatingVisualFor === outfit.titre;
-          
+          const isSelected = selectedOutfit?.titre === outfit.titre && selectedOutfit?.description === outfit.description;
+
           return (
-            <div key={index} className="bg-snow dark:bg-onyx border border-black/10 dark:border-white/10 rounded-lg p-5 transition-all duration-300 hover:shadow-lg hover:border-gold/50">
+            <div key={index} className={`bg-snow dark:bg-onyx border-2 rounded-lg p-5 transition-all duration-300 hover:shadow-lg relative ${
+              isSelected
+                ? 'border-gold shadow-gold/30 shadow-lg'
+                : 'border-black/10 dark:border-white/10 hover:border-gold/50'
+            }`}>
+              {isSelected && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-gold to-gold-dark text-onyx px-4 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Tenue choisie
+                </div>
+              )}
               <div className="flex justify-between items-start">
                   <h3 className="font-serif font-bold text-xl text-gold">{outfit.titre}</h3>
                   <div className="flex items-center gap-2">
-                    <button 
+                    <button
+                      onClick={() => onSelectOutfit(outfit)}
+                      className={`p-1.5 transition-colors ${
+                        isSelected
+                          ? 'text-gold'
+                          : 'text-gray-400 hover:text-gold dark:hover:text-gold'
+                      }`}
+                      aria-label={isSelected ? "Désélectionner cette tenue" : "Choisir cette tenue"}
+                      title={isSelected ? "Désélectionner cette tenue" : "Choisir cette tenue"}
+                    >
+                      <svg className="w-6 h-6" fill={isSelected ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </button>
+                    <button
                       onClick={() => onGenerateVisual(outfit)}
                       disabled={isLoadingVisual}
                       className="p-1.5 text-gray-400 hover:text-gold dark:hover:text-gold transition-colors disabled:cursor-not-allowed"
@@ -93,7 +124,7 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
                     >
                       {isLoadingVisual ? <LoadingSpinner className="h-5 w-5" /> : <MagicWandIcon />}
                     </button>
-                    <button 
+                    <button
                       onClick={() => onToggleFavorite(outfit)}
                       className="p-1.5 text-gray-400 hover:text-gold dark:hover:text-gold transition-colors"
                       aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
