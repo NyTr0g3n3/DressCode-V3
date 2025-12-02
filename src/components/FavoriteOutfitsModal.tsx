@@ -12,9 +12,11 @@ interface FavoriteOutfitsModalProps {
   onToggleFavorite: (outfit: OutfitSuggestion) => void;
   onGenerateVisual: (outfit: OutfitSuggestion) => void;
   generatingVisualFor: string | null;
+  selectedOutfit: OutfitSuggestion | null;
+  onSelectOutfit: (outfit: OutfitSuggestion) => void;
 }
 
-const FavoriteOutfitsModal: React.FC<FavoriteOutfitsModalProps> = ({ 
+const FavoriteOutfitsModal: React.FC<FavoriteOutfitsModalProps> = ({
   open,
   onClose,
   allClothingItems,
@@ -22,7 +24,9 @@ const FavoriteOutfitsModal: React.FC<FavoriteOutfitsModalProps> = ({
   favoriteOutfits,
   onToggleFavorite,
   onGenerateVisual,
-  generatingVisualFor
+  generatingVisualFor,
+  selectedOutfit,
+  onSelectOutfit
 }) => {
   const isDarkMode = document.documentElement.classList.contains('dark');
 
@@ -54,14 +58,16 @@ snapPoints={({ maxHeight }) => [
     >
       <div className="p-6 bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
         {favoriteOutfits.length > 0 ? (
-          <OutfitDisplay 
-            outfits={favoriteOutfits} 
-            allClothingItems={allClothingItems} 
-            allClothingSets={allClothingSets} 
+          <OutfitDisplay
+            outfits={favoriteOutfits}
+            allClothingItems={allClothingItems}
+            allClothingSets={allClothingSets}
             favoriteOutfits={favoriteOutfits}
             onToggleFavorite={onToggleFavorite}
             onGenerateVisual={onGenerateVisual}
             generatingVisualFor={generatingVisualFor}
+            selectedOutfit={selectedOutfit}
+            onSelectOutfit={onSelectOutfit}
           />
         ) : (
           <div className="text-center py-12">

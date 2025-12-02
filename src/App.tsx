@@ -66,6 +66,7 @@ const AppContent: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [suggestedOutfits, setSuggestedOutfits] = useState<OutfitSuggestion[]>([]);
+  const [selectedOutfit, setSelectedOutfit] = useState<OutfitSuggestion | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [vacationPlan, setVacationPlan] = useState<VacationPlan | null>(null);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
@@ -139,9 +140,25 @@ const AppContent: React.FC = () => {
     setToast('Ajouté aux favoris ❤️');
     hapticFeedback.success();
   }
-  
+
   setTimeout(() => setToast(null), 2000);
 }, [favoriteOutfits, addFavoriteOutfit, deleteFavoriteOutfit]);
+
+  const handleSelectOutfit = useCallback((outfit: OutfitSuggestion) => {
+    const isAlreadySelected = selectedOutfit?.titre === outfit.titre && selectedOutfit?.description === outfit.description;
+
+    if (isAlreadySelected) {
+      setSelectedOutfit(null);
+      setToast('Sélection annulée');
+      hapticFeedback.light();
+    } else {
+      setSelectedOutfit(outfit);
+      setToast('Tenue choisie ✨');
+      hapticFeedback.success();
+    }
+
+    setTimeout(() => setToast(null), 2000);
+  }, [selectedOutfit]);
   
   const safeClothingSets = React.useMemo(() => clothingSets || [], [clothingSets]);
   const itemIdsInSets = React.useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
@@ -618,14 +635,16 @@ useEffect(() => {
               />
             </div>
             {suggestedOutfits.length > 0 && (
-                  <OutfitDisplay 
-                    outfits={suggestedOutfits} 
-                    allClothingItems={safeClothingItems} 
+                  <OutfitDisplay
+                    outfits={suggestedOutfits}
+                    allClothingItems={safeClothingItems}
                     allClothingSets={safeClothingSets}
                     favoriteOutfits={favoriteOutfits}
                     onToggleFavorite={handleToggleFavorite}
                     onGenerateVisual={handleGenerateVisual}
                     generatingVisualFor={generatingVisualFor}
+                    selectedOutfit={selectedOutfit}
+                    onSelectOutfit={handleSelectOutfit}
                   />
               )}
 
@@ -656,6 +675,8 @@ useEffect(() => {
           onToggleFavorite={handleToggleFavorite}
           onGenerateVisual={handleGenerateVisual}
           generatingVisualFor={generatingVisualFor}
+          selectedOutfit={selectedOutfit}
+          onSelectOutfit={handleSelectOutfit}
         />
       </div>
     )}
@@ -734,6 +755,8 @@ useEffect(() => {
         onToggleFavorite={handleToggleFavorite}
         onGenerateVisual={handleGenerateVisual}
         generatingVisualFor={generatingVisualFor}
+        selectedOutfit={selectedOutfit}
+        onSelectOutfit={handleSelectOutfit}
       />
     
       <VacationModal
@@ -766,6 +789,8 @@ useEffect(() => {
         onToggleFavorite={handleToggleFavorite}
         onGenerateVisual={handleGenerateVisual}
         generatingVisualFor={generatingVisualFor}
+        selectedOutfit={selectedOutfit}
+        onSelectOutfit={handleSelectOutfit}
       />
       
       {/* NOUVELLE MODALE PROFIL (s'affiche si activée par l'utilisateur ou automatiquement si pas de photo) */}
