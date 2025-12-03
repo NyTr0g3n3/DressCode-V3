@@ -8,13 +8,12 @@ interface CardProps {
   imageSrc: string;
   analysis: string;
   onClick: () => void;
-  onRemove: (e: React.MouseEvent) => void;
   isSelected: boolean;
   isSet?: boolean;
   isFavorite?: boolean;
 }
 
-const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onRemove, isSelected, isSet, isFavorite }) => (
+const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, isSelected, isSet, isFavorite }) => (
   <div onClick={onClick} className="group relative aspect-square bg-raisin-black rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer">
     <img 
       src={imageSrc} 
@@ -37,13 +36,6 @@ const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onRemove, isSe
     <div className="absolute bottom-0 left-0 right-0 p-3">
       <p className="text-white text-sm font-medium line-clamp-2">{analysis}</p>
     </div>
-    <button
-      onClick={onRemove}
-      className="absolute top-2 right-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-500"
-      aria-label="Supprimer"
-    >
-      <RemoveIcon />
-    </button>
   </div>
 );
 
@@ -107,18 +99,6 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
     } else {
       onItemClick(item);
     }
-  };
-
-  const handleRemoveItem = (e: React.MouseEvent, itemId: string) => {
-    e.stopPropagation();
-    if (selectedItemIds.has(itemId)) {
-      setSelectedItemIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(itemId);
-        return newSet;
-      });
-    }
-    onDeleteItem(itemId);
   };
 
   // Fonction de tri
@@ -425,7 +405,6 @@ const filteredItems = useMemo(() => {
                               imageSrc={item.imageSrc}
                               analysis={item.analysis}
                               onClick={() => handleCardClick(item)}
-                              onRemove={(e) => handleRemoveItem(e, item.id)}
                               isSelected={selectedItemIds.has(item.id)}
                               isSet={itemIdsInSets.has(item.id)}
                               isFavorite={item.isFavorite}
