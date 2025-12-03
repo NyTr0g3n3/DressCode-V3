@@ -33,6 +33,7 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
 
     const [isSaved, setIsSaved] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [isVisible, setIsVisible] = useState(false);
     const isDarkMode = document.documentElement.classList.contains('dark');
 
     const belongingSet = clothingSets.find(set => set.itemIds.includes(item.id));
@@ -43,6 +44,13 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
             category: item.category,
             color: item.color,
             material: item.material
+        });
+        // Trigger animation on mount
+        setIsVisible(false);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                setIsVisible(true);
+            });
         });
     }, [item]);
 
@@ -262,11 +270,15 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
     // Version desktop : Modal classique
     return (
         <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className={`fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 transition-opacity duration-200 ${
+                isVisible ? 'opacity-100' : 'opacity-0'
+            }`}
             onClick={onClose}
         >
             <div
-                className="relative bg-white dark:bg-raisin-black rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                className={`relative bg-white dark:bg-raisin-black rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transition-all duration-200 ${
+                    isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+                }`}
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header desktop avec X */}
