@@ -100,8 +100,8 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
             ]}
         >
             <div className="bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
-                <div className="relative px-4 pt-6">
-                    <img src={item.imageSrc} alt={item.analysis} className="w-full h-auto max-h-[40vh] object-cover rounded-lg" />
+                <div className="relative px-4 pt-2 pb-4">
+                    <img src={item.imageSrc} alt={item.analysis} className="w-full h-auto max-h-[40vh] object-contain rounded-lg" />
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6">
