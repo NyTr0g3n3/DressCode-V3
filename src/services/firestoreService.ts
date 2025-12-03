@@ -1,16 +1,18 @@
-import { 
-  collection, 
-  doc, 
-  updateDoc, 
-  deleteDoc, 
-  getDocs, 
+import {
+  collection,
+  doc,
+  updateDoc,
+  deleteDoc,
+  getDocs,
   addDoc,
   setDoc,
   onSnapshot,
-  query
+  query,
+  where,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import type { ClothingItem, ClothingSet, FavoriteOutfit, OutfitSuggestion } from '../types';
+import type { ClothingItem, ClothingSet, FavoriteOutfit, OutfitSuggestion, OutfitWearHistory } from '../types';
 
 type NewClothingItem = Omit<ClothingItem, 'id'>;
 type NewClothingSet = Omit<ClothingSet, 'id'>;
@@ -194,4 +196,64 @@ export const setClothingItemWithId = async (userId: string, item: ClothingItem) 
   } catch (error) {
     console.error("Erreur lors de la migration de l'item:", item.id, error);
   }
+};
+
+// --- OUTFIT WEAR HISTORY ---
+
+export const addOutfitWearHistory = async (
+  userId: string,
+  outfitTitle: string,
+  outfitDescription: string,
+  itemIds: string[]
+): Promise<string> => {
+  try {
+    const historyCol = collection(db, 'users', userId, 'wearHistory');
+    const docRef = await addDoc(historyCol, {
+      outfitTitle,
+      outfitDescription,
+      itemIds,
+      wornAt: Date.now()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error("Erreur lors de l'ajout de l'historique de port:", error);
+    throw error;
+  }
+};
+
+export const getWearHistoryLast30Days = async (userId: string): Promise<OutfitWearHistory[]> => {
+  try {
+    const historyCol = collection(db, 'users', userId, 'wearHistory');
+    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+    const q = query(historyCol, where('wornAt', '>=', thirtyDaysAgo));
+    const querySnapshot = await getDocs(q);
+
+    const history = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as OutfitWearHistory));
+
+    return history;
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'historique des 30 derniers jours:', error);
+    return [];
+  }
+};
+
+export const listenToWearHistory = (userId: string, callback: (history: OutfitWearHistory[]) => void) => {
+  const historyCol = collection(db, 'users', userId, 'wearHistory');
+  const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+  const q = query(historyCol, where('wornAt', '>=', thirtyDaysAgo));
+
+  const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const history = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as OutfitWearHistory));
+    callback(history);
+  }, (error) => {
+    console.error('Erreur (wearHistory listener):', error);
+  });
+
+  return unsubscribe;
 };

@@ -58,3 +58,11 @@ export interface WardrobeAnalysis {
   suggestions: WardrobeSuggestion[];
 }
 
+export interface OutfitWearHistory {
+  id: string; // ID du document Firestore
+  outfitTitle: string;
+  outfitDescription: string;
+  itemIds: string[]; // Liste des IDs des articles portés dans cette tenue
+  wornAt: number; // Timestamp du port (date de sélection)
+}
+
