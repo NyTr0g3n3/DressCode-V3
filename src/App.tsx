@@ -29,6 +29,7 @@ import { config } from './config.ts';
 
 import { WardrobeProvider, useWardrobe } from './contexts/WardrobeContext.tsx';
 import FavoriteOutfitsModal from './components/FavoriteOutfitsModal.tsx';
+import WornOutfitsModal from './components/WornOutfitsModal.tsx';
 
 import VisualResultModal from './components/VisualResultModal.tsx'; 
 
@@ -77,6 +78,7 @@ const AppContent: React.FC = () => {
   const [showVacationModal, setShowVacationModal] = useState(false);
   const [showSetModal, setShowSetModal] = useState(false);
   const [showFavoriteModal, setShowFavoriteModal] = useState(false);
+  const [showWornOutfitsModal, setShowWornOutfitsModal] = useState(false);
   const [showModelProfileModal, setShowModelProfileModal] = useState(false); // État pour la modale profil
   const [weatherInfo, setWeatherInfo] = useState<string | null>(null);
   const [weatherError, setWeatherError] = useState<string | null>(null);
@@ -86,6 +88,7 @@ const AppContent: React.FC = () => {
   const [generatingVisualFor, setGeneratingVisualFor] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+  const [isWornOutfitsOpen, setIsWornOutfitsOpen] = useState(false);
   const [mobileSearchQuery, setMobileSearchQuery] = useState('');
   const [mobileSortBy, setMobileSortBy] = useState<'favorites' | 'newest' | 'oldest' | 'color'>('favorites');
     
@@ -116,6 +119,7 @@ const AppContent: React.FC = () => {
     userModelImage,
     recordOutfitWear,
     getItemWearCount,
+    getWornOutfitsLast7Days,
     loading
   } = useWardrobe();
 
@@ -168,6 +172,8 @@ const AppContent: React.FC = () => {
   
   const safeClothingSets = React.useMemo(() => clothingSets || [], [clothingSets]);
   const itemIdsInSets = React.useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
+
+  const wornOutfitsLast7Days = useMemo(() => getWornOutfitsLast7Days(), [getWornOutfitsLast7Days]);
 
  
   useEffect(() => {
@@ -501,9 +507,11 @@ useEffect(() => {
                 onScrollToVacation={handleScrollToVacation}
                 onStartSetCreation={() => setShowSetModal(true)}
                 onShowFavorites={() => setShowFavoriteModal(true)}
+                onShowWornOutfits={() => setShowWornOutfitsModal(true)}
                 isAnalyzingWardrobe={isAnalyzingWardrobe}
                 clothingCount={safeClothingItems.length}
                 favoriteOutfitCount={favoriteOutfits.length}
+                wornOutfitCount={wornOutfitsLast7Days.length}
               />
             )}
            {activeTab !== 'home' && (
@@ -688,7 +696,54 @@ useEffect(() => {
     )}
   </div>
 )}
-            
+
+          {wornOutfitsLast7Days.length > 0 && (
+  <div className="mt-10 border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-raisin-black shadow-sm">
+    <button
+      onClick={() => setIsWornOutfitsOpen(!isWornOutfitsOpen)}
+      className="w-full flex items-center justify-between p-5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+    >
+      <div className="flex items-center gap-2">
+        <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h2 className="text-xl font-serif font-bold text-raisin-black dark:text-snow">
+          Tenues Portées <span className="text-sm font-sans font-normal text-gray-500">(7 derniers jours - {wornOutfitsLast7Days.length})</span>
+        </h2>
+      </div>
+      <div className={`transition-transform duration-300 ${isWornOutfitsOpen ? 'rotate-180' : ''} text-gray-400`}>
+        <ChevronDownIcon />
+      </div>
+    </button>
+
+    {isWornOutfitsOpen && (
+      <div className="p-4 border-t border-black/10 dark:border-white/10 bg-snow dark:bg-onyx/50 max-h-[600px] overflow-y-auto custom-scrollbar">
+        <OutfitDisplay
+          outfits={wornOutfitsLast7Days.map(history => ({
+            titre: history.outfitTitle,
+            description: history.outfitDescription,
+            vetements: history.itemIds.map(id => {
+              const item = safeClothingItems.find(ci => ci.id === id);
+              return {
+                id: id,
+                description: item ? item.analysis : 'Article supprimé'
+              };
+            })
+          }))}
+          allClothingItems={safeClothingItems}
+          allClothingSets={safeClothingSets}
+          favoriteOutfits={favoriteOutfits}
+          onToggleFavorite={handleToggleFavorite}
+          onGenerateVisual={handleGenerateVisual}
+          generatingVisualFor={generatingVisualFor}
+          selectedOutfit={selectedOutfit}
+          onSelectOutfit={handleSelectOutfit}
+        />
+      </div>
+    )}
+  </div>
+)}
+
             <div id="vacation-planner">
               <VacationPlanner
                 clothingItems={safeClothingItems}
@@ -799,7 +854,21 @@ useEffect(() => {
         selectedOutfit={selectedOutfit}
         onSelectOutfit={handleSelectOutfit}
       />
-      
+
+      <WornOutfitsModal
+        open={showWornOutfitsModal}
+        onClose={() => setShowWornOutfitsModal(false)}
+        allClothingItems={safeClothingItems}
+        allClothingSets={safeClothingSets}
+        wornOutfits={wornOutfitsLast7Days}
+        favoriteOutfits={favoriteOutfits}
+        onToggleFavorite={handleToggleFavorite}
+        onGenerateVisual={handleGenerateVisual}
+        generatingVisualFor={generatingVisualFor}
+        selectedOutfit={selectedOutfit}
+        onSelectOutfit={handleSelectOutfit}
+      />
+
       {/* NOUVELLE MODALE PROFIL (s'affiche si activée par l'utilisateur ou automatiquement si pas de photo) */}
       {showModelProfileModal && (
         <ModelProfileModal onClose={() => setShowModelProfileModal(false)} />

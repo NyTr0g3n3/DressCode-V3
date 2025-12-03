@@ -6,21 +6,25 @@ interface MobileHomeProps {
   onScrollToOutfits: () => void;
   onScrollToVacation: () => void;
   onStartSetCreation: () => void;
-  onShowFavorites: () => void; // <-- AJOUTER
+  onShowFavorites: () => void;
+  onShowWornOutfits: () => void;
   isAnalyzingWardrobe: boolean;
   clothingCount: number;
-  favoriteOutfitCount: number; // <-- AJOUTER
+  favoriteOutfitCount: number;
+  wornOutfitCount: number;
 }
 
-const MobileHome: React.FC<MobileHomeProps> = ({ 
-  onAnalyzeWardrobe, 
-  onScrollToOutfits, 
+const MobileHome: React.FC<MobileHomeProps> = ({
+  onAnalyzeWardrobe,
+  onScrollToOutfits,
   onScrollToVacation,
   onStartSetCreation,
-  onShowFavorites, // <-- AJOUTER
+  onShowFavorites,
+  onShowWornOutfits,
   isAnalyzingWardrobe,
   clothingCount,
-  favoriteOutfitCount // <-- AJOUTER
+  favoriteOutfitCount,
+  wornOutfitCount
 }) => {
   
   return (
@@ -116,31 +120,40 @@ const MobileHome: React.FC<MobileHomeProps> = ({
             Aperçu rapide
           </h4>
           <div className="grid grid-cols-3 gap-3">
-            {/* Carte Vêtements (inchangée) */}
-            <div className="bg-white dark:bg-raisin-black rounded-xl p-3 text-center">
-              <p className="text-2xl font-bold text-gold">{clothingCount}</p>
-              <p className="text-xs text-gray-500">Vêtements</p>
-            </div>
-            
-            {/* Carte "Tenues possibles" REMPLACÉE par "Créer un ensemble" */}
+            {/* Carte Tenues portées (7 derniers jours) */}
+            <button
+              onClick={onShowWornOutfits}
+              className="bg-white dark:bg-raisin-black rounded-xl p-3 text-center flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-raisin-black/50 transition-colors active:scale-95"
+            >
+              <div className="text-blue-500">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p className="text-2xl font-bold">{wornOutfitCount}</p>
+              <p className="text-xs text-gray-500 mt-0.5 font-medium">Portées (7j)</p>
+            </button>
+
+            {/* Carte "Créer un ensemble" */}
             <button
               onClick={onStartSetCreation}
               className="bg-white dark:bg-raisin-black rounded-xl p-3 text-center flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-raisin-black/50 transition-colors active:scale-95"
             >
               <div className="text-green-500">
-                {/* Utilisation de l'icône importée */}
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.536a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                 </svg>
               </div>
               <p className="text-xs text-gray-500 mt-1.5 font-medium">Créer un ensemble</p>
             </button>
-<button
+
+            {/* Carte Favorites */}
+            <button
               onClick={onShowFavorites}
               className="bg-white dark:bg-raisin-black rounded-xl p-3 text-center flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-raisin-black/50 transition-colors active:scale-95"
             >
               <div className="text-red-500">
-                <HeartIcon /> {/* Utiliser HeartIcon */}
+                <HeartIcon />
               </div>
               <p className="text-2xl font-bold">{favoriteOutfitCount}</p>
               <p className="text-xs text-gray-500 mt-0.5 font-medium">Favorites</p>
