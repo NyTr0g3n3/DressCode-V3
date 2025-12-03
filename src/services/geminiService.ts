@@ -120,51 +120,73 @@ export async function generateOutfits(
         ? `\n**RÈGLE D'ANCRAGE : La tenue DOIT inclure : "${('name' in anchorItemOrSet ? anchorItemOrSet.name : anchorItemOrSet.analysis)} (ID: ${anchorItemOrSet.id})".**\n`
         : '';
  
-    const prompt = `Tu es un styliste expert reconnu pour ton goût impeccable. Crée 3 tenues complètes et harmonieuses basées sur le contexte : "${context}".
-    
+    const prompt = `Tu es un styliste expert. Crée 3 tenues complètes et harmonieuses pour : "${context}".
+
 Vêtements disponibles :
 ${availableClothes}
 ${anchorInstruction}
 
-**RÈGLES CRITIQUES** :
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴 PRIORITÉ 1 - TEMPÉRATURE (RÈGLE ABSOLUE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1. **BASE** : Utilise UNIQUEMENT les articles listés. Chaque tenue doit être complète (Haut + Bas + Chaussures).
+Analyse la météo dans le contexte et applique :
 
-2. **ACCESSOIRES** : Chaque tenue DOIT être accompagnée d'une montre (si disponible).
+| Température | Règle stricte |
+|-------------|---------------|
+| **< 10°C** | Layering OBLIGATOIRE : Base (t-shirt/chemise) + Pull/Sweat + Manteau |
+| **10-20°C** | Pull, sweat, ou veste légère suffisent |
+| **20-25°C** | 1 seule couche (t-shirt OU chemise légère) |
+| **> 25°C** | Vêtements TRÈS légers uniquement. INTERDITS : jeans épais, pulls, vestes |
 
-3. **SUPERPOSITION (LAYERING)** :
-   - **Pull col V** → OBLIGATOIREMENT avec une chemise en dessous
-   - **Pull col camionneur/zippé** → OBLIGATOIREMENT avec un t-shirt ou chemise en dessous
-   - **Veste/Blazer** → Peut aller sur t-shirt, chemise, ou pull fin
+⚠️ **INTERDICTIONS THERMIQUES** :
+- Doudoune/manteau si > 15°C
+- Short si < 12°C
+- Pull laine si > 22°C
+- Sandales si < 15°C
 
-4. **LOGIQUE THERMIQUE (CRITIQUE)** :
-   - Analyse la météo mentionnée dans le contexte.
-   
-   | Température | Règle |
-   |-------------|-------|
-   | **< 10°C (FROID)** | Layering OBLIGATOIRE : T-shirt + Pull + Manteau. JAMAIS une chemise seule sous un manteau. |
-   | **10-20°C (DOUX)** | Pull, sweat ou veste légère suffisent. |
-   | **> 20°C (CHAUD)** | Une seule couche légère (t-shirt OU chemise). JAMAIS de pull ni veste. |
-   | **> 30°C (TRÈS CHAUD)** | Vêtements très légers uniquement. INTERDITS : jeans épais, matières synthétiques. |
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🟠 PRIORITÉ 2 - LAYERING (SUPERPOSITION)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-5. **INTERDICTIONS THERMIQUES ABSOLUES** :
-   - ❌ Doudoune/veste d'hiver si > 15°C
-   - ❌ Short si < 12°C
-   - ❌ Sandales si < 15°C
-   - ❌ Pull en laine si > 22°C
+**RÈGLES DE SUPERPOSITION VALIDES** :
 
-6. **MATIÈRES ADAPTÉES** :
-   - **Chaud (> 25°C)** : Privilégier coton léger, lin, matières respirantes
-   - **Froid (< 10°C)** : Privilégier laine, polaire, matières chaudes
-   
-7. **HARMONIE DES COULEURS & MOTIFS** :
-   - **Règle des 3 couleurs** : Maximum 3 couleurs différentes par tenue
-   - **Équilibre motifs** : Si le haut est à motifs → bas UNI. Jamais 2 motifs différents ensemble.
-   - **Contraste** : Éviter les tons trop proches (bleu marine + noir) sauf choix délibéré
+✅ **Pull col V** → TOUJOURS avec chemise dessous (sinon négligé)
+✅ **Pull col zippé/camionneur** → TOUJOURS avec t-shirt ou chemise dessous
+✅ **Veste/Blazer** → Sur t-shirt, chemise, pull fin, ou col roulé
+✅ **Manteau** → Sur pull, sweat, ou veste (si très froid)
+✅ **Col roulé** → Seul OU sous une veste (JAMAIS sous chemise !)
 
-8. **VARIÉTÉ** : Les 3 tenues doivent être VISUELLEMENT différentes. Évite de répéter le même pantalon 3 fois.
+❌ **INTERDICTIONS ABSOLUES DE LAYERING** :
+- JAMAIS chemise sur col roulé (aberration stylistique)
+- JAMAIS col V sans rien dessous en contexte formel
+- JAMAIS pull épais sous veste ajustée (volume excessif)
+- JAMAIS 2 cols montants ensemble (col roulé + col montant)
 
-**SORTIE** : Renvoie l'ID EXACT et la description pour chaque article sélectionné.`;
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🟡 PRIORITÉ 3 - COHÉRENCE & HARMONIE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**STRUCTURE** : Chaque tenue = Haut + Bas + Chaussures (minimum)
+
+**COULEURS** :
+- Maximum 3 couleurs par tenue
+- 1 seul motif maximum (si haut à motifs → bas uni)
+- Évite contrastes trop proches (bleu marine + noir)
+
+**VARIÉTÉ** :
+- 3 looks visuellement différents
+- Évite de répéter le même pantalon 3 fois si possible
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 ACCESSOIRES (recommandés mais optionnels)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Montre/bracelet si disponible
+- Ceinture pour pantalon classique
+- Écharpe si < 10°C
+
+**IMPORTANT** : Utilise les IDs EXACTS des articles. Sois créatif dans les limites.`;
 
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
