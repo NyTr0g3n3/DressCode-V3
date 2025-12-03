@@ -9,6 +9,13 @@ const ArrowIcon = () => (
   </svg>
 );
 
+// Icône chevron down pour le scroll indicator
+const ChevronDownIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+);
+
 interface LandingPageProps {
   onGetStarted: () => void;
 }
@@ -73,7 +80,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           </motion.p>
           
           <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button 
+            <button
               onClick={onGetStarted}
               className="group relative px-8 py-4 bg-gold text-onyx text-lg font-bold rounded-full overflow-hidden shadow-lg shadow-gold/20 hover:shadow-gold/40 transition-all hover:scale-105 active:scale-95"
             >
@@ -82,9 +89,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               </span>
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
             </button>
-            <p className="text-xs text-gray-400 mt-2 sm:mt-0">
-              *Aucune carte bancaire requise
-            </p>
           </motion.div>
         </motion.div>
 
@@ -116,6 +120,25 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                <span className="text-xs font-bold text-gray-500">Manteau Laine</span>
                <div className="w-2 h-2 rounded-full bg-green-500"></div>
              </div>
+          </div>
+        </motion.div>
+
+        {/* Scroll Indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, y: [0, 10, 0] }}
+          transition={{
+            opacity: { delay: 1.5, duration: 0.6 },
+            y: { repeat: Infinity, duration: 1.5, ease: "easeInOut" }
+          }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer"
+          onClick={() => {
+            window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+          }}
+        >
+          <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">Découvrir</span>
+          <div className="text-gold">
+            <ChevronDownIcon />
           </div>
         </motion.div>
       </section>
