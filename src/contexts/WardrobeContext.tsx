@@ -36,6 +36,7 @@ interface WardrobeContextType {
   deleteFavoriteOutfit: (outfitId: string) => Promise<void>;
   recordOutfitWear: (outfitTitle: string, outfitDescription: string, itemIds: string[]) => Promise<void>;
   getItemWearCount: (itemId: string) => number;
+  getWornOutfitsLast7Days: () => OutfitWearHistory[];
   loading: boolean;
 }
 
@@ -215,6 +216,12 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
     return wearHistory.filter(history => history.itemIds.includes(itemId)).length;
   }, [wearHistory]);
 
+  const getWornOutfitsLast7Days = useCallback((): OutfitWearHistory[] => {
+    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    return wearHistory.filter(history => history.wornAt >= sevenDaysAgo)
+      .sort((a, b) => b.wornAt - a.wornAt); // Plus récent en premier
+  }, [wearHistory]);
+
   const value = {
     clothingItems,
     clothingSets,
@@ -233,6 +240,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
     deleteFavoriteOutfit: deleteFavoriteOutfitCallback,
     recordOutfitWear: recordOutfitWearCallback,
     getItemWearCount,
+    getWornOutfitsLast7Days,
     loading,
   };
 
