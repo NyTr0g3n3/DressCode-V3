@@ -101,19 +101,21 @@ const AppContent: React.FC = () => {
     return !localStorage.getItem('dressmup_onboarding_complete');
   });
 
-  const { 
-    clothingItems, 
-    clothingSets, 
-    isAnalyzing, 
-    analyzeClothingItems, 
-    deleteClothingItem,   
-    createClothingSet,    
-    updateClothingItem,  
+  const {
+    clothingItems,
+    clothingSets,
+    isAnalyzing,
+    analyzeClothingItems,
+    deleteClothingItem,
+    createClothingSet,
+    updateClothingItem,
     deleteClothingSet,
-    favoriteOutfits,     
-    addFavoriteOutfit,   
+    favoriteOutfits,
+    addFavoriteOutfit,
     deleteFavoriteOutfit,
-    userModelImage, // <--- AJOUTÉ ICI
+    userModelImage,
+    recordOutfitWear,
+    getItemWearCount,
     loading
   } = useWardrobe();
 
@@ -155,10 +157,14 @@ const AppContent: React.FC = () => {
       setSelectedOutfit(outfit);
       setToast('Tenue choisie ✨');
       hapticFeedback.success();
+
+      // Enregistrer le port de la tenue dans l'historique
+      const itemIds = outfit.vetements.map(item => item.id);
+      recordOutfitWear(outfit.titre, outfit.description, itemIds);
     }
 
     setTimeout(() => setToast(null), 2000);
-  }, [selectedOutfit]);
+  }, [selectedOutfit, recordOutfitWear]);
   
   const safeClothingSets = React.useMemo(() => clothingSets || [], [clothingSets]);
   const itemIdsInSets = React.useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
@@ -713,6 +719,7 @@ useEffect(() => {
           onGenerateFrom={handleGenerateFromModal}
           onRemoveSet={handleRemoveSet}
           onDelete={handleDeleteItem}
+          getItemWearCount={getItemWearCount}
         />
       )}
 

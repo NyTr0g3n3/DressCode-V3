@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
 import { User } from 'firebase/auth';
-import type { ClothingItem, ClothingSet, FavoriteOutfit, OutfitSuggestion } from '../types';
-import { 
+import type { ClothingItem, ClothingSet, FavoriteOutfit, OutfitSuggestion, OutfitWearHistory } from '../types';
+import {
   listenToClothingItems,
   listenToClothingSets,
   addClothingItem,
@@ -11,7 +11,9 @@ import {
   deleteClothingSet,
   listenToFavoriteOutfits,
   addFavoriteOutfit,
-  deleteFavoriteOutfit
+  deleteFavoriteOutfit,
+  listenToWearHistory,
+  addOutfitWearHistory
 } from '../services/firestoreService';
 import { analyzeClothingImages } from '../services/geminiService';
 import { uploadClothingImage, uploadUserPhoto } from '../services/storageService'; // Import ajouté
@@ -20,9 +22,10 @@ interface WardrobeContextType {
   clothingItems: ClothingItem[];
   clothingSets: ClothingSet[];
   favoriteOutfits: FavoriteOutfit[];
-  userModelImage: string | null; // NOUVEAU
-  setUserModelImage: (url: string | null) => void; // NOUVEAU
-  updateUserModelPhoto: (file: File) => Promise<void>; // NOUVEAU
+  wearHistory: OutfitWearHistory[];
+  userModelImage: string | null;
+  setUserModelImage: (url: string | null) => void;
+  updateUserModelPhoto: (file: File) => Promise<void>;
   isAnalyzing: boolean;
   analyzeClothingItems: (files: File[]) => Promise<void>;
   deleteClothingItem: (itemId: string) => Promise<void>;
@@ -31,6 +34,8 @@ interface WardrobeContextType {
   deleteClothingSet: (setId: string) => Promise<void>;
   addFavoriteOutfit: (outfit: OutfitSuggestion) => Promise<void>;
   deleteFavoriteOutfit: (outfitId: string) => Promise<void>;
+  recordOutfitWear: (outfitTitle: string, outfitDescription: string, itemIds: string[]) => Promise<void>;
+  getItemWearCount: (itemId: string) => number;
   loading: boolean;
 }
 
@@ -73,7 +78,8 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
   const [clothingItems, setClothingItems] = useState<ClothingItem[]>([]);
   const [clothingSets, setClothingSets] = useState<ClothingSet[]>([]);
   const [favoriteOutfits, setFavoriteOutfits] = useState<FavoriteOutfit[]>([]);
-  const [userModelImage, setUserModelImage] = useState<string | null>(localStorage.getItem('dressmup_user_model_url')); // Persistance simple
+  const [wearHistory, setWearHistory] = useState<OutfitWearHistory[]>([]);
+  const [userModelImage, setUserModelImage] = useState<string | null>(localStorage.getItem('dressmup_user_model_url'));
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -90,24 +96,30 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
         setClothingItems(items);
         setLoading(false);
       });
-      
+
       const unsubscribeSets = listenToClothingSets(user.uid, (sets) => {
         setClothingSets(sets);
       });
 
-      const unsubscribeFavs = listenToFavoriteOutfits(user.uid, (favs) => { 
+      const unsubscribeFavs = listenToFavoriteOutfits(user.uid, (favs) => {
         setFavoriteOutfits(favs);
+      });
+
+      const unsubscribeHistory = listenToWearHistory(user.uid, (history) => {
+        setWearHistory(history);
       });
 
       return () => {
         unsubscribeItems();
         unsubscribeSets();
         unsubscribeFavs();
+        unsubscribeHistory();
       };
     } else {
       setClothingItems([]);
       setClothingSets([]);
       setFavoriteOutfits([]);
+      setWearHistory([]);
       setLoading(false);
     }
   }, [user]);
@@ -190,21 +202,37 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
     await deleteClothingSet(user.uid, setId);
   }, [user]);
 
+  const recordOutfitWearCallback = useCallback(async (
+    outfitTitle: string,
+    outfitDescription: string,
+    itemIds: string[]
+  ) => {
+    if (!user) return;
+    await addOutfitWearHistory(user.uid, outfitTitle, outfitDescription, itemIds);
+  }, [user]);
+
+  const getItemWearCount = useCallback((itemId: string): number => {
+    return wearHistory.filter(history => history.itemIds.includes(itemId)).length;
+  }, [wearHistory]);
+
   const value = {
     clothingItems,
     clothingSets,
     favoriteOutfits,
-    userModelImage, // Export du state
+    wearHistory,
+    userModelImage,
     setUserModelImage,
-    updateUserModelPhoto: updateUserModelPhotoCallback, // Export de la fonction
+    updateUserModelPhoto: updateUserModelPhotoCallback,
     isAnalyzing,
     analyzeClothingItems,
     deleteClothingItem: deleteClothingItemCallback,
     updateClothingItem: updateClothingItemCallback,
     createClothingSet: createClothingSetCallback,
     deleteClothingSet: deleteClothingSetCallback,
-    addFavoriteOutfit: addFavoriteOutfitCallback, 
+    addFavoriteOutfit: addFavoriteOutfitCallback,
     deleteFavoriteOutfit: deleteFavoriteOutfitCallback,
+    recordOutfitWear: recordOutfitWearCallback,
+    getItemWearCount,
     loading,
   };
 

@@ -10,16 +10,18 @@ interface ClothingDetailModalProps {
   onGenerateFrom: (item: ClothingItem) => void;
   onRemoveSet: (setId: string) => void;
   onDelete: (itemId: string) => void;
+  getItemWearCount: (itemId: string) => number;
 }
 
-const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({ 
-    item, 
-    clothingSets, 
-    onClose, 
-    onUpdate, 
-    onGenerateFrom, 
-    onRemoveSet, 
-    onDelete 
+const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
+    item,
+    clothingSets,
+    onClose,
+    onUpdate,
+    onGenerateFrom,
+    onRemoveSet,
+    onDelete,
+    getItemWearCount
 }) => {
     const [formData, setFormData] = useState<Omit<ClothingItem, 'id' | 'imageSrc'>>({
         analysis: item.analysis,
@@ -139,13 +141,27 @@ firstFocusable?.focus();
                                 <input type="text" id="material" name="material" value={formData.material} onChange={handleChange} className="mt-1 w-full px-3 py-2 bg-snow dark:bg-onyx border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gold focus:border-gold transition-colors text-sm text-raisin-black dark:text-snow" />
                             </div>
                         </div>
+
+                        {/* Statistique de port */}
+                        <div className="bg-gradient-to-r from-gold/5 to-gold-dark/5 dark:from-gold/10 dark:to-gold-dark/10 p-3 rounded-lg border border-gold/20">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-xs font-semibold text-gold dark:text-gold-light uppercase tracking-wider">Statistique</p>
+                                    <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                                        Porté <span className="font-bold text-lg text-gold">{getItemWearCount(item.id)}</span> fois ces 30 derniers jours
+                                    </p>
+                                </div>
+                                <div className="text-3xl">👕</div>
+                            </div>
+                        </div>
+
                         {belongingSet && (
                             <div className="bg-gold/10 dark:bg-gold/20 p-3 rounded-lg flex items-center justify-between gap-4">
                                 <div>
                                     <p className="text-xs font-semibold text-gold uppercase tracking-wider">Fait partie de l'ensemble</p>
                                     <p className="font-medium text-onyx dark:text-snow truncate" title={belongingSet.name}>{belongingSet.name}</p>
                                 </div>
-                                <button 
+                                <button
                                     type="button"
                                     onClick={() => {
                                         onRemoveSet(belongingSet.id);
