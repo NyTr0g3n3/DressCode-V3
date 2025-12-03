@@ -99,9 +99,9 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                 maxHeight * 0.95
             ]}
         >
-            <div className="bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
-                <div className="relative">
-                    <img src={item.imageSrc} alt={item.analysis} className="w-full h-auto max-h-[40vh] object-cover" />
+            <div className="bg-white dark:bg-raisin-black text-raisin-black dark:text-snow pt-4">
+                <div className="relative px-4">
+                    <img src={item.imageSrc} alt={item.analysis} className="w-full h-auto max-h-[40vh] object-cover rounded-lg" />
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6">
