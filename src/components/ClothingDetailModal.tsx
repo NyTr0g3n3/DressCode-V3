@@ -76,6 +76,22 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
             open={!!item}
             onDismiss={onClose}
             className={isDarkMode ? 'dark' : ''}
+            header={
+                <div className="flex items-center justify-between w-full px-4 py-2">
+                    <h2 className="text-lg font-bold text-raisin-black dark:text-snow">Détails de l'article</h2>
+                    <button
+                        onClick={handleToggleFavorite}
+                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                        aria-label="Ajouter aux favoris"
+                    >
+                        {item.isFavorite ? (
+                            <HeartIconSolid className="w-6 h-6 text-red-500" />
+                        ) : (
+                            <HeartIcon className="w-6 h-6" />
+                        )}
+                    </button>
+                </div>
+            }
             defaultSnap={({ maxHeight }) => maxHeight * 0.85}
             snapPoints={({ maxHeight }) => [
                 maxHeight * 0.5,
@@ -86,18 +102,6 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
             <div className="bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
                 <div className="relative">
                     <img src={item.imageSrc} alt={item.analysis} className="w-full h-auto max-h-[40vh] object-cover" />
-
-                    <button
-                        onClick={handleToggleFavorite}
-                        className="absolute top-3 left-3 p-1.5 bg-black/40 backdrop-blur-sm rounded-full text-white hover:bg-black/60 transition-colors"
-                        aria-label="Ajouter aux favoris"
-                    >
-                        {item.isFavorite ? (
-                            <HeartIconSolid className="w-6 h-6 text-red-500" />
-                        ) : (
-                            <HeartIcon className="w-6 h-6" />
-                        )}
-                    </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6">
