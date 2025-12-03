@@ -32,6 +32,7 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
     });
 
     const [isSaved, setIsSaved] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const isDarkMode = document.documentElement.classList.contains('dark');
 
     const belongingSet = clothingSets.find(set => set.itemIds.includes(item.id));
@@ -44,6 +45,22 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
             material: item.material
         });
     }, [item]);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        if (!isMobile) {
+            const handleKeyDown = (e: KeyboardEvent) => {
+                if (e.key === 'Escape') onClose();
+            };
+            window.addEventListener('keydown', handleKeyDown);
+            return () => window.removeEventListener('keydown', handleKeyDown);
+        }
+    }, [isMobile, onClose]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -71,40 +88,14 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
         onUpdate({ ...item, isFavorite: !item.isFavorite });
     };
 
-    return (
-        <BottomSheet
-            open={!!item}
-            onDismiss={onClose}
-            className={isDarkMode ? 'dark' : ''}
-            header={
-                <div className="flex items-center justify-between w-full px-4 py-2">
-                    <h2 className="text-lg font-bold text-raisin-black dark:text-snow">Détails de l'article</h2>
-                    <button
-                        onClick={handleToggleFavorite}
-                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-                        aria-label="Ajouter aux favoris"
-                    >
-                        {item.isFavorite ? (
-                            <HeartIconSolid className="w-6 h-6 text-red-500" />
-                        ) : (
-                            <HeartIcon className="w-6 h-6" />
-                        )}
-                    </button>
-                </div>
-            }
-            defaultSnap={({ maxHeight }) => maxHeight * 0.85}
-            snapPoints={({ maxHeight }) => [
-                maxHeight * 0.5,
-                maxHeight * 0.85,
-                maxHeight * 0.95
-            ]}
-        >
-            <div className="bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
-                <div className="relative px-4 pt-2 pb-4">
-                    <img src={item.imageSrc} alt={item.analysis} className="w-full h-auto max-h-[40vh] object-contain rounded-lg" />
-                </div>
+    // Contenu réutilisable du formulaire
+    const modalContent = (
+        <div className="bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
+            <div className="relative px-4 pt-2 pb-4">
+                <img src={item.imageSrc} alt={item.analysis} className="w-full h-auto max-h-[40vh] object-contain rounded-lg" />
+            </div>
 
-                <form onSubmit={handleSubmit} className="p-6">
+            <form onSubmit={handleSubmit} className="p-6">
                     <div className="space-y-4">
                         <div>
                             <label htmlFor="analysis" className="block text-sm font-medium text-gray-500 dark:text-gray-400">Description</label>
@@ -231,7 +222,82 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                     </div>
                 </form>
             </div>
-        </BottomSheet>
+    );
+
+    // Version mobile : BottomSheet
+    if (isMobile) {
+        return (
+            <BottomSheet
+                open={!!item}
+                onDismiss={onClose}
+                className={isDarkMode ? 'dark' : ''}
+                header={
+                    <div className="flex items-center justify-between w-full px-4 py-2">
+                        <h2 className="text-lg font-bold text-raisin-black dark:text-snow">Détails de l'article</h2>
+                        <button
+                            onClick={handleToggleFavorite}
+                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                            aria-label="Ajouter aux favoris"
+                        >
+                            {item.isFavorite ? (
+                                <HeartIconSolid className="w-6 h-6 text-red-500" />
+                            ) : (
+                                <HeartIcon className="w-6 h-6" />
+                            )}
+                        </button>
+                    </div>
+                }
+                defaultSnap={({ maxHeight }) => maxHeight * 0.85}
+                snapPoints={({ maxHeight }) => [
+                    maxHeight * 0.5,
+                    maxHeight * 0.85,
+                    maxHeight * 0.95
+                ]}
+            >
+                {modalContent}
+            </BottomSheet>
+        );
+    }
+
+    // Version desktop : Modal classique
+    return (
+        <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={onClose}
+        >
+            <div
+                className="relative bg-white dark:bg-raisin-black rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Header desktop avec X */}
+                <div className="sticky top-0 bg-white dark:bg-raisin-black border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
+                    <h2 className="text-xl font-bold text-raisin-black dark:text-snow">Détails de l'article</h2>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleToggleFavorite}
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                            aria-label="Ajouter aux favoris"
+                        >
+                            {item.isFavorite ? (
+                                <HeartIconSolid className="w-6 h-6 text-red-500" />
+                            ) : (
+                                <HeartIcon className="w-6 h-6" />
+                            )}
+                        </button>
+                        <button
+                            onClick={onClose}
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                            aria-label="Fermer"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                {modalContent}
+            </div>
+        </div>
     );
 };
 
