@@ -49,6 +49,7 @@ export interface WardrobeSuggestion {
   reason: string;
   priority: 'high' | 'medium' | 'low';
   estimatedPrice?: string;
+  searchQuery: string; // Query optimisée pour recherche en ligne
 }
 
 export interface WardrobeAnalysis {

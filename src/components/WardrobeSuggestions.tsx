@@ -102,15 +102,43 @@ const WardrobeSuggestions: React.FC<WardrobeSuggestionsProps> = ({ analysis, onC
                   <p className="text-sm mb-3 text-gray-700 dark:text-gray-300">
                     <span className="font-semibold">Pourquoi ?</span> {suggestion.reason}
                   </p>
-                  
-                  {suggestion.estimatedPrice && (
-                    <div className="flex items-center gap-2 text-sm text-gold font-semibold">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      {suggestion.estimatedPrice}
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    {suggestion.estimatedPrice && (
+                      <div className="flex items-center gap-2 text-sm text-gold font-semibold">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {suggestion.estimatedPrice}
+                      </div>
+                    )}
+
+                    {/* Boutons de recherche */}
+                    <div className="flex flex-wrap gap-2 ml-auto">
+                      <a
+                        href={`https://www.zalando.fr/recherche/?q=${encodeURIComponent(suggestion.searchQuery)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-semibold rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-sm hover:shadow-md"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Zalando
+                      </a>
+                      <a
+                        href={`https://www.google.com/search?q=${encodeURIComponent(suggestion.searchQuery + ' achat en ligne')}&tbm=shop`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-semibold rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm hover:shadow-md"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                        Google Shopping
+                      </a>
                     </div>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>
