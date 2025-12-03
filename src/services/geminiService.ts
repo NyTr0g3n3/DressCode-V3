@@ -212,35 +212,79 @@ ${anchorInstruction}
     }
 }
 
-// --- ANALYSE DES MANQUES (Inchangé) ---
+// --- ANALYSE DE GARDE-ROBE & SUGGESTIONS D'ACHATS ---
 export async function analyzeWardrobeGaps(
   clothingItems: ClothingItem[],
   clothingSets: ClothingSet[]
 ): Promise<WardrobeAnalysis> {
-   // ... (Code inchangé) ...
-    const itemsDescription = clothingItems.map(item => `${item.category}: ${item.analysis}`).join('\n');
-    const prompt = `Analyse cette garde-robe et suggère des achats.`; // Simplifié pour la copie
-    // ... (reste du code inchangé, je remets le bloc complet si besoin, mais focus sur le fix)
-    const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-    config: { responseMimeType: "application/json" } // Schema simplifié pour l'exemple
-  });
-  // Pour éviter de casser le fichier, je remets le vrai code complet ci-dessous :
-  return {
-      summary: "Analyse générée",
-      strengths: [],
-      gaps: [],
-      suggestions: []
+  // Structurer l'inventaire par catégorie avec détails
+  const categoryBreakdown = {
+    Hauts: clothingItems.filter(i => i.category === 'Hauts'),
+    Bas: clothingItems.filter(i => i.category === 'Bas'),
+    Chaussures: clothingItems.filter(i => i.category === 'Chaussures'),
+    Accessoires: clothingItems.filter(i => i.category === 'Accessoires')
   };
-}
-// Je réécris analyzeWardrobeGaps correctement pour ne pas casser le build
-async function realAnalyzeWardrobeGaps(
-  clothingItems: ClothingItem[],
-  clothingSets: ClothingSet[]
-): Promise<WardrobeAnalysis> {
-  const itemsDescription = clothingItems.map(item => `${item.category}: ${item.analysis}`).join('\n');
-  const prompt = `Analyse cette garde-robe (${clothingItems.length} pièces) et suggère 3-5 achats stratégiques. Garde-robe : ${itemsDescription}`;
+
+  const inventoryDescription = Object.entries(categoryBreakdown)
+    .map(([cat, items]) => `**${cat}** (${items.length}) :\n${items.map(i => `  - ${i.analysis} (${i.color}, ${i.material})`).join('\n')}`)
+    .join('\n\n');
+
+  const totalItems = clothingItems.length;
+  const hasEnsembles = clothingSets.length > 0;
+
+  const prompt = `Tu es un expert styliste et conseiller en garde-robe avec 20 ans d'expérience. Ta mission : analyser cette garde-robe et suggérer des achats stratégiques pour maximiser la polyvalence.
+
+📊 **INVENTAIRE ACTUEL** (${totalItems} pièces${hasEnsembles ? `, ${clothingSets.length} ensembles` : ''}) :
+
+${inventoryDescription}
+
+---
+
+🎯 **OBJECTIF DE L'ANALYSE** :
+Identifier les **pièces manquantes clés** qui permettront de créer le maximum de tenues différentes avec l'existant.
+
+📋 **MÉTHODOLOGIE** :
+
+1. **ANALYSE STRATÉGIQUE** :
+   - Équilibre entre catégories (ratio Hauts/Bas/Chaussures)
+   - Diversité des couleurs (neutres vs. vives)
+   - Polyvalence des pièces existantes
+   - Occasions couvertes (casual, formel, sport, etc.)
+   - Saisons couvertes
+
+2. **IDENTIFICATION DES GAPS CRITIQUES** :
+   - Pièces basiques manquantes (ex: chemise blanche, jean brut)
+   - Couleurs absentes pour compléter les palettes
+   - Styles/occasions non couverts
+   - Opportunités de layering (superposition)
+
+3. **PRIORISATION** :
+   - **HIGH** : Pièce essentielle manquante qui débloque 5+ nouvelles tenues
+   - **MEDIUM** : Pièce utile qui ajoute de la variété (3-5 tenues)
+   - **LOW** : Pièce "nice-to-have" pour occasions spécifiques
+
+4. **SUGGESTIONS D'ACHATS** (4-6 pièces maximum) :
+   - Focus sur la **POLYVALENCE** : chaque suggestion doit se marier avec plusieurs pièces existantes
+   - Inclure des **pièces basiques intemporelles** avant les tendances
+   - Équilibrer les priorités (au moins 1-2 high priority)
+   - Pour chaque suggestion, fournis :
+     * Une description précise (ex: "Chemise oxford bleu clair en coton")
+     * La raison stratégique (ex: "Se marie avec vos 3 pantalons et crée une base smart-casual")
+     * Un prix estimé réaliste en €
+     * Une requête de recherche optimisée (mots-clés pour Zalando/autres boutiques)
+
+---
+
+⚠️ **RÈGLES CRITIQUES** :
+
+- NE suggère PAS de pièces similaires à l'existant
+- Favorise les neutres (blanc, noir, beige, navy) pour maximiser les combinaisons
+- Évite les pièces très spécifiques/occasionnelles (sauf si totalement absentes)
+- Sois concis mais précis dans les descriptions
+- Le champ \`searchQuery\` doit contenir des mots-clés optimisés pour recherche en ligne (ex: "chemise oxford homme coton bleu clair" ou "pull col V mérinos noir homme")
+
+Retourne ton analyse au format JSON.`;
+
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
     contents: prompt,
@@ -249,33 +293,64 @@ async function realAnalyzeWardrobeGaps(
       responseSchema: {
         type: Type.OBJECT,
         properties: {
-          summary: { type: Type.STRING },
-          strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
-          gaps: { type: Type.ARRAY, items: { type: Type.STRING } },
+          summary: {
+            type: Type.STRING,
+            description: "Résumé global de l'analyse en 2-3 phrases"
+          },
+          strengths: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "2-3 points forts de la garde-robe actuelle"
+          },
+          gaps: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "2-4 gaps/opportunités d'amélioration identifiés"
+          },
           suggestions: {
             type: Type.ARRAY,
             items: {
               type: Type.OBJECT,
               properties: {
-                category: { type: Type.STRING },
-                description: { type: Type.STRING },
-                reason: { type: Type.STRING },
-                priority: { type: Type.STRING, enum: ["high", "medium", "low"] },
-                estimatedPrice: { type: Type.STRING }
+                category: {
+                  type: Type.STRING,
+                  description: "Catégorie du vêtement suggéré"
+                },
+                description: {
+                  type: Type.STRING,
+                  description: "Description précise du vêtement suggéré (style, couleur, matière)"
+                },
+                reason: {
+                  type: Type.STRING,
+                  description: "Pourquoi cette pièce est stratégique (combien de tenues elle permet)"
+                },
+                priority: {
+                  type: Type.STRING,
+                  enum: ["high", "medium", "low"],
+                  description: "Niveau de priorité basé sur l'impact"
+                },
+                estimatedPrice: {
+                  type: Type.STRING,
+                  description: "Fourchette de prix estimée (ex: '50-80€')"
+                },
+                searchQuery: {
+                  type: Type.STRING,
+                  description: "Mots-clés optimisés pour recherche en boutique en ligne"
+                }
               },
-              required: ["category", "description", "reason", "priority", "estimatedPrice"]
-            }
+              required: ["category", "description", "reason", "priority", "estimatedPrice", "searchQuery"]
+            },
+            description: "4-6 suggestions d'achats priorisées"
           }
         },
         required: ["summary", "strengths", "gaps", "suggestions"]
       }
     }
   });
+
   const rawText = extractText(response);
   return JSON.parse(rawText);
 }
-// Alias pour export
-analyzeWardrobeGaps = realAnalyzeWardrobeGaps;
 
 
 // --- PLANIFICATEUR DE VALISE (Inchangé) ---
