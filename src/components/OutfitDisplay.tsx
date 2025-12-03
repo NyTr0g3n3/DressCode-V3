@@ -2,6 +2,10 @@ import React, { useState, useEffect, memo } from 'react';
 import type { OutfitSuggestion, ClothingItem, ClothingSet, OutfitItem, FavoriteOutfit } from '../types.ts';
 import { QuestionMarkIcon, XIcon, HeartIcon, HeartIconSolid, MagicWandIcon, LoadingSpinner } from './icons.tsx';
 
+// FEATURE FLAG: Fonctionnalité de génération visuelle désactivée temporairement
+// TODO: Réactiver quand une solution viable sera trouvée
+const ENABLE_VISUAL_GENERATION = false;
+
 interface OutfitDisplayProps {
   outfits: OutfitSuggestion[] | FavoriteOutfit[];
   allClothingItems: ClothingItem[];
@@ -115,15 +119,20 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </button>
-                    <button
-                      onClick={() => onGenerateVisual(outfit)}
-                      disabled={isLoadingVisual}
-                      className="p-1.5 text-gray-400 hover:text-gold dark:hover:text-gold transition-colors disabled:cursor-not-allowed"
-                      aria-label="Générer un rendu visuel"
-                      title="Générer un rendu visuel"
-                    >
-                      {isLoadingVisual ? <LoadingSpinner className="h-5 w-5" /> : <MagicWandIcon />}
-                    </button>
+                    {/* FONCTIONNALITÉ DÉSACTIVÉE: Génération visuelle sur mannequin
+                        Raison: Solution Replicate non viable
+                        TODO: Réactiver quand une meilleure solution sera trouvée */}
+                    {ENABLE_VISUAL_GENERATION && (
+                      <button
+                        onClick={() => onGenerateVisual(outfit)}
+                        disabled={isLoadingVisual}
+                        className="p-1.5 text-gray-400 hover:text-gold dark:hover:text-gold transition-colors disabled:cursor-not-allowed"
+                        aria-label="Générer un rendu visuel"
+                        title="Générer un rendu visuel"
+                      >
+                        {isLoadingVisual ? <LoadingSpinner className="h-5 w-5" /> : <MagicWandIcon />}
+                      </button>
+                    )}
                     <button
                       onClick={() => onToggleFavorite(outfit)}
                       className="p-1.5 text-gray-400 hover:text-gold dark:hover:text-gold transition-colors"

@@ -4,6 +4,10 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
 import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, FavoriteOutfit } from './types.ts';
 import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps, generateVisualOutfit } from './services/geminiService.ts';
+
+// FEATURE FLAG: Fonctionnalité de génération visuelle désactivée temporairement
+// TODO: Réactiver quand une solution viable sera trouvée
+const ENABLE_VISUAL_GENERATION = false;
 // Imports des composants
 import Header from './components/Header.tsx';
 import Auth from './components/Auth.tsx';
@@ -268,6 +272,11 @@ const AppContent: React.FC = () => {
 
 
   const handleGenerateVisual = useCallback(async (outfit: OutfitSuggestion) => {
+    // FONCTIONNALITÉ DÉSACTIVÉE: Génération visuelle
+    if (!ENABLE_VISUAL_GENERATION) {
+      return;
+    }
+
     setGeneratingVisualFor(outfit.titre);
     setError(null);
 
@@ -414,18 +423,20 @@ useEffect(() => {
   
   return (
     <main className="container mx-auto px-4 lg:px-8 py-10">
-      {/* BOUTON PROFIL MOBILE FLOTTANT */}
-      <button 
-        onClick={() => setShowModelProfileModal(true)}
-        className="fixed top-24 right-4 z-40 bg-white dark:bg-onyx p-2 rounded-full shadow-lg border border-gold/30 md:hidden"
-        title="Mon mannequin"
-      >
-        {userModelImage ? (
-          <img src={userModelImage} alt="Profil" className="w-8 h-8 rounded-full object-cover" />
-        ) : (
-          <div className="w-8 h-8 bg-gold/20 rounded-full flex items-center justify-center text-xs">👤</div>
-        )}
-      </button>
+      {/* FONCTIONNALITÉ DÉSACTIVÉE: Bouton profil mannequin (mobile) */}
+      {ENABLE_VISUAL_GENERATION && (
+        <button
+          onClick={() => setShowModelProfileModal(true)}
+          className="fixed top-24 right-4 z-40 bg-white dark:bg-onyx p-2 rounded-full shadow-lg border border-gold/30 md:hidden"
+          title="Mon mannequin"
+        >
+          {userModelImage ? (
+            <img src={userModelImage} alt="Profil" className="w-8 h-8 rounded-full object-cover" />
+          ) : (
+            <div className="w-8 h-8 bg-gold/20 rounded-full flex items-center justify-center text-xs">👤</div>
+          )}
+        </button>
+      )}
 
       {error && (
   <div className="bg-red-500/20 border border-red-500 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative mb-8 flex items-center justify-between shadow-sm animate-pulse" role="alert">
@@ -449,20 +460,22 @@ useEffect(() => {
         
         <div className="lg:col-span-2 space-y-10">
           
-          {/* BOUTON PROFIL DESKTOP */}
-          <div className="hidden md:flex justify-end mb-4">
-             <button 
-                onClick={() => setShowModelProfileModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-onyx border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gold transition-colors"
-             >
-                {userModelImage ? (
-                  <img src={userModelImage} alt="Profil" className="w-8 h-8 rounded-full object-cover" />
-                ) : (
-                  <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                )}
-                <span className="text-sm font-medium">Mon Mannequin Virtuel</span>
-             </button>
-          </div>
+          {/* FONCTIONNALITÉ DÉSACTIVÉE: Bouton profil mannequin (desktop) */}
+          {ENABLE_VISUAL_GENERATION && (
+            <div className="hidden md:flex justify-end mb-4">
+               <button
+                  onClick={() => setShowModelProfileModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-onyx border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gold transition-colors"
+               >
+                  {userModelImage ? (
+                    <img src={userModelImage} alt="Profil" className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                  )}
+                  <span className="text-sm font-medium">Mon Mannequin Virtuel</span>
+               </button>
+            </div>
+          )}
          
           {safeClothingItems.length >= 3 && (
             <div className="hidden md:block bg-gradient-to-r from-gold/10 to-gold-dark/10 border-2 border-gold/30 rounded-xl p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4 md:justify-between">
@@ -785,7 +798,8 @@ useEffect(() => {
         />
       )}
 
-      {generatedImageUrl && (
+      {/* FONCTIONNALITÉ DÉSACTIVÉE: Modal de résultat visuel */}
+      {ENABLE_VISUAL_GENERATION && generatedImageUrl && (
         <VisualResultModal
           imageUrl={generatedImageUrl}
           onClose={() => setGeneratedImageUrl(null)}
@@ -870,7 +884,8 @@ useEffect(() => {
       />
 
       {/* NOUVELLE MODALE PROFIL (s'affiche si activée par l'utilisateur ou automatiquement si pas de photo) */}
-      {showModelProfileModal && (
+      {/* FONCTIONNALITÉ DÉSACTIVÉE: Modal profil mannequin */}
+      {ENABLE_VISUAL_GENERATION && showModelProfileModal && (
         <ModelProfileModal onClose={() => setShowModelProfileModal(false)} />
       )}
 
