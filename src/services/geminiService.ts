@@ -134,16 +134,16 @@ Analyse la météo dans le contexte et applique :
 
 | Température | Règle stricte |
 |-------------|---------------|
-| **< 10°C** | Layering OBLIGATOIRE : Base (t-shirt/chemise) + Pull/Sweat + Manteau |
-| **10-20°C** | Pull, sweat, ou veste légère suffisent |
+| **< 15°C** | Layering OBLIGATOIRE : Base (t-shirt/chemise) + Pull/Sweat + Manteau |
+| **15-20°C** | Pull, sweat, ou veste légère suffisent |
 | **20-25°C** | 1 seule couche (t-shirt OU chemise légère) |
 | **> 25°C** | Vêtements TRÈS légers uniquement. INTERDITS : jeans épais, pulls, vestes |
 
 ⚠️ **INTERDICTIONS THERMIQUES** :
 - Doudoune/manteau si > 15°C
-- Short si < 12°C
-- Pull laine si > 22°C
-- Sandales si < 15°C
+- Short si < 22°C
+- Pull laine si > 15°C
+- Sandales si < 25°C
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🟠 PRIORITÉ 2 - LAYERING (SUPERPOSITION)
@@ -155,10 +155,10 @@ Analyse la météo dans le contexte et applique :
 ✅ **Pull col zippé/camionneur** → TOUJOURS avec t-shirt ou chemise dessous
 ✅ **Veste/Blazer** → Sur t-shirt, chemise, pull fin, ou col roulé
 ✅ **Manteau** → Sur pull, sweat, ou veste (si très froid)
-✅ **Col roulé** → Seul OU sous une veste (JAMAIS sous chemise !)
+✅ **Col roulé** → JAMAIS avec chemise !
 
 ❌ **INTERDICTIONS ABSOLUES DE LAYERING** :
-- JAMAIS chemise sur col roulé (aberration stylistique)
+- JAMAIS chemise avec col roulé (aberration stylistique)
 - JAMAIS col V sans rien dessous en contexte formel
 - JAMAIS pull épais sous veste ajustée (volume excessif)
 - JAMAIS 2 cols montants ensemble (col roulé + col montant)
