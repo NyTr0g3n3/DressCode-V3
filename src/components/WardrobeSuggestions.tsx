@@ -113,31 +113,18 @@ const WardrobeSuggestions: React.FC<WardrobeSuggestionsProps> = ({ analysis, onC
                       </div>
                     )}
 
-                    {/* Boutons de recherche */}
-                    <div className="flex flex-wrap gap-2 ml-auto">
-                      <a
-                        href={`https://www.zalando.fr/recherche/?q=${encodeURIComponent(suggestion.searchQuery)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-semibold rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-sm hover:shadow-md"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        Zalando
-                      </a>
-                      <a
-                        href={`https://www.google.com/search?q=${encodeURIComponent(suggestion.searchQuery + ' achat en ligne')}&tbm=shop`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-semibold rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm hover:shadow-md"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                        </svg>
-                        Google Shopping
-                      </a>
-                    </div>
+                    {/* Bouton de recherche */}
+                    <a
+                      href={`https://www.google.com/search?q=${encodeURIComponent(suggestion.searchQuery + ' achat en ligne')}&tbm=shop`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-semibold rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm hover:shadow-md"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      Rechercher en ligne
+                    </a>
                   </div>
                 </div>
               ))}
