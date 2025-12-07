@@ -243,7 +243,8 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
     // Modale de confirmation de suppression
     const deleteConfirmModal = showDeleteConfirm && (
         <div
-            className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4 transition-opacity duration-200"
+            className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 transition-opacity duration-200"
+            style={{ zIndex: 9999 }}
             onClick={handleCancelDelete}
         >
             <div
@@ -307,7 +308,6 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
     if (isMobile) {
         return (
             <>
-                {deleteConfirmModal}
                 <BottomSheet
                 open={!!item}
                 onDismiss={onClose}
@@ -337,6 +337,7 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
             >
                 {modalContent}
             </BottomSheet>
+            {deleteConfirmModal}
             </>
         );
     }
@@ -344,7 +345,6 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
     // Version desktop : Modal classique
     return (
         <>
-            {deleteConfirmModal}
         <div
             className={`fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 transition-opacity duration-200 ${
                 isVisible ? 'opacity-100' : 'opacity-0'
@@ -386,6 +386,7 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                 {modalContent}
             </div>
         </div>
+        {deleteConfirmModal}
         </>
     );
 };
