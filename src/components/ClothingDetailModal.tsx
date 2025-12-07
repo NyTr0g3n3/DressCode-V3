@@ -242,8 +242,14 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
 
     // Modale de confirmation de suppression
     const deleteConfirmModal = showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-raisin-black rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+        <div
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4 transition-opacity duration-200"
+            onClick={handleCancelDelete}
+        >
+            <div
+                className="bg-white dark:bg-raisin-black rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all duration-200 scale-100"
+                onClick={e => e.stopPropagation()}
+            >
                 {/* Image miniature */}
                 <div className="flex items-start gap-4 mb-4">
                     <img
