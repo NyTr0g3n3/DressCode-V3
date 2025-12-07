@@ -253,7 +253,7 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
     const deleteConfirmModal = showDeleteConfirm ? createPortal(
         <div
             className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 transition-opacity duration-200"
-            style={{ zIndex: 9999 }}
+            style={{ zIndex: 999999, pointerEvents: 'auto' }}
             onClick={(e) => {
                 console.log('🖱️ Clic sur backdrop');
                 handleCancelDelete();
