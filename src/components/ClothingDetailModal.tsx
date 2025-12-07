@@ -333,6 +333,7 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                 open={!!item}
                 onDismiss={onClose}
                 className={isDarkMode ? 'dark' : ''}
+                style={showDeleteConfirm ? { pointerEvents: 'none' } : undefined}
                 header={
                     <div className="flex items-center justify-between w-full px-4 py-2">
                         <h2 className="text-lg font-bold text-raisin-black dark:text-snow">Détails de l'article</h2>
@@ -370,12 +371,14 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
             className={`fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 transition-opacity duration-200 ${
                 isVisible ? 'opacity-100' : 'opacity-0'
             }`}
+            style={showDeleteConfirm ? { pointerEvents: 'none' } : undefined}
             onClick={onClose}
         >
             <div
                 className={`relative bg-white dark:bg-raisin-black rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transition-all duration-200 ${
                     isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
                 }`}
+                style={showDeleteConfirm ? { pointerEvents: 'none' } : undefined}
                 onClick={e => e.stopPropagation()}
             >
                 {/* Header desktop avec X */}
