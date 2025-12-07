@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import type { ClothingItem, ClothingSet, Category } from '../types.ts';
 import { SparklesIcon, UnlinkIcon, CheckCircleIcon, RemoveIcon, HeartIcon, HeartIconSolid } from './icons.tsx';
@@ -86,16 +87,19 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
     };
 
     const handleDeleteClick = () => {
+        console.log('🗑️ Ouverture confirmation suppression');
         setShowDeleteConfirm(true);
     };
 
     const handleConfirmDelete = () => {
+        console.log('✅ Confirmation suppression');
         onDelete(item.id);
         setShowDeleteConfirm(false);
         onClose();
     };
 
     const handleCancelDelete = () => {
+        console.log('❌ Annulation suppression');
         setShowDeleteConfirm(false);
     };
 
@@ -240,12 +244,20 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
             </div>
     );
 
-    // Modale de confirmation de suppression
-    const deleteConfirmModal = showDeleteConfirm && (
+    // Log pour debugging
+    useEffect(() => {
+        console.log('🔍 showDeleteConfirm:', showDeleteConfirm);
+    }, [showDeleteConfirm]);
+
+    // Modale de confirmation de suppression - Utilise un Portal pour garantir qu'elle est au-dessus de tout
+    const deleteConfirmModal = showDeleteConfirm ? createPortal(
         <div
             className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 transition-opacity duration-200"
             style={{ zIndex: 9999 }}
-            onClick={handleCancelDelete}
+            onClick={(e) => {
+                console.log('🖱️ Clic sur backdrop');
+                handleCancelDelete();
+            }}
         >
             <div
                 className="bg-white dark:bg-raisin-black rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all duration-200 scale-100"
@@ -288,21 +300,30 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                 {/* Boutons */}
                 <div className="flex gap-3">
                     <button
-                        onClick={handleCancelDelete}
+                        onClick={(e) => {
+                            console.log('🖱️ Clic sur bouton Annuler');
+                            e.stopPropagation();
+                            handleCancelDelete();
+                        }}
                         className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                     >
                         Annuler
                     </button>
                     <button
-                        onClick={handleConfirmDelete}
+                        onClick={(e) => {
+                            console.log('🖱️ Clic sur bouton Supprimer');
+                            e.stopPropagation();
+                            handleConfirmDelete();
+                        }}
                         className="flex-1 px-4 py-2.5 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors shadow-lg shadow-red-500/30"
                     >
                         Supprimer
                     </button>
                 </div>
             </div>
-        </div>
-    );
+        </div>,
+        document.body
+    ) : null;
 
     // Version mobile : BottomSheet
     if (isMobile) {
