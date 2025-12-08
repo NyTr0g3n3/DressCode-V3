@@ -330,10 +330,9 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
         return (
             <>
                 <BottomSheet
-                open={!!item}
+                open={!!item && !showDeleteConfirm}
                 onDismiss={onClose}
                 className={isDarkMode ? 'dark' : ''}
-                style={showDeleteConfirm ? { pointerEvents: 'none' } : undefined}
                 header={
                     <div className="flex items-center justify-between w-full px-4 py-2">
                         <h2 className="text-lg font-bold text-raisin-black dark:text-snow">Détails de l'article</h2>
