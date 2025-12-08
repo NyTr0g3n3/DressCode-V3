@@ -87,19 +87,16 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
     };
 
     const handleDeleteClick = () => {
-        console.log('🗑️ Ouverture confirmation suppression');
         setShowDeleteConfirm(true);
     };
 
     const handleConfirmDelete = () => {
-        console.log('✅ Confirmation suppression');
         onDelete(item.id);
         setShowDeleteConfirm(false);
         onClose();
     };
 
     const handleCancelDelete = () => {
-        console.log('❌ Annulation suppression');
         setShowDeleteConfirm(false);
     };
 
@@ -244,20 +241,12 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
             </div>
     );
 
-    // Log pour debugging
-    useEffect(() => {
-        console.log('🔍 showDeleteConfirm:', showDeleteConfirm);
-    }, [showDeleteConfirm]);
-
     // Modale de confirmation de suppression - Utilise un Portal pour garantir qu'elle est au-dessus de tout
     const deleteConfirmModal = showDeleteConfirm ? createPortal(
         <div
             className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 transition-opacity duration-200"
             style={{ zIndex: 999999, pointerEvents: 'auto' }}
-            onClick={(e) => {
-                console.log('🖱️ Clic sur backdrop');
-                handleCancelDelete();
-            }}
+            onClick={handleCancelDelete}
         >
             <div
                 className="bg-white dark:bg-raisin-black rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all duration-200 scale-100"
@@ -301,7 +290,6 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                 <div className="flex gap-3">
                     <button
                         onClick={(e) => {
-                            console.log('🖱️ Clic sur bouton Annuler');
                             e.stopPropagation();
                             handleCancelDelete();
                         }}
@@ -311,7 +299,6 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                     </button>
                     <button
                         onClick={(e) => {
-                            console.log('🖱️ Clic sur bouton Supprimer');
                             e.stopPropagation();
                             handleConfirmDelete();
                         }}
