@@ -7,7 +7,7 @@ import { functions } from '../firebase';
 if (!config.geminiApiKey) {
   throw new Error("Clé API manquante. Veuillez la configurer dans vos variables d'environnement.");
 }
-
+ 
 const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
 
 type AnalysisResult = Omit<ClothingItem, 'id' | 'imageSrc'>;
