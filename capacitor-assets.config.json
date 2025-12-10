@@ -1,0 +1,13 @@
+{
+  "iconBackgroundColor": "#D4AF37",
+  "iconBackgroundColorDark": "#D4AF37",
+  "splashBackgroundColor": "#1A1A1A",
+  "splashBackgroundColorDark": "#1A1A1A",
+  "android": {
+    "iconForegroundColor": "#111111",
+    "iconBackgroundColor": "#D4AF37"
+  },
+  "ios": {
+    "backgroundColor": "#1A1A1A"
+  }
+}

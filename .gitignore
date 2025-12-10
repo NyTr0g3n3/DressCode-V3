@@ -81,3 +81,29 @@ package-lock.json
 .env.production
 .env.development
 *.local
+
+# Capacitor
+.capacitor/
+ios/App/Pods/
+ios/App/Podfile.lock
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+
+# iOS
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
+ios/App/App.xcworkspace/xcuserdata/
+*.xcuserstate
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Android (si ajouté plus tard)
+android/app/build/
+android/app/release/
+android/app/debug/
+android/.gradle/
+android/gradle/

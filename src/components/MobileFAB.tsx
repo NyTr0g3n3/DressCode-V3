@@ -1,10 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { hapticFeedback } from '../utils/haptics';
+import { isNativeApp, takePictures } from '../utils/capacitorCamera';
+import { Camera, CameraSource } from '@capacitor/camera';
 
 interface MobileFABProps {
   onFilesSelected: (files: File[]) => void;
   isAnalyzing: boolean;
-  isOtherModalOpen: boolean; 
+  isOtherModalOpen: boolean;
 }
 
 const MobileFAB: React.FC<MobileFABProps> = ({ 
@@ -32,12 +34,89 @@ const MobileFAB: React.FC<MobileFABProps> = ({
     setIsOpen(!isOpen);
   };
 
-  const handleCameraClick = () => {
-    cameraInputRef.current?.click();
+  const handleCameraClick = async () => {
+    if (isNativeApp()) {
+      try {
+        hapticFeedback.light();
+        const photo = await Camera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: 'Base64' as any,
+          source: CameraSource.Camera,
+        });
+
+        // Convertir base64 en File
+        const base64Data = photo.base64String || '';
+        const mimeType = `image/${photo.format}`;
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: mimeType });
+        const file = new File([blob], `photo_${Date.now()}.${photo.format}`, { type: mimeType });
+
+        hapticFeedback.success();
+        onFilesSelected([file]);
+        setIsOpen(false);
+      } catch (error) {
+        console.error('Erreur caméra:', error);
+        hapticFeedback.error();
+      }
+    } else {
+      cameraInputRef.current?.click();
+    }
   };
 
-  const handleGalleryClick = () => {
-    galleryInputRef.current?.click();
+  const handleGalleryClick = async () => {
+    if (isNativeApp()) {
+      try {
+        hapticFeedback.light();
+        const photos = await Camera.pickImages({
+          quality: 90,
+          limit: 10,
+        });
+
+        const files: File[] = [];
+        for (let i = 0; i < photos.photos.length; i++) {
+          const photo = photos.photos[i];
+          const base64Data = photo.base64String || photo.webPath;
+
+          if (base64Data) {
+            const mimeType = `image/${photo.format}`;
+            const base64WithoutPrefix = base64Data.includes('base64,')
+              ? base64Data.split('base64,')[1]
+              : base64Data;
+
+            const byteCharacters = atob(base64WithoutPrefix);
+            const byteNumbers = new Array(byteCharacters.length);
+
+            for (let j = 0; j < byteCharacters.length; j++) {
+              byteNumbers[j] = byteCharacters.charCodeAt(j);
+            }
+
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: mimeType });
+            const file = new File([blob], `photo_${Date.now()}_${i}.${photo.format}`, { type: mimeType });
+            files.push(file);
+          }
+        }
+
+        if (files.length > 0) {
+          hapticFeedback.success();
+          onFilesSelected(files);
+          setIsOpen(false);
+        }
+      } catch (error) {
+        console.error('Erreur galerie:', error);
+        hapticFeedback.error();
+      }
+    } else {
+      galleryInputRef.current?.click();
+    }
   };
 
   if (isOtherModalOpen) return null;
