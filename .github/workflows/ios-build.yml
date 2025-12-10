@@ -1,0 +1,51 @@
+name: Build iOS
+
+on:
+  push:
+    branches: [ main, claude/* ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm install --legacy-peer-deps
+
+    - name: Build web app
+      run: npm run build
+
+    - name: Sync Capacitor
+      run: npx cap sync ios
+
+    - name: Install CocoaPods
+      run: |
+        cd ios/App
+        pod install
+
+    - name: Build iOS (Debug)
+      run: |
+        xcodebuild -workspace ios/App/App.xcworkspace \
+          -scheme App \
+          -configuration Debug \
+          -sdk iphonesimulator \
+          -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
+          build
+
+    - name: Upload build logs
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs
+        path: |
+          ~/Library/Logs/DiagnosticReports/
+          DerivedData/Logs/
