@@ -108,9 +108,17 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
         case 'favorites':
           return (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0);
         case 'newest':
-          return (b.createdAt || 0) - (a.createdAt || 0);
+          // Items sans createdAt vont à la fin
+          if (!a.createdAt && !b.createdAt) return 0;
+          if (!a.createdAt) return 1;
+          if (!b.createdAt) return -1;
+          return b.createdAt - a.createdAt;
         case 'oldest':
-          return (a.createdAt || 0) - (b.createdAt || 0);
+          // Items sans createdAt vont à la fin
+          if (!a.createdAt && !b.createdAt) return 0;
+          if (!a.createdAt) return 1;
+          if (!b.createdAt) return -1;
+          return a.createdAt - b.createdAt;
         case 'color':
           return a.color.localeCompare(b.color);
         case 'category':
