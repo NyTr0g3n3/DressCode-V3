@@ -1,24 +1,21 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
-import {defineSecret} from "firebase-functions/params";
 import Replicate from "replicate";
 import {GoogleGenAI, Type} from "@google/genai";
 
-// Firebase Secrets
-const geminiApiKeySecret = defineSecret("GEMINI_API_KEY");
-const replicateApiTokenSecret = defineSecret("REPLICATE_API_TOKEN");
+// Variables d'environnement (à configurer via Firebase Console ou CLI)
+// Plus besoin de Secret Manager - on utilise des variables d'environnement classiques
 
 export const generateVisualOutfit = onCall(
   {
     cors: true,
     timeoutSeconds: 300,
     memory: "1GiB",
-    secrets: [replicateApiTokenSecret],
   },
   async (request) => {
     logger.info("Demarrage VTON...");
 
-    const apiToken = replicateApiTokenSecret.value();
+    const apiToken = process.env.REPLICATE_API_TOKEN;
     if (!apiToken) throw new HttpsError("failed-precondition", "API Key manquante.");
 
     const replicate = new Replicate({ auth: apiToken });
@@ -97,12 +94,11 @@ export const analyzeClothingImages = onCall(
     cors: true,
     timeoutSeconds: 60,
     memory: "512MiB",
-    secrets: [geminiApiKeySecret],
   },
   async (request) => {
     logger.info("Analyse de vêtements via Gemini...");
 
-    const apiKey = geminiApiKeySecret.value();
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new HttpsError("failed-precondition", "Clé API Gemini manquante.");
 
     const ai = new GoogleGenAI({apiKey});
@@ -178,12 +174,11 @@ export const generateOutfitsFunction = onCall(
     cors: true,
     timeoutSeconds: 60,
     memory: "512MiB",
-    secrets: [geminiApiKeySecret],
   },
   async (request) => {
     logger.info("Génération de tenues via Gemini...");
 
-    const apiKey = geminiApiKeySecret.value();
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new HttpsError("failed-precondition", "Clé API Gemini manquante.");
 
     const ai = new GoogleGenAI({apiKey});
@@ -248,12 +243,11 @@ export const analyzeWardrobeGapsFunction = onCall(
     cors: true,
     timeoutSeconds: 60,
     memory: "512MiB",
-    secrets: [geminiApiKeySecret],
   },
   async (request) => {
     logger.info("Analyse de garde-robe via Gemini...");
 
-    const apiKey = geminiApiKeySecret.value();
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new HttpsError("failed-precondition", "Clé API Gemini manquante.");
 
     const ai = new GoogleGenAI({apiKey});
@@ -345,12 +339,11 @@ export const generateVacationPlanFunction = onCall(
     cors: true,
     timeoutSeconds: 60,
     memory: "512MiB",
-    secrets: [geminiApiKeySecret],
   },
   async (request) => {
     logger.info("Génération plan vacances via Gemini...");
 
-    const apiKey = geminiApiKeySecret.value();
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new HttpsError("failed-precondition", "Clé API Gemini manquante.");
 
     const ai = new GoogleGenAI({apiKey});
