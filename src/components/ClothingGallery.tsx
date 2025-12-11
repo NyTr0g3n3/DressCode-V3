@@ -3,7 +3,7 @@ import type { ClothingItem as ClothingItemType, ClothingSet, Category } from '..
 import { motion, AnimatePresence } from 'framer-motion';
 import { SkeletonCard } from './SkeletonCard';
 import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, HeartIconSolid, SearchIcon, SortIcon } from './icons.tsx';
-
+ 
 interface CardProps {
   imageSrc: string;
   analysis: string;
