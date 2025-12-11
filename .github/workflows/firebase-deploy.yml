@@ -23,7 +23,7 @@ jobs:
       - name: Install Functions dependencies
         run: |
           cd functions
-          npm ci
+          npm install
 
       - name: Build Functions
         run: |
