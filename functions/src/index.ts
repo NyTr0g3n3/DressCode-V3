@@ -1,12 +1,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
-import {defineString} from "firebase-functions/params";
 import Replicate from "replicate";
 import {GoogleGenAI, Type} from "@google/genai";
-
-// Define environment variables
-const geminiApiKey = defineString("GEMINI_API_KEY");
-const replicateApiToken = defineString("REPLICATE_API_TOKEN");
 
 export const generateVisualOutfit = onCall(
   {
@@ -17,7 +12,7 @@ export const generateVisualOutfit = onCall(
   async (request) => {
     logger.info("Demarrage VTON...");
 
-    const apiToken = replicateApiToken.value();
+    const apiToken = process.env.REPLICATE_API_TOKEN;
     if (!apiToken) throw new HttpsError("failed-precondition", "API Key manquante.");
 
     const replicate = new Replicate({ auth: apiToken });
@@ -100,7 +95,7 @@ export const analyzeClothingImages = onCall(
   async (request) => {
     logger.info("Analyse de vêtements via Gemini...");
 
-    const apiKey = geminiApiKey.value();
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new HttpsError("failed-precondition", "Clé API Gemini manquante.");
 
     const ai = new GoogleGenAI({apiKey});
@@ -180,7 +175,7 @@ export const generateOutfitsFunction = onCall(
   async (request) => {
     logger.info("Génération de tenues via Gemini...");
 
-    const apiKey = geminiApiKey.value();
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new HttpsError("failed-precondition", "Clé API Gemini manquante.");
 
     const ai = new GoogleGenAI({apiKey});
@@ -249,7 +244,7 @@ export const analyzeWardrobeGapsFunction = onCall(
   async (request) => {
     logger.info("Analyse de garde-robe via Gemini...");
 
-    const apiKey = geminiApiKey.value();
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new HttpsError("failed-precondition", "Clé API Gemini manquante.");
 
     const ai = new GoogleGenAI({apiKey});
@@ -345,7 +340,7 @@ export const generateVacationPlanFunction = onCall(
   async (request) => {
     logger.info("Génération plan vacances via Gemini...");
 
-    const apiKey = geminiApiKey.value();
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new HttpsError("failed-precondition", "Clé API Gemini manquante.");
 
     const ai = new GoogleGenAI({apiKey});
