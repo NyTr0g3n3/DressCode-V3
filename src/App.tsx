@@ -35,9 +35,7 @@ import { WardrobeProvider, useWardrobe } from './contexts/WardrobeContext.tsx';
 import FavoriteOutfitsModal from './components/FavoriteOutfitsModal.tsx';
 import WornOutfitsModal from './components/WornOutfitsModal.tsx';
 
-import VisualResultModal from './components/VisualResultModal.tsx'; 
-
-import { hapticFeedback } from './utils/haptics.ts';
+import VisualResultModal from './components/VisualResultModal.tsx';
 
 import 'react-spring-bottom-sheet/dist/style.css';
 
@@ -144,11 +142,9 @@ const AppContent: React.FC = () => {
   if (existingFavorite) {
     deleteFavoriteOutfit(existingFavorite.id);
     setToast('Retiré des favoris');
-    hapticFeedback.light();
   } else {
     addFavoriteOutfit(outfit);
     setToast('Ajouté aux favoris ❤️');
-    hapticFeedback.success();
   }
 
   setTimeout(() => setToast(null), 2000);
@@ -160,11 +156,9 @@ const AppContent: React.FC = () => {
     if (isAlreadySelected) {
       setSelectedOutfit(null);
       setToast('Sélection annulée');
-      hapticFeedback.light();
     } else {
       setSelectedOutfit(outfit);
       setToast('Tenue choisie ✨');
-      hapticFeedback.success();
 
       // Enregistrer le port de la tenue dans l'historique
       const itemIds = outfit.vetements.map(item => item.id);
@@ -344,10 +338,8 @@ const AppContent: React.FC = () => {
 
   const handlePullToRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    hapticFeedback.medium();
     await new Promise(resolve => setTimeout(resolve, 1000));
     setIsRefreshing(false);
-    hapticFeedback.success();
   }, []);
 
   const categoryCounts = {
