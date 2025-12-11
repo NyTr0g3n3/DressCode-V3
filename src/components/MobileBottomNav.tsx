@@ -1,6 +1,5 @@
 import React from 'react';
 import type { Category } from '../types';
-import { hapticFeedback } from '../utils/haptics';
 
 type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
 
@@ -77,10 +76,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onTabChang
           return (
             <button
               key={tab.id}
-              onClick={() => {
-                hapticFeedback.light();
-                onTabChange(tab.id);
-              }}
+              onClick={() => onTabChange(tab.id)}
               className={`flex flex-col items-center justify-center gap-1 px-3 py-2 transition-all flex-1 ${
                 isActive ? 'text-gold' : 'text-gray-500 dark:text-gray-400'
               }`}
