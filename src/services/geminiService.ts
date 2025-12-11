@@ -1,102 +1,29 @@
-import { GoogleGenAI, Type } from "@google/genai";
-import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan, WardrobeAnalysis } from '../types';
-import { config } from '../config.ts';
+import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis } from '../types';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
 
-if (!config.geminiApiKey) {
-  throw new Error("Clé API manquante. Veuillez la configurer dans vos variables d'environnement.");
-}
- 
-const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
+// Les appels Gemini passent maintenant par des Cloud Functions sécurisées
+// La clé API reste côté serveur et n'est jamais exposée au client
 
 type AnalysisResult = Omit<ClothingItem, 'id' | 'imageSrc'>;
 
-function extractText(response: any): string {
-  try {
-    if (typeof response.text === 'function') {
-      return response.text();
-    }
-    if (response.candidates && response.candidates.length > 0) {
-      const candidate = response.candidates[0];
-      if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
-        return candidate.content.parts[0].text || "{}";
-      }
-    }
-    return "{}";
-  } catch (error) {
-    console.error("Erreur lors de l'extraction du texte Gemini:", error);
-    return "{}";
-  }
-}
+// Cloud Function pour l'analyse des vêtements
+const analyzeClothingImagesFunction = httpsCallable(functions, 'analyzeClothingImages');
 
 // --- ANALYSE DES VÊTEMENTS ---
 export async function analyzeClothingImages(base64Images: string[]): Promise<AnalysisResult[]> {
-  const textPart = {
-    text: `Analyse chacune des images de vêtements fournies. Pour chaque image, dans l'ordre, extrais les informations suivantes en français :
-    1. Une description concise incluant son type (ex: T-shirt, jean), sa couleur principale, et son style.
-    2. Sa catégorie : "Hauts", "Bas", "Chaussures", ou "Accessoires".
-    3. Sa couleur principale (ex: "Bleu", "Noir"). Sois concis.
-    4. Sa matière principale (ex: "Coton", "Cuir"). Sois concis.
-    
-    Retourne le résultat sous la forme d'un objet JSON unique contenant une clé "items", qui est un tableau d'objets.`,
-  };
-
-  const imageParts = base64Images.map(img => ({
-    inlineData: {
-      data: img,
-      mimeType: 'image/jpeg',
-    },
-  }));
-
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: { parts: [textPart, ...imageParts] },
-    config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-                items: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            analysis: { type: Type.STRING },
-                            category: {
-                                type: Type.STRING,
-                                enum: ["Hauts", "Bas", "Chaussures", "Accessoires"]
-                            },
-                            color: { type: Type.STRING },
-                            material: { type: Type.STRING }
-                        },
-                        required: ["analysis", "category", "color", "material"]
-                    }
-                }
-            },
-            required: ["items"]
-        }
-    }
-  });
-
   try {
-      const rawText = extractText(response);
-      const result = JSON.parse(rawText);
-      
-      const validCategories: Category[] = ["Hauts", "Bas", "Chaussures", "Accessoires"];
-      
-      if (result.items) {
-          (result.items as AnalysisResult[]).forEach(item => {
-              if (!validCategories.includes(item.category)) {
-                  item.category = "Accessoires";
-              }
-          });
-          return result.items as AnalysisResult[];
-      }
-      return [];
-  } catch (e) {
-      console.error("Erreur parsing Gemini:", e);
-      throw new Error("L'IA a renvoyé une réponse malformée.");
+    const result = await analyzeClothingImagesFunction({ base64Images });
+    const data = result.data as { items: AnalysisResult[] };
+    return data.items || [];
+  } catch (error) {
+    console.error("Erreur lors de l'analyse des vêtements:", error);
+    throw new Error("Erreur lors de l'analyse des vêtements.");
   }
 }
+
+// Cloud Function pour la génération de tenues
+const generateOutfitsFunctionCall = httpsCallable(functions, 'generateOutfitsFunction');
 
 // --- GÉNÉRATION DE TENUES ---
 export async function generateOutfits(
@@ -108,7 +35,7 @@ export async function generateOutfits(
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
 
-    const individualItemsFormatted = individualItems.map(item => 
+    const individualItemsFormatted = individualItems.map(item =>
       `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Matière: ${item.material})`
     ).join('\n');
     const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
@@ -117,7 +44,7 @@ export async function generateOutfits(
     const anchorInstruction = anchorItemOrSet
         ? `\n**RÈGLE D'ANCRAGE : La tenue DOIT inclure : "${('name' in anchorItemOrSet ? anchorItemOrSet.name : anchorItemOrSet.analysis)} (ID: ${anchorItemOrSet.id})".**\n`
         : '';
- 
+
     const prompt = `Tu es un styliste expert. Crée 3 tenues complètes et harmonieuses pour : "${context}".
 
 Vêtements disponibles :
@@ -186,51 +113,18 @@ Analyse la météo dans le contexte et applique :
 
 **IMPORTANT** : Utilise les IDs EXACTS des articles. Sois créatif dans les limites.`;
 
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                    tenues: {
-                        type: Type.ARRAY,
-                        items: {
-                            type: Type.OBJECT,
-                            properties: {
-                                titre: { type: Type.STRING },
-                                description: { type: Type.STRING },
-                                vetements: {
-                                    type: Type.ARRAY,
-                                    items: {
-                                        type: Type.OBJECT,
-                                        properties: {
-                                            id: { type: Type.STRING },
-                                            description: { type: Type.STRING }
-                                        },
-                                        required: ["id", "description"]
-                                    }
-                                }
-                            },
-                            required: ["titre", "description", "vetements"],
-                        }
-                    }
-                },
-                required: ["tenues"],
-            }
-        }
-    });
-
     try {
-        const rawText = extractText(response);
-        const jsonResponse = JSON.parse(rawText);
-        return jsonResponse.tenues as OutfitSuggestion[];
-    } catch (e) {
-        console.error("Erreur parsing Gemini:", e);
-        throw new Error("Réponse malformée.");
+        const result = await generateOutfitsFunctionCall({ prompt });
+        const data = result.data as { tenues: OutfitSuggestion[] };
+        return data.tenues;
+    } catch (error) {
+        console.error("Erreur génération tenues:", error);
+        throw new Error("Erreur lors de la génération des tenues.");
     }
 }
+
+// Cloud Function pour l'analyse de garde-robe
+const analyzeWardrobeGapsFunctionCall = httpsCallable(functions, 'analyzeWardrobeGapsFunction');
 
 // --- ANALYSE DE GARDE-ROBE & SUGGESTIONS D'ACHATS ---
 export async function analyzeWardrobeGaps(
@@ -305,93 +199,38 @@ Identifier les **pièces manquantes clés** qui permettront de créer le maximum
 
 Retourne ton analyse au format JSON.`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          summary: {
-            type: Type.STRING,
-            description: "Résumé global de l'analyse en 2-3 phrases"
-          },
-          strengths: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING },
-            description: "2-3 points forts de la garde-robe actuelle"
-          },
-          gaps: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING },
-            description: "2-4 gaps/opportunités d'amélioration identifiés"
-          },
-          suggestions: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                category: {
-                  type: Type.STRING,
-                  description: "Catégorie du vêtement suggéré"
-                },
-                description: {
-                  type: Type.STRING,
-                  description: "Description précise du vêtement suggéré (style, couleur, matière)"
-                },
-                reason: {
-                  type: Type.STRING,
-                  description: "Pourquoi cette pièce est stratégique (combien de tenues elle permet)"
-                },
-                priority: {
-                  type: Type.STRING,
-                  enum: ["high", "medium", "low"],
-                  description: "Niveau de priorité basé sur l'impact"
-                },
-                estimatedPrice: {
-                  type: Type.STRING,
-                  description: "Fourchette de prix estimée (ex: '50-80€')"
-                },
-                searchQuery: {
-                  type: Type.STRING,
-                  description: "Mots-clés optimisés pour recherche en boutique en ligne"
-                }
-              },
-              required: ["category", "description", "reason", "priority", "estimatedPrice", "searchQuery"]
-            },
-            description: "4-6 suggestions d'achats priorisées"
-          }
-        },
-        required: ["summary", "strengths", "gaps", "suggestions"]
-      }
-    }
-  });
-
-  const rawText = extractText(response);
-  return JSON.parse(rawText);
+  try {
+    const result = await analyzeWardrobeGapsFunctionCall({ prompt });
+    return result.data as WardrobeAnalysis;
+  } catch (error) {
+    console.error("Erreur analyse garde-robe:", error);
+    throw new Error("Erreur lors de l'analyse de la garde-robe.");
+  }
 }
 
 
-// --- PLANIFICATEUR DE VALISE (Inchangé) ---
+// Cloud Function pour le planificateur de valise
+const generateVacationPlanFunctionCall = httpsCallable(functions, 'generateVacationPlanFunction');
+
+// --- PLANIFICATEUR DE VALISE ---
 export async function generateVacationPlan(
     clothingList: ClothingItem[],
     sets: ClothingSet[],
     days: number,
     context: string,
-    maxWeight?: number 
+    maxWeight?: number
 ): Promise<VacationPlan> {
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
 
-    const individualItemsFormatted = individualItems.map(item => 
+    const individualItemsFormatted = individualItems.map(item =>
       `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Couleur: ${item.color}, Matière: ${item.material})`
     ).join('\n');
     const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
-    const weightInstruction = maxWeight 
-        ? `\n**CONTRAINTE POIDS** : Le poids total NE DOIT PAS dépasser ${maxWeight} kg. Estime le poids moyen (t-shirt ~150g, jean ~600g, pull ~400g, chaussures ~800g).` 
+    const weightInstruction = maxWeight
+        ? `\n**CONTRAINTE POIDS** : Le poids total NE DOIT PAS dépasser ${maxWeight} kg. Estime le poids moyen (t-shirt ~150g, jean ~600g, pull ~400g, chaussures ~800g).`
         : '';
 
     const prompt = `Tu es un expert en préparation de valise. Crée une **CAPSULE WARDROBE** optimisée pour ${days} jours.
@@ -403,7 +242,7 @@ export async function generateVacationPlan(
 **RÈGLES CRITIQUES** :
 
 1. **LOGIQUE THERMIQUE (PRIORITÉ ABSOLUE)** :
-   
+
    | Température | Vêtements adaptés |
    |-------------|-------------------|
    | **> 30°C (TRÈS CHAUD)** | T-shirts légers, shorts, robes, sandales. INTERDITS : jeans, pulls, vestes |
@@ -444,49 +283,57 @@ ${weightInstruction}
 **VÊTEMENTS DISPONIBLES** :
 ${availableClothes}
 
-**SORTIE** : 
+**SORTIE** :
 - Un titre accrocheur pour cette valise
 - Un résumé expliquant tes choix (météo, style, combinaisons possibles)
 - La liste des articles avec leur ID exact`;
 
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                    titre: { type: Type.STRING },
-                    resume: { type: Type.STRING },
-                    valise: {
-                        type: Type.ARRAY,
-                        items: {
-                            type: Type.OBJECT,
-                            properties: {
-                                id: { type: Type.STRING },
-                                description: { type: Type.STRING }
-                            },
-                            required: ["id", "description"]
-                        }
-                    }
-                },
-                required: ["titre", "resume", "valise"],
-            }
-        }
-    });
-
-    const rawText = extractText(response);
-    return JSON.parse(rawText);
+    try {
+        const result = await generateVacationPlanFunctionCall({ prompt });
+        return result.data as VacationPlan;
+    } catch (error) {
+        console.error("Erreur génération plan vacances:", error);
+        throw new Error("Erreur lors de la génération du plan vacances.");
+    }
 }
 
 
 // --- GÉNÉRATION VISUELLE (VIRTUAL TRY-ON) ---
-// NOTE: Cette fonctionnalité est désactivée (voir ENABLE_VISUAL_GENERATION dans App.tsx)
-// Elle nécessiterait Firebase Cloud Functions pour fonctionner
+const generateVisualFunction = httpsCallable(functions, 'generateVisualOutfit');
+
 export async function generateVisualOutfit(
     items: ClothingItem[],
-    context: string,
+    context: string, // <--- Ceci contient l'URL de l'image utilisateur
 ): Promise<string> {
-    throw new Error("La génération visuelle est désactivée.");
+    
+    console.log("🚀 Préparation du Virtual Try-On...");
+
+    const mainItem = items[0];
+
+    if (!mainItem || !mainItem.imageSrc) {
+        throw new Error("Aucun vêtement valide trouvé pour l'essayage.");
+    }
+
+    try {
+        // C'EST ICI QUE C'ÉTAIT CASSÉ : On n'envoyait pas 'humanImageUrl'
+        const result = await generateVisualFunction({ 
+            garmentUrl: mainItem.imageSrc, 
+            category: mainItem.category,   
+            description: mainItem.analysis,
+            humanImageUrl: context // <--- CORRECTION: On passe l'image de l'utilisateur au serveur !
+        });
+        
+        const data = result.data as { imageUrl: string };
+        
+        if (!data || !data.imageUrl) {
+            throw new Error("Pas d'image retournée par le serveur.");
+        }
+
+        console.log("✅ Image reçue de Replicate !");
+        return data.imageUrl;
+        
+    } catch (error) {
+        console.error("❌ Erreur lors de l'appel Cloud Function :", error);
+        throw error;
+    }
 }
