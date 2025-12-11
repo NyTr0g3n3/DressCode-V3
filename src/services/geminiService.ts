@@ -104,12 +104,16 @@ Analyse la météo dans le contexte et applique :
 - Évite de répéter le même pantalon 3 fois si possible
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💡 ACCESSOIRES (recommandés mais optionnels)
+⭐ ACCESSOIRES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Montre/bracelet si disponible
-- Ceinture pour pantalon classique
-- Écharpe si < 10°C
+**OBLIGATOIRES** :
+- Montre : TOUJOURS inclure si disponible dans les accessoires
+
+**OPTIONNELS** :
+- Bracelet : Peut être ajouté EN PLUS de la montre si disponible
+- Ceinture : Pour pantalon classique
+- Écharpe : Si < 10°C
 
 **IMPORTANT** : Utilise les IDs EXACTS des articles. Sois créatif dans les limites.`;
 
