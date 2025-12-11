@@ -1,8 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { ClothingItem, OutfitSuggestion, Category, ClothingSet, VacationPlan, WardrobeAnalysis } from '../types';
-import { config } from '../config.ts';     
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../firebase';
+import { config } from '../config.ts';
 
 if (!config.geminiApiKey) {
   throw new Error("Clé API manquante. Veuillez la configurer dans vos variables d'environnement.");
@@ -484,41 +482,11 @@ ${availableClothes}
 
 
 // --- GÉNÉRATION VISUELLE (VIRTUAL TRY-ON) ---
-const generateVisualFunction = httpsCallable(functions, 'generateVisualOutfit');
-
+// NOTE: Cette fonctionnalité est désactivée (voir ENABLE_VISUAL_GENERATION dans App.tsx)
+// Elle nécessiterait Firebase Cloud Functions pour fonctionner
 export async function generateVisualOutfit(
     items: ClothingItem[],
-    context: string, // <--- Ceci contient l'URL de l'image utilisateur
+    context: string,
 ): Promise<string> {
-    
-    console.log("🚀 Préparation du Virtual Try-On...");
-
-    const mainItem = items[0];
-
-    if (!mainItem || !mainItem.imageSrc) {
-        throw new Error("Aucun vêtement valide trouvé pour l'essayage.");
-    }
-
-    try {
-        // C'EST ICI QUE C'ÉTAIT CASSÉ : On n'envoyait pas 'humanImageUrl'
-        const result = await generateVisualFunction({ 
-            garmentUrl: mainItem.imageSrc, 
-            category: mainItem.category,   
-            description: mainItem.analysis,
-            humanImageUrl: context // <--- CORRECTION: On passe l'image de l'utilisateur au serveur !
-        });
-        
-        const data = result.data as { imageUrl: string };
-        
-        if (!data || !data.imageUrl) {
-            throw new Error("Pas d'image retournée par le serveur.");
-        }
-
-        console.log("✅ Image reçue de Replicate !");
-        return data.imageUrl;
-        
-    } catch (error) {
-        console.error("❌ Erreur lors de l'appel Cloud Function :", error);
-        throw error;
-    }
+    throw new Error("La génération visuelle est désactivée.");
 }
