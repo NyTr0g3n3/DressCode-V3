@@ -34,14 +34,8 @@ jobs:
         run: |
           echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > $HOME/gcp-key.json
 
-      - name: Set Firebase Secrets and Deploy
+      - name: Deploy Functions
         run: |
           npm install -g firebase-tools
           export GOOGLE_APPLICATION_CREDENTIALS="$HOME/gcp-key.json"
-
-          # Configure les secrets Firebase (une seule fois, sera ignoré si existe déjà)
-          echo "${{ secrets.GEMINI_API_KEY }}" | firebase functions:secrets:set GEMINI_API_KEY --project dresscode-ai-32c50 --force
-          echo "${{ secrets.REPLICATE_API_TOKEN }}" | firebase functions:secrets:set REPLICATE_API_TOKEN --project dresscode-ai-32c50 --force
-
-          # Déploie les functions
           firebase deploy --only functions --force --project dresscode-ai-32c50
