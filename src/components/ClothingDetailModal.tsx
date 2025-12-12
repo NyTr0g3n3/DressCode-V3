@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import type { ClothingItem, ClothingSet, Category } from '../types.ts';
-import { SparklesIcon, UnlinkIcon, CheckCircleIcon, RemoveIcon, HeartIcon, HeartIconSolid } from './icons.tsx';
+import { SparklesIcon, UnlinkIcon, CheckCircleIcon, RemoveIcon, HeartIcon, HeartIconSolid, EyeSlashIcon } from './icons.tsx';
 
 interface ClothingDetailModalProps {
   item: ClothingItem;
@@ -103,6 +103,11 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
     const handleToggleFavorite = (e: React.MouseEvent) => {
         e.stopPropagation();
         onUpdate({ ...item, isFavorite: !item.isFavorite });
+    };
+
+    const handleToggleExclude = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onUpdate({ ...item, isExcluded: !item.isExcluded });
     };
 
     // Contenu réutilisable du formulaire
@@ -323,17 +328,31 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                 header={
                     <div className="flex items-center justify-between w-full px-4 py-2">
                         <h2 className="text-lg font-bold text-raisin-black dark:text-snow">Détails de l'article</h2>
-                        <button
-                            onClick={handleToggleFavorite}
-                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-                            aria-label="Ajouter aux favoris"
-                        >
-                            {item.isFavorite ? (
-                                <HeartIconSolid className="w-6 h-6 text-red-500" />
-                            ) : (
-                                <HeartIcon className="w-6 h-6" />
-                            )}
-                        </button>
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={handleToggleExclude}
+                                className={`p-1.5 rounded-full transition-colors ${
+                                    item.isExcluded
+                                        ? 'bg-gray-500/20 text-gray-700 dark:text-gray-300'
+                                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                                }`}
+                                aria-label={item.isExcluded ? "Inclure dans les suggestions" : "Exclure des suggestions"}
+                                title={item.isExcluded ? "Inclure dans les suggestions" : "Ne pas suggérer cet article"}
+                            >
+                                <EyeSlashIcon className="w-6 h-6" />
+                            </button>
+                            <button
+                                onClick={handleToggleFavorite}
+                                className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                                aria-label="Ajouter aux favoris"
+                            >
+                                {item.isFavorite ? (
+                                    <HeartIconSolid className="w-6 h-6 text-red-500" />
+                                ) : (
+                                    <HeartIcon className="w-6 h-6" />
+                                )}
+                            </button>
+                        </div>
                     </div>
                 }
                 defaultSnap={({ maxHeight }) => maxHeight * 0.85}
@@ -371,6 +390,18 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                 <div className="sticky top-0 bg-white dark:bg-raisin-black border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
                     <h2 className="text-xl font-bold text-raisin-black dark:text-snow">Détails de l'article</h2>
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleToggleExclude}
+                            className={`p-2 rounded-full transition-colors ${
+                                item.isExcluded
+                                    ? 'bg-gray-500/20 text-gray-700 dark:text-gray-300'
+                                    : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                            }`}
+                            aria-label={item.isExcluded ? "Inclure dans les suggestions" : "Exclure des suggestions"}
+                            title={item.isExcluded ? "Inclure dans les suggestions" : "Ne pas suggérer cet article"}
+                        >
+                            <EyeSlashIcon className="w-6 h-6" />
+                        </button>
                         <button
                             onClick={handleToggleFavorite}
                             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"

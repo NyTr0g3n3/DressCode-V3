@@ -9,6 +9,7 @@ export interface ClothingItem {
   color: string;
   material: string;
   isFavorite?: boolean;
+  isExcluded?: boolean; // Exclure cet article des suggestions de tenues/valises
   createdAt?: number; // Timestamp de création
 }
 

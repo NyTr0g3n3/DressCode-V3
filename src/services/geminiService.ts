@@ -33,7 +33,8 @@ export async function generateOutfits(
     anchorItemOrSet?: ClothingItem | ClothingSet
 ): Promise<OutfitSuggestion[]> {
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
-    const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
+    // Filtrer les items exclus ET ceux qui sont dans des ensembles
+    const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id) && !item.isExcluded);
 
     const individualItemsFormatted = individualItems.map(item =>
       `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Matière: ${item.material})`
@@ -225,7 +226,8 @@ export async function generateVacationPlan(
     maxWeight?: number
 ): Promise<VacationPlan> {
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
-    const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id));
+    // Filtrer les items exclus ET ceux qui sont dans des ensembles
+    const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id) && !item.isExcluded);
 
     const individualItemsFormatted = individualItems.map(item =>
       `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Couleur: ${item.color}, Matière: ${item.material})`
