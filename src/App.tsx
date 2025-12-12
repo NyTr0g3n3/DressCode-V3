@@ -174,16 +174,13 @@ const AppContent: React.FC = () => {
 
   const wornOutfitsLast7Days = useMemo(() => getWornOutfitsLast7Days(), [getWornOutfitsLast7Days]);
 
- 
+
   useEffect(() => {
-    const fetchWeather = async (position: GeolocationPosition) => {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      
+    const fetchWeather = async (lat: number, lon: number) => {
       const API_KEY = config.openWeatherApiKey;
       if (!API_KEY) {
         setWeatherError("Service météo non configuré.");
-        return; 
+        return;
       }
       const API_URL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=fr`;
 
@@ -194,13 +191,66 @@ const AppContent: React.FC = () => {
         const weatherString = `${Math.round(data.main.temp)}°C, ${data.weather[0].description}, à ${data.name}`;
         setWeatherInfo(weatherString);
         setWeatherError(null);
+
+        // Mettre en cache la météo
+        localStorage.setItem('cachedWeather', JSON.stringify({
+          weather: weatherString,
+          timestamp: Date.now()
+        }));
       } catch (err) {
         setWeatherError("Météo indisponible.");
       }
     };
+
+    // Vérifier d'abord si on a une météo en cache (< 30 minutes)
+    const cachedWeather = localStorage.getItem('cachedWeather');
+    if (cachedWeather) {
+      try {
+        const { weather, timestamp } = JSON.parse(cachedWeather);
+        const thirtyMinutes = 30 * 60 * 1000;
+        if (Date.now() - timestamp < thirtyMinutes) {
+          // Utiliser la météo en cache
+          setWeatherInfo(weather);
+          setWeatherError(null);
+          return;
+        }
+      } catch (e) {
+        // Cache invalide, continuer avec la géolocalisation
+      }
+    }
+
+    // Vérifier si on a une position en cache (< 30 minutes)
+    const cachedPosition = localStorage.getItem('cachedPosition');
+    if (cachedPosition) {
+      try {
+        const { lat, lon, timestamp } = JSON.parse(cachedPosition);
+        const thirtyMinutes = 30 * 60 * 1000;
+        if (Date.now() - timestamp < thirtyMinutes) {
+          // Utiliser la position en cache
+          fetchWeather(lat, lon);
+          return;
+        }
+      } catch (e) {
+        // Cache invalide, continuer avec la géolocalisation
+      }
+    }
+
+    // Pas de cache valide, demander la géolocalisation
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        fetchWeather,
+        (position: GeolocationPosition) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+
+          // Mettre en cache la position
+          localStorage.setItem('cachedPosition', JSON.stringify({
+            lat,
+            lon,
+            timestamp: Date.now()
+          }));
+
+          fetchWeather(lat, lon);
+        },
         () => setWeatherError("Activez la géolocalisation pour la météo.")
       );
     } else {
