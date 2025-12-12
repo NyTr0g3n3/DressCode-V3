@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import type { ClothingItem as ClothingItemType, ClothingSet, Category } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SkeletonCard } from './SkeletonCard';
-import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, HeartIconSolid, SearchIcon, SortIcon } from './icons.tsx';
+import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, HeartIconSolid, SearchIcon, SortIcon, EyeSlashIcon } from './icons.tsx';
  
 interface CardProps {
   imageSrc: string;
@@ -11,20 +11,30 @@ interface CardProps {
   isSelected: boolean;
   isSet?: boolean;
   isFavorite?: boolean;
+  isExcluded?: boolean;
 }
 
-const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, isSelected, isSet, isFavorite }) => (
+const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, isSelected, isSet, isFavorite, isExcluded }) => (
   <div onClick={onClick} className="group relative aspect-square bg-raisin-black rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer">
-    <img 
-      src={imageSrc} 
-      alt={analysis} 
+    <img
+      src={imageSrc}
+      alt={analysis}
       loading="lazy"
-      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" 
+      className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 ${isExcluded ? 'opacity-40' : ''}`}
     />
-    
+
     <div className={`absolute inset-0 transition-all duration-300 ${isSelected ? 'ring-4 ring-gold' : 'ring-2 ring-transparent'} rounded-lg`}></div>
     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-    
+
+    {/* Overlay pour items exclus */}
+    {isExcluded && (
+      <div className="absolute inset-0 bg-gray-500/30 backdrop-blur-[1px] flex items-center justify-center z-5">
+        <div className="bg-gray-800/80 backdrop-blur-sm rounded-full p-3">
+          <EyeSlashIcon className="w-8 h-8 text-gray-300" />
+        </div>
+      </div>
+    )}
+
     {isSelected ? (
       <span className="absolute top-2 left-2 p-1.5 bg-gold rounded-full text-onyx z-10"><CheckCircleIcon /></span>
     ) : isFavorite ? (
@@ -416,6 +426,7 @@ const filteredItems = useMemo(() => {
                               isSelected={selectedItemIds.has(item.id)}
                               isSet={itemIdsInSets.has(item.id)}
                               isFavorite={item.isFavorite}
+                              isExcluded={item.isExcluded}
                             />
                           </motion.div>
                         ))}
