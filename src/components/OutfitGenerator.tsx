@@ -9,17 +9,24 @@ interface OutfitGeneratorProps {
   isGenerating: boolean;
   weatherInfo: string | null; // Nouvelle prop
   weatherError: string | null; // Nouvelle prop
+  anchorItem?: ClothingItem | ClothingSet | null; // Item ancré pour générer une tenue autour de lui
 }
 
-const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({ 
-  clothingItems, 
-  clothingSets, 
-  onGenerate, 
-  isGenerating, 
-  weatherInfo, 
-  weatherError 
+const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({
+  clothingItems,
+  clothingSets,
+  onGenerate,
+  isGenerating,
+  weatherInfo,
+  weatherError,
+  anchorItem
 }) => {
   const [occasion, setOccasion] = React.useState(''); // 'context' renommé en 'occasion'
+
+  // Obtenir le nom/description de l'item ancré
+  const anchorItemName = anchorItem
+    ? ('name' in anchorItem ? anchorItem.name : anchorItem.analysis)
+    : null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +39,16 @@ const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({
   return (
     <div>
       {/* FIX: Suppression du h2 "Créateur de Tenues" (en double avec la modale) */}
-      
+
+      {/* AFFICHAGE DE L'ITEM ANCRÉ */}
+      {anchorItemName && (
+        <div className="mb-4 p-3 rounded-lg bg-gold/10 border border-gold/30">
+          <p className="text-sm font-semibold text-gold-dark dark:text-gold text-center">
+            🎯 Créer une tenue avec : <span className="font-bold">{anchorItemName}</span>
+          </p>
+        </div>
+      )}
+
       {/* AFFICHAGE DE LA MÉTÉO */}
       <div className="text-center mb-6 p-3 rounded-lg bg-snow dark:bg-onyx border border-black/10 dark:border-white/10">
         {weatherInfo && (
