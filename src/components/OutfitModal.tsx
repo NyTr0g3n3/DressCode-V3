@@ -20,6 +20,7 @@ interface OutfitModalProps {
   generatingVisualFor: string | null;
   selectedOutfit: OutfitSuggestion | null;
   onSelectOutfit: (outfit: OutfitSuggestion) => void;
+  anchorItem?: ClothingItem | ClothingSet | null;
 }
 
 const OutfitModal: React.FC<OutfitModalProps> = ({
@@ -37,7 +38,8 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
   onGenerateVisual,
   generatingVisualFor,
   selectedOutfit,
-  onSelectOutfit
+  onSelectOutfit,
+  anchorItem
 }) => {
   const isDarkMode = document.documentElement.classList.contains('dark');
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -79,13 +81,14 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
       ]}
     >
       <div className="p-6 space-y-6 bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
-        <OutfitGenerator 
+        <OutfitGenerator
           clothingItems={clothingItems}
           clothingSets={clothingSets}
           onGenerate={onGenerate}
           isGenerating={isGenerating}
           weatherInfo={weatherInfo}
           weatherError={weatherError}
+          anchorItem={anchorItem}
         />
 
         {isGenerating && (

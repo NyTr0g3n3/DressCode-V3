@@ -93,7 +93,8 @@ const AppContent: React.FC = () => {
   const [isWornOutfitsOpen, setIsWornOutfitsOpen] = useState(false);
   const [mobileSearchQuery, setMobileSearchQuery] = useState('');
   const [mobileSortBy, setMobileSortBy] = useState<'favorites' | 'newest' | 'oldest' | 'color'>('favorites');
-    
+  const [anchorItemForGeneration, setAnchorItemForGeneration] = useState<ClothingItem | ClothingSet | null>(null);
+
   useEffect(() => {
     if (error) {
       const timeout = error.includes('Accès refusé') ? 10000 : 5000;
@@ -215,19 +216,24 @@ const AppContent: React.FC = () => {
     }
     setIsGenerating(true);
     setError(null);
-    const fullContext = weatherInfo 
+
+    // Utiliser l'ancre depuis l'état si aucune n'est passée en paramètre
+    const effectiveAnchor = anchorItem || anchorItemForGeneration;
+
+    const fullContext = weatherInfo
       ? `Météo actuelle : ${weatherInfo}. Occasion : ${occasion}`
       : `Occasion : ${occasion}`;
 
     try {
-      const outfits = await generateOutfits(safeClothingItems, safeClothingSets, fullContext, anchorItem);
+      const outfits = await generateOutfits(safeClothingItems, safeClothingSets, fullContext, effectiveAnchor || undefined);
       setSuggestedOutfits(outfits);
+      setAnchorItemForGeneration(null); // Réinitialiser l'ancre après génération
     } catch (err) {
       setError(getUserFriendlyError(err));
     } finally {
       setIsGenerating(false);
     }
-  }, [safeClothingItems, safeClothingSets, weatherInfo]);
+  }, [safeClothingItems, safeClothingSets, weatherInfo, anchorItemForGeneration]);
 
   const handleGenerateVacationPlan = useCallback(async (days: number, context: string, maxWeight?: number) => {
     if (safeClothingItems.length === 0) {
@@ -321,10 +327,10 @@ const AppContent: React.FC = () => {
   };
   
   const handleGenerateFromModal = (item: ClothingItem) => {
-    const occasion = `Focus sur l'article : ${item.analysis}`;
-    handleGenerateOutfits(occasion, item);
-    setSelectedItem(null);
-    if (window.innerWidth < 768) setShowOutfitModal(true);
+    // Stocker l'item comme ancre et ouvrir le modal de génération
+    setAnchorItemForGeneration(item);
+    setSelectedItem(null); // Fermer le modal de détails
+    setShowOutfitModal(true); // Ouvrir le modal de génération
   };
   
 
@@ -649,8 +655,9 @@ useEffect(() => {
                 clothingSets={safeClothingSets}
                 onGenerate={handleGenerateOutfits}
                 isGenerating={isGenerating}
-                weatherInfo={weatherInfo} 
+                weatherInfo={weatherInfo}
                 weatherError={weatherError}
+                anchorItem={anchorItemForGeneration}
               />
             </div>
             {suggestedOutfits.length > 0 && (
@@ -825,6 +832,7 @@ useEffect(() => {
         generatingVisualFor={generatingVisualFor}
         selectedOutfit={selectedOutfit}
         onSelectOutfit={handleSelectOutfit}
+        anchorItem={anchorItemForGeneration}
       />
     
       <VacationModal
