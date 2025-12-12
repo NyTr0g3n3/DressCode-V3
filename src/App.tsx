@@ -482,6 +482,9 @@ useEffect(() => {
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Découvrez quelles pièces acheter pour rendre votre garde-robe plus polyvalente
                 </p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  ⏱️ Analyse : ~30 secondes
+                </p>
               </div>
               <button
                 onClick={handleAnalyzeWardrobe}
