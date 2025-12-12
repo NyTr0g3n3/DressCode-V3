@@ -75,11 +75,11 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
         </div>
       }
       
-      defaultSnap={({ maxHeight }) => maxHeight * 0.65}
+      defaultSnap={({ maxHeight }) => maxHeight * 0.75}
       snapPoints={({ minHeight, maxHeight }) => [
-        minHeight, 
-        maxHeight * 0.65, 
-        maxHeight * 0.85
+        minHeight,
+        maxHeight * 0.75,
+        maxHeight * 0.9
       ]}
     >
       <div className="p-6 space-y-6 bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
