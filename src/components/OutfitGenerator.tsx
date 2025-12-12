@@ -124,6 +124,13 @@ const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({
             <SparklesIcon />
             {isGenerating ? 'Génération...' : 'Générer des Tenues'}
           </button>
+
+          {/* Indication temporelle */}
+          <div className="text-center mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              ⏱️ Génération : 30-60 secondes (selon la taille de votre garde-robe)
+            </p>
+          </div>
         </div>
       </form>
     </div>

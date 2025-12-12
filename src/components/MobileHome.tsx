@@ -66,6 +66,9 @@ const MobileHome: React.FC<MobileHomeProps> = ({
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Découvrez quelles pièces acheter pour plus de polyvalence
                 </p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  ⏱️ ~30 secondes
+                </p>
               </div>
             </div>
           </button>
@@ -87,6 +90,9 @@ const MobileHome: React.FC<MobileHomeProps> = ({
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Générez des looks personnalisés avec l'IA
               </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                ⏱️ 30-60 secondes
+              </p>
             </div>
           </div>
         </button>
@@ -106,6 +112,9 @@ const MobileHome: React.FC<MobileHomeProps> = ({
               <h3 className="text-lg font-bold mb-1">🧳 Planificateur de Valise</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Préparez votre valise optimale pour votre voyage
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                ⏱️ 30-60 secondes
               </p>
             </div>
           </div>

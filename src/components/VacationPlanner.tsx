@@ -88,6 +88,13 @@ const VacationPlanner: React.FC<VacationPlannerProps> = ({ clothingItems, clothi
         <SuitcaseIcon />
         {isGenerating ? 'Analyse du poids...' : 'Générer la valise'}
       </button>
+
+      {/* Indication temporelle */}
+      <div className="text-center mt-2">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          ⏱️ Génération : 30-60 secondes (selon la taille de votre garde-robe)
+        </p>
+      </div>
     </form>
   );
 };
