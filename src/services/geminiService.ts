@@ -79,12 +79,16 @@ Analyse la météo dans le contexte et applique :
 
 ✅ **Pull col V** → TOUJOURS avec chemise dessous (sinon négligé)
 ✅ **Pull col zippé/camionneur** → TOUJOURS avec t-shirt ou chemise dessous
+✅ **Pull col rond (classique)** → UNIQUEMENT avec t-shirt uni dessous, JAMAIS avec chemise
+✅ **Sweat/Pull sportif** → UNIQUEMENT avec t-shirt, JAMAIS avec chemise
 ✅ **Veste/Blazer** → Sur t-shirt, chemise, pull fin, ou col roulé
 ✅ **Manteau** → Sur pull, sweat, ou veste (si très froid)
 ✅ **Col roulé** → JAMAIS avec chemise !
 
 ❌ **INTERDICTIONS ABSOLUES DE LAYERING** :
 - JAMAIS chemise avec col roulé (aberration stylistique)
+- JAMAIS chemise avec pull col rond/ras-du-cou (trop formel + trop casual = clash)
+- JAMAIS chemise avec sweat ou pull sportif (incompatibilité de style totale)
 - JAMAIS col V sans rien dessous en contexte formel
 - JAMAIS pull épais sous veste ajustée (volume excessif)
 - JAMAIS 2 cols montants ensemble (col roulé + col montant)
@@ -94,6 +98,13 @@ Analyse la météo dans le contexte et applique :
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **STRUCTURE** : Chaque tenue = Haut + Bas + Chaussures (minimum)
+
+**COHÉRENCE DE STYLE (CRUCIAL)** :
+- ❌ JAMAIS mélanger sportif et formel (ex: sweat délavé + chemise = NON)
+- ❌ JAMAIS associer streetwear et business (ex: jogger + chemise = NON)
+- ✅ Style cohérent : tout casual OU tout formel OU smart-casual équilibré
+- ✅ Chemise = TOUJOURS avec pièces au moins smart-casual (chino, jean brut, blazer)
+- ✅ Pull sportif/sweat = TOUJOURS avec pièces casual (jean délavé, jogger, sneakers)
 
 **COULEURS** :
 - Maximum 3 couleurs par tenue
