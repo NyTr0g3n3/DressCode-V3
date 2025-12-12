@@ -10,6 +10,7 @@ interface OutfitGeneratorProps {
   weatherInfo: string | null; // Nouvelle prop
   weatherError: string | null; // Nouvelle prop
   anchorItem?: ClothingItem | ClothingSet | null; // Item ancré pour générer une tenue autour de lui
+  onClearAnchor?: () => void; // Fonction pour effacer l'ancre
 }
 
 const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({
@@ -19,7 +20,8 @@ const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({
   isGenerating,
   weatherInfo,
   weatherError,
-  anchorItem
+  anchorItem,
+  onClearAnchor
 }) => {
   const [occasion, setOccasion] = React.useState(''); // 'context' renommé en 'occasion'
 
@@ -42,10 +44,23 @@ const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({
 
       {/* AFFICHAGE DE L'ITEM ANCRÉ */}
       {anchorItemName && (
-        <div className="mb-4 p-3 rounded-lg bg-gold/10 border border-gold/30">
-          <p className="text-sm font-semibold text-gold-dark dark:text-gold text-center">
+        <div className="mb-4 p-3 rounded-lg bg-gold/10 border border-gold/30 relative">
+          <p className="text-sm font-semibold text-gold-dark dark:text-gold text-center pr-8">
             🎯 Créer une tenue avec : <span className="font-bold">{anchorItemName}</span>
           </p>
+          {onClearAnchor && (
+            <button
+              type="button"
+              onClick={onClearAnchor}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gold/20 rounded-full transition-colors"
+              aria-label="Supprimer l'ancre"
+              title="Générer sans cet article"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
       )}
 

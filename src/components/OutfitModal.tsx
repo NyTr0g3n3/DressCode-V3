@@ -21,6 +21,7 @@ interface OutfitModalProps {
   selectedOutfit: OutfitSuggestion | null;
   onSelectOutfit: (outfit: OutfitSuggestion) => void;
   anchorItem?: ClothingItem | ClothingSet | null;
+  onClearAnchor?: () => void;
 }
 
 const OutfitModal: React.FC<OutfitModalProps> = ({
@@ -39,7 +40,8 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
   generatingVisualFor,
   selectedOutfit,
   onSelectOutfit,
-  anchorItem
+  anchorItem,
+  onClearAnchor
 }) => {
   const isDarkMode = document.documentElement.classList.contains('dark');
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -89,6 +91,7 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
           weatherInfo={weatherInfo}
           weatherError={weatherError}
           anchorItem={anchorItem}
+          onClearAnchor={onClearAnchor}
         />
 
         {isGenerating && (

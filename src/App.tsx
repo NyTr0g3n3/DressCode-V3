@@ -658,6 +658,7 @@ useEffect(() => {
                 weatherInfo={weatherInfo}
                 weatherError={weatherError}
                 anchorItem={anchorItemForGeneration}
+                onClearAnchor={() => setAnchorItemForGeneration(null)}
               />
             </div>
             {suggestedOutfits.length > 0 && (
@@ -823,7 +824,10 @@ useEffect(() => {
         onGenerate={handleGenerateOutfits}
         isGenerating={isGenerating}
         suggestedOutfits={suggestedOutfits}
-        onClose={() => setShowOutfitModal(false)}
+        onClose={() => {
+          setShowOutfitModal(false);
+          setAnchorItemForGeneration(null); // Effacer l'ancre si l'utilisateur ferme sans générer
+        }}
         weatherInfo={weatherInfo}
         weatherError={weatherError}
         favoriteOutfits={favoriteOutfits}
@@ -833,6 +837,7 @@ useEffect(() => {
         selectedOutfit={selectedOutfit}
         onSelectOutfit={handleSelectOutfit}
         anchorItem={anchorItemForGeneration}
+        onClearAnchor={() => setAnchorItemForGeneration(null)}
       />
     
       <VacationModal
