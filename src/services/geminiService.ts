@@ -247,7 +247,21 @@ export async function generateVacationPlan(
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
     const weightInstruction = maxWeight
-        ? `\n**CONTRAINTE POIDS** : Le poids total NE DOIT PAS dépasser ${maxWeight} kg. Estime le poids moyen (t-shirt ~150g, jean ~600g, pull ~400g, chaussures ~800g).`
+        ? `\n**CONTRAINTE POIDS** : Le poids total NE DOIT PAS dépasser ${maxWeight} kg. Estime le poids moyen selon ces références réalistes :
+- T-shirt : ~150g
+- Chemise : ~200g
+- Jean/Denim : ~900g
+- Pantalon coton/chino : ~500g
+- Jogging/Pantalon léger : ~350g
+- Pull laine : ~700g
+- Sweat : ~400g
+- Veste légère : ~500g
+- Manteau/Doudoune : ~1kg
+- Chaussures (par paire) : ~1kg
+- Baskets (par paire) : ~1kg
+- Chaussures de ville cuir : ~1,2kg
+- Sous-vêtements : ~50g
+- Chaussettes : ~50g`
         : '';
 
     const prompt = `Tu es un expert en préparation de valise. Crée une **CAPSULE WARDROBE** optimisée pour ${days} jours.
