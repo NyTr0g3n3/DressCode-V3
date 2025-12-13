@@ -191,7 +191,7 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
             <img src={selectedImage} alt="Vue agrandie" className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg shadow-2xl" />
             <button
               onClick={() => setSelectedImage(null)}
-              className="absolute -top-3 -right-3 p-1.5 bg-raisin-black border-2 border-white dark:border-onyx rounded-full text-white hover:bg-red-500 hover:scale-110 transition-all focus:outline-none focus:ring-2 focus:ring-gold"
+              className="absolute top-2 right-2 p-2 bg-raisin-black/90 border-2 border-white/50 rounded-full text-white hover:bg-red-500 hover:border-white hover:scale-110 transition-all focus:outline-none focus:ring-2 focus:ring-gold shadow-lg"
               aria-label="Fermer"
             >
               <XIcon />
