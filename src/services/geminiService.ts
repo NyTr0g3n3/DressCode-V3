@@ -25,6 +25,9 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
 // Cloud Function pour la génération de tenues
 const generateOutfitsFunctionCall = httpsCallable(functions, 'generateOutfitsFunction');
 
+// Cloud Function pour la génération de variantes de tenues (remplacement d'une pièce)
+const generateOutfitVariantsFunctionCall = httpsCallable(functions, 'generateOutfitsFunction');
+
 // --- GÉNÉRATION DE TENUES ---
 export async function generateOutfits(
     clothingList: ClothingItem[],
@@ -136,6 +139,136 @@ Analyse la météo dans le contexte et applique :
     } catch (error) {
         console.error("Erreur génération tenues:", error);
         throw new Error("Erreur lors de la génération des tenues.");
+    }
+}
+
+// --- GÉNÉRATION DE VARIANTES (REMPLACEMENT D'UNE PIÈCE) ---
+export async function generateOutfitVariants(
+    clothingList: ClothingItem[],
+    sets: ClothingSet[],
+    context: string,
+    outfitToModify: OutfitSuggestion,
+    itemToReplace: OutfitItem
+): Promise<OutfitSuggestion[]> {
+    const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
+    // Filtrer les items exclus ET ceux qui sont dans des ensembles
+    const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id) && !item.isExcluded);
+
+    const individualItemsFormatted = individualItems.map(item =>
+      `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Matière: ${item.material})`
+    ).join('\n');
+    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
+    const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
+
+    // Construire la liste des items à garder (tous sauf celui à remplacer)
+    const itemsToKeep = outfitToModify.vetements.filter(item => item.id !== itemToReplace.id);
+    const keepInstruction = itemsToKeep.map(item =>
+        `  ✅ GARDER : "${item.description}" (ID: ${item.id})`
+    ).join('\n');
+
+    const replaceInstruction = `  ❌ REMPLACER : "${itemToReplace.description}" (ID: ${itemToReplace.id})`;
+
+    const prompt = `Tu es un styliste expert. L'utilisateur aime cette tenue mais veut remplacer UNE SEULE pièce.
+
+**TENUE ACTUELLE** : "${outfitToModify.titre}"
+${outfitToModify.description}
+
+**INSTRUCTIONS DE MODIFICATION** :
+${keepInstruction}
+${replaceInstruction}
+
+⚠️ **RÈGLE ABSOLUE** : Tu DOIS inclure EXACTEMENT les mêmes articles marqués "✅ GARDER" avec leurs IDs exacts dans chacune des 3 tenues.
+Tu dois UNIQUEMENT remplacer l'article marqué "❌ REMPLACER" par une alternative différente parmi les vêtements disponibles.
+
+**CONTEXTE** : ${context}
+
+Vêtements disponibles :
+${availableClothes}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴 PRIORITÉ 1 - TEMPÉRATURE (RÈGLE ABSOLUE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Analyse la météo dans le contexte et applique :
+
+| Température | Règle stricte |
+|-------------|---------------|
+| **< 15°C** | Layering OBLIGATOIRE : Base (t-shirt/chemise) + Pull/Sweat + Manteau |
+| **15-20°C** | Pull, sweat, ou veste légère suffisent |
+| **20-25°C** | 1 seule couche (t-shirt OU chemise légère) |
+| **> 25°C** | Vêtements TRÈS légers uniquement. INTERDITS : jeans épais, pulls, vestes |
+
+⚠️ **INTERDICTIONS THERMIQUES** :
+- Doudoune/manteau si > 15°C
+- Short si < 22°C
+- Pull laine si > 15°C
+- Sandales si < 25°C
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🟠 PRIORITÉ 2 - LAYERING (SUPERPOSITION)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**RÈGLES DE SUPERPOSITION VALIDES** :
+
+✅ **Pull col V** → TOUJOURS avec chemise dessous (sinon négligé)
+✅ **Pull col zippé/camionneur** → TOUJOURS avec t-shirt ou chemise dessous
+✅ **Pull col rond (classique)** → UNIQUEMENT avec t-shirt uni dessous, JAMAIS avec chemise
+✅ **Sweat/Pull sportif** → UNIQUEMENT avec t-shirt, JAMAIS avec chemise
+✅ **Veste/Blazer** → Sur t-shirt, chemise, pull fin, ou col roulé
+✅ **Manteau** → Sur pull, sweat, ou veste (si très froid)
+✅ **Col roulé** → JAMAIS avec chemise !
+
+❌ **INTERDICTIONS ABSOLUES DE LAYERING** :
+- JAMAIS chemise avec col roulé (aberration stylistique)
+- JAMAIS chemise avec pull col rond/ras-du-cou (trop formel + trop casual = clash)
+- JAMAIS chemise avec sweat ou pull sportif (incompatibilité de style totale)
+- JAMAIS col V sans rien dessous en contexte formel
+- JAMAIS pull épais sous veste ajustée (volume excessif)
+- JAMAIS 2 cols montants ensemble (col roulé + col montant)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🟡 PRIORITÉ 3 - COHÉRENCE & HARMONIE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**STRUCTURE** : Chaque tenue = Haut + Bas + Chaussures (minimum)
+
+**COHÉRENCE DE STYLE (CRUCIAL)** :
+- ❌ JAMAIS mélanger sportif et formel (ex: sweat délavé + chemise = NON)
+- ❌ JAMAIS associer streetwear et business (ex: jogger + chemise = NON)
+- ✅ Style cohérent : tout casual OU tout formel OU smart-casual équilibré
+- ✅ Chemise = TOUJOURS avec pièces au moins smart-casual (chino, jean brut, blazer)
+- ✅ Pull sportif/sweat = TOUJOURS avec pièces casual (jean délavé, jogger, sneakers)
+
+**COULEURS** :
+- Maximum 3 couleurs par tenue
+- 1 seul motif maximum (si haut à motifs → bas uni)
+- Évite contrastes trop proches (bleu marine + noir)
+
+**VARIÉTÉ** :
+- 3 alternatives DIFFÉRENTES pour remplacer la pièce désignée
+- Garde l'harmonie avec les pièces conservées
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⭐ ACCESSOIRES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**OBLIGATOIRES** :
+- Montre : TOUJOURS inclure si disponible dans les accessoires
+
+**OPTIONNELS** :
+- Bracelet : Peut être ajouté EN PLUS de la montre si disponible
+- Ceinture : Pour pantalon classique
+- Écharpe : Si < 10°C
+
+**IMPORTANT** : Utilise les IDs EXACTS des articles. Génère 3 variantes qui respectent TOUTES les règles ci-dessus.`;
+
+    try {
+        const result = await generateOutfitVariantsFunctionCall({ prompt });
+        const data = result.data as { tenues: OutfitSuggestion[] };
+        return data.tenues;
+    } catch (error) {
+        console.error("Erreur génération variantes:", error);
+        throw new Error("Erreur lors de la génération des variantes.");
     }
 }
 
