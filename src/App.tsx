@@ -3,7 +3,7 @@ import OnboardingModal from './components/OnboardingModal.tsx';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
 import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, FavoriteOutfit, OutfitItem } from './types.ts';
-import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps, generateVisualOutfit, generateOutfitVariants } from './services/geminiService.ts';
+import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps, generateVisualOutfit, generateOutfitVariants, generateChatResponse } from './services/geminiService.ts';
 
 // FEATURE FLAG: Fonctionnalité de génération visuelle désactivée temporairement
 // TODO: Réactiver quand une solution viable sera trouvée
