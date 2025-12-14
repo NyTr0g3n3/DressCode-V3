@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import OutfitDisplay from './OutfitDisplay';
-import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit, OutfitWearHistory } from '../types';
+import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit, OutfitWearHistory, OutfitItem } from '../types';
 
 interface WornOutfitsModalProps {
   open: boolean;
@@ -15,6 +15,9 @@ interface WornOutfitsModalProps {
   generatingVisualFor: string | null;
   selectedOutfit: OutfitSuggestion | null;
   onSelectOutfit: (outfit: OutfitSuggestion) => void;
+  onGenerateVariants?: (outfit: OutfitSuggestion, itemToReplace: OutfitItem) => void;
+  isGenerating?: boolean;
+  onOpenChat?: (outfit: OutfitSuggestion) => void;
 }
 
 const WornOutfitsModal: React.FC<WornOutfitsModalProps> = ({
@@ -28,7 +31,10 @@ const WornOutfitsModal: React.FC<WornOutfitsModalProps> = ({
   onGenerateVisual,
   generatingVisualFor,
   selectedOutfit,
-  onSelectOutfit
+  onSelectOutfit,
+  onGenerateVariants,
+  isGenerating,
+  onOpenChat
 }) => {
   const isDarkMode = document.documentElement.classList.contains('dark');
 
@@ -99,6 +105,9 @@ const WornOutfitsModal: React.FC<WornOutfitsModalProps> = ({
               generatingVisualFor={generatingVisualFor}
               selectedOutfit={selectedOutfit}
               onSelectOutfit={onSelectOutfit}
+              onGenerateVariants={onGenerateVariants}
+              isGenerating={isGenerating}
+              onOpenChat={onOpenChat}
             />
           </>
         ) : (

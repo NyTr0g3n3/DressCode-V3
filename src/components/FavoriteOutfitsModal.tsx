@@ -1,7 +1,7 @@
 import React from 'react';
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import OutfitDisplay from './OutfitDisplay';
-import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit } from '../types';
+import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit, OutfitItem } from '../types';
 
 interface FavoriteOutfitsModalProps {
   open: boolean;
@@ -14,6 +14,9 @@ interface FavoriteOutfitsModalProps {
   generatingVisualFor: string | null;
   selectedOutfit: OutfitSuggestion | null;
   onSelectOutfit: (outfit: OutfitSuggestion) => void;
+  onGenerateVariants?: (outfit: OutfitSuggestion, itemToReplace: OutfitItem) => void;
+  isGenerating?: boolean;
+  onOpenChat?: (outfit: OutfitSuggestion) => void;
 }
 
 const FavoriteOutfitsModal: React.FC<FavoriteOutfitsModalProps> = ({
@@ -26,7 +29,10 @@ const FavoriteOutfitsModal: React.FC<FavoriteOutfitsModalProps> = ({
   onGenerateVisual,
   generatingVisualFor,
   selectedOutfit,
-  onSelectOutfit
+  onSelectOutfit,
+  onGenerateVariants,
+  isGenerating,
+  onOpenChat
 }) => {
   const isDarkMode = document.documentElement.classList.contains('dark');
 
@@ -68,6 +74,9 @@ snapPoints={({ maxHeight }) => [
             generatingVisualFor={generatingVisualFor}
             selectedOutfit={selectedOutfit}
             onSelectOutfit={onSelectOutfit}
+            onGenerateVariants={onGenerateVariants}
+            isGenerating={isGenerating}
+            onOpenChat={onOpenChat}
           />
         ) : (
           <div className="text-center py-12">
