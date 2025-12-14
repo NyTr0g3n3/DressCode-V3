@@ -29,7 +29,7 @@ const generateOutfitsFunctionCall = httpsCallable(functions, 'generateOutfitsFun
 const generateOutfitVariantsFunctionCall = httpsCallable(functions, 'generateOutfitsFunction');
 
 // Cloud Function pour le chatbot styliste
-const generateChatResponseFunctionCall = httpsCallable(functions, 'generateOutfitsFunction');
+const generateChatResponseFunctionCall = httpsCallable(functions, 'generateChatResponseFunction');
 
 // --- GÉNÉRATION DE TENUES ---
 export async function generateOutfits(
@@ -371,19 +371,22 @@ ${userMessage}
 - Reste focus sur cette tenue spécifique
 - Pas d'actions (génération) pour le moment, uniquement des conseils
 
-**IMPORTANT** : Si la question est hors-sujet (recette, code, etc.), réponds poliment que tu es un assistant styliste et redirige vers la mode.`;
+🔒 **FORMAT DE RÉPONSE JSON** :
+{
+  "message": "Ta réponse textuelle ici",
+  "isRejected": true/false
+}
+
+⚠️ Mets "isRejected": true UNIQUEMENT si la question est TOTALEMENT hors-sujet mode/style (recette, code, math, histoire, etc.)
+✅ Mets "isRejected": false pour toute question liée à la mode, même vaguement`;
 
     try {
         const result = await generateChatResponseFunctionCall({ prompt });
-        const data = result.data as { tenues?: OutfitSuggestion[], message?: string };
-
-        // La Cloud Function retourne soit du texte, soit une structure
-        // Pour le MVP, on attend juste du texte dans le champ message
-        const message = data.message || JSON.stringify(data);
+        const data = result.data as ChatResponse;
 
         return {
-            message: message,
-            isRejected: false // On pourrait détecter si c'est un refus plus tard
+            message: data.message,
+            isRejected: data.isRejected
         };
     } catch (error) {
         console.error("Erreur génération chat:", error);

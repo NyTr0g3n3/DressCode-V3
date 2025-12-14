@@ -392,3 +392,58 @@ export const generateVacationPlanFunction = onCall(
     }
   }
 );
+
+// Chatbot Assistant Styliste
+export const generateChatResponseFunction = onCall(
+  {
+    cors: true,
+    timeoutSeconds: 60,
+    memory: "512MiB",
+  },
+  async (request) => {
+    logger.info("Génération réponse chatbot via Gemini...");
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new HttpsError("failed-precondition", "Clé API Gemini manquante.");
+
+    const ai = new GoogleGenAI({apiKey});
+    const {prompt} = request.data;
+
+    if (!prompt) {
+      throw new HttpsError("invalid-argument", "Prompt manquant.");
+    }
+
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              message: {
+                type: Type.STRING,
+                description: "Réponse du chatbot ou message de refus si question hors-sujet",
+              },
+              isRejected: {
+                type: Type.BOOLEAN,
+                description: "true si la question est hors-sujet mode/style, false sinon",
+              },
+            },
+            required: ["message", "isRejected"],
+          },
+        },
+      });
+
+      const rawText = extractText(response);
+      const chatResponse = JSON.parse(rawText);
+
+      logger.info("Réponse chatbot générée");
+      return chatResponse;
+    } catch (error) {
+      logger.error("Erreur génération réponse chatbot:", error);
+      throw new HttpsError("internal", "Erreur lors de la génération de la réponse chatbot.");
+    }
+  }
+);
