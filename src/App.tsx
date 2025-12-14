@@ -961,6 +961,7 @@ useEffect(() => {
         anchorItem={anchorItemForGeneration}
         onClearAnchor={() => setAnchorItemForGeneration(null)}
         onGenerateVariants={handleGenerateVariants}
+        onOpenChat={handleOpenChat}
       />
     
       <VacationModal
@@ -1007,6 +1008,9 @@ useEffect(() => {
         generatingVisualFor={generatingVisualFor}
         selectedOutfit={selectedOutfit}
         onSelectOutfit={handleSelectOutfit}
+        onGenerateVariants={handleGenerateVariants}
+        isGenerating={isGenerating}
+        onOpenChat={handleOpenChat}
       />
 
       <WornOutfitsModal
@@ -1021,6 +1025,9 @@ useEffect(() => {
         generatingVisualFor={generatingVisualFor}
         selectedOutfit={selectedOutfit}
         onSelectOutfit={handleSelectOutfit}
+        onGenerateVariants={handleGenerateVariants}
+        isGenerating={isGenerating}
+        onOpenChat={handleOpenChat}
       />
 
       {/* NOUVELLE MODALE PROFIL (s'affiche si activée par l'utilisateur ou automatiquement si pas de photo) */}

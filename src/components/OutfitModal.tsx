@@ -23,6 +23,7 @@ interface OutfitModalProps {
   anchorItem?: ClothingItem | ClothingSet | null;
   onClearAnchor?: () => void;
   onGenerateVariants: (outfit: OutfitSuggestion, itemToReplace: OutfitItem) => void;
+  onOpenChat?: (outfit: OutfitSuggestion) => void;
 }
 
 const OutfitModal: React.FC<OutfitModalProps> = ({
@@ -43,7 +44,8 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
   onSelectOutfit,
   anchorItem,
   onClearAnchor,
-  onGenerateVariants
+  onGenerateVariants,
+  onOpenChat
 }) => {
   const isDarkMode = document.documentElement.classList.contains('dark');
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -123,6 +125,7 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
               onSelectOutfit={onSelectOutfit}
               onGenerateVariants={onGenerateVariants}
               isGenerating={isGenerating}
+              onOpenChat={onOpenChat}
             />
           )}
         </div>
