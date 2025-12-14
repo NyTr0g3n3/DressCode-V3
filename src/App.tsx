@@ -23,10 +23,11 @@ import MobileFAB from './components/MobileFAB.tsx';
 import MobileHome from './components/MobileHome.tsx';
 import MobileBottomNav from './components/MobileBottomNav.tsx';
 import WardrobeSuggestions from './components/WardrobeSuggestions.tsx';
-import OutfitModal from './components/OutfitModal.tsx';  
-import VacationModal from './components/VacationModal.tsx'; 
+import OutfitModal from './components/OutfitModal.tsx';
+import VacationModal from './components/VacationModal.tsx';
 import SetCreatorModal from './components/SetCreatorModal.tsx';
 import ModelProfileModal from './components/ModelProfileModal.tsx';
+import OutfitChatModal from './components/OutfitChatModal.tsx';
 import { LinkIcon, HeartIconSolid, ChevronDownIcon, SearchIcon, SortIcon } from './components/icons.tsx';
 import { config } from './config.ts';
 
@@ -94,6 +95,10 @@ const AppContent: React.FC = () => {
   const [mobileSearchQuery, setMobileSearchQuery] = useState('');
   const [mobileSortBy, setMobileSortBy] = useState<'favorites' | 'newest' | 'oldest' | 'color'>('favorites');
   const [anchorItemForGeneration, setAnchorItemForGeneration] = useState<ClothingItem | ClothingSet | null>(null);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [chatOutfit, setChatOutfit] = useState<OutfitSuggestion | null>(null);
+  const [isChatGenerating, setIsChatGenerating] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
     if (error) {
@@ -306,6 +311,39 @@ const AppContent: React.FC = () => {
       setIsGenerating(false);
     }
   }, [safeClothingItems, safeClothingSets, weatherInfo]);
+
+  const handleOpenChat = useCallback((outfit: OutfitSuggestion) => {
+    setChatOutfit(outfit);
+    setChatMessages([]);
+    setShowChatModal(true);
+  }, []);
+
+  const handleChatMessage = useCallback(async (message: string, history: ChatMessage[]) => {
+    if (!chatOutfit) return;
+
+    setIsChatGenerating(true);
+    try {
+      const response = await generateChatResponse(
+        chatOutfit,
+        message,
+        history,
+        safeClothingItems,
+        safeClothingSets
+      );
+
+      const assistantMessage: ChatMessage = {
+        role: 'assistant',
+        content: response.message,
+        timestamp: Date.now()
+      };
+
+      setChatMessages(prev => [...prev, assistantMessage]);
+    } catch (err) {
+      setError(getUserFriendlyError(err));
+    } finally {
+      setIsChatGenerating(false);
+    }
+  }, [chatOutfit, safeClothingItems, safeClothingSets]);
 
   const handleGenerateVacationPlan = useCallback(async (days: number, context: string, maxWeight?: number) => {
     if (safeClothingItems.length === 0) {
@@ -749,6 +787,7 @@ useEffect(() => {
                     onSelectOutfit={handleSelectOutfit}
                     onGenerateVariants={handleGenerateVariants}
                     isGenerating={isGenerating}
+                    onOpenChat={handleOpenChat}
                   />
               )}
 
@@ -783,6 +822,7 @@ useEffect(() => {
           onSelectOutfit={handleSelectOutfit}
           onGenerateVariants={handleGenerateVariants}
           isGenerating={isGenerating}
+          onOpenChat={handleOpenChat}
         />
       </div>
     )}
@@ -832,6 +872,7 @@ useEffect(() => {
           onSelectOutfit={handleSelectOutfit}
           onGenerateVariants={handleGenerateVariants}
           isGenerating={isGenerating}
+          onOpenChat={handleOpenChat}
         />
       </div>
     )}
@@ -923,7 +964,7 @@ useEffect(() => {
       />
     
       <VacationModal
-        open={showVacationModal} 
+        open={showVacationModal}
         clothingItems={safeClothingItems}
         clothingSets={safeClothingSets}
         onGeneratePlan={handleGenerateVacationPlan}
@@ -932,6 +973,18 @@ useEffect(() => {
         onCreateSet={handleCreateSet}
         onClose={() => setShowVacationModal(false)}
       />
+
+      <OutfitChatModal
+        open={showChatModal}
+        outfit={chatOutfit}
+        onClose={() => setShowChatModal(false)}
+        onSendMessage={async (message, history) => {
+          await handleChatMessage(message, history);
+        }}
+        isGenerating={isChatGenerating}
+        messages={chatMessages}
+      />
+
       <SetCreatorModal 
               open={showSetModal}
               clothingItems={safeClothingItems}
