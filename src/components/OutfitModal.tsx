@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react'; // 'useState' n'est pas néces
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import OutfitGenerator from './OutfitGenerator';
 import OutfitDisplay from './OutfitDisplay';
-import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit } from '../types';
+import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit, OutfitItem } from '../types';
 
 interface OutfitModalProps {
   open: boolean;
@@ -22,6 +22,7 @@ interface OutfitModalProps {
   onSelectOutfit: (outfit: OutfitSuggestion) => void;
   anchorItem?: ClothingItem | ClothingSet | null;
   onClearAnchor?: () => void;
+  onGenerateVariants: (outfit: OutfitSuggestion, itemToReplace: OutfitItem) => void;
 }
 
 const OutfitModal: React.FC<OutfitModalProps> = ({
@@ -41,7 +42,8 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
   selectedOutfit,
   onSelectOutfit,
   anchorItem,
-  onClearAnchor
+  onClearAnchor,
+  onGenerateVariants
 }) => {
   const isDarkMode = document.documentElement.classList.contains('dark');
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -119,6 +121,8 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
               generatingVisualFor={generatingVisualFor}
               selectedOutfit={selectedOutfit}
               onSelectOutfit={onSelectOutfit}
+              onGenerateVariants={onGenerateVariants}
+              isGenerating={isGenerating}
             />
           )}
         </div>

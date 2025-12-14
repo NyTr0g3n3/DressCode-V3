@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import OnboardingModal from './components/OnboardingModal.tsx';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
-import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, FavoriteOutfit } from './types.ts';
-import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps, generateVisualOutfit } from './services/geminiService.ts';
+import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, FavoriteOutfit, OutfitItem } from './types.ts';
+import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps, generateVisualOutfit, generateOutfitVariants } from './services/geminiService.ts';
 
 // FEATURE FLAG: Fonctionnalité de génération visuelle désactivée temporairement
 // TODO: Réactiver quand une solution viable sera trouvée
@@ -284,6 +284,28 @@ const AppContent: React.FC = () => {
       setIsGenerating(false);
     }
   }, [safeClothingItems, safeClothingSets, weatherInfo, anchorItemForGeneration]);
+
+  const handleGenerateVariants = useCallback(async (outfit: OutfitSuggestion, itemToReplace: OutfitItem) => {
+    if (safeClothingItems.length === 0) {
+      setError("Veuillez d'abord ajouter des vêtements.");
+      return;
+    }
+    setIsGenerating(true);
+    setError(null);
+
+    const fullContext = weatherInfo
+      ? `Météo actuelle : ${weatherInfo}. Contexte original : ${outfit.description}`
+      : `Contexte original : ${outfit.description}`;
+
+    try {
+      const variants = await generateOutfitVariants(safeClothingItems, safeClothingSets, fullContext, outfit, itemToReplace);
+      setSuggestedOutfits(variants);
+    } catch (err) {
+      setError(getUserFriendlyError(err));
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [safeClothingItems, safeClothingSets, weatherInfo]);
 
   const handleGenerateVacationPlan = useCallback(async (days: number, context: string, maxWeight?: number) => {
     if (safeClothingItems.length === 0) {
@@ -725,6 +747,8 @@ useEffect(() => {
                     generatingVisualFor={generatingVisualFor}
                     selectedOutfit={selectedOutfit}
                     onSelectOutfit={handleSelectOutfit}
+                    onGenerateVariants={handleGenerateVariants}
+                    isGenerating={isGenerating}
                   />
               )}
 
@@ -757,6 +781,8 @@ useEffect(() => {
           generatingVisualFor={generatingVisualFor}
           selectedOutfit={selectedOutfit}
           onSelectOutfit={handleSelectOutfit}
+          onGenerateVariants={handleGenerateVariants}
+          isGenerating={isGenerating}
         />
       </div>
     )}
@@ -804,6 +830,8 @@ useEffect(() => {
           generatingVisualFor={generatingVisualFor}
           selectedOutfit={selectedOutfit}
           onSelectOutfit={handleSelectOutfit}
+          onGenerateVariants={handleGenerateVariants}
+          isGenerating={isGenerating}
         />
       </div>
     )}
@@ -891,6 +919,7 @@ useEffect(() => {
         onSelectOutfit={handleSelectOutfit}
         anchorItem={anchorItemForGeneration}
         onClearAnchor={() => setAnchorItemForGeneration(null)}
+        onGenerateVariants={handleGenerateVariants}
       />
     
       <VacationModal
