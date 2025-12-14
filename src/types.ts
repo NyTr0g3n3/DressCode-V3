@@ -68,3 +68,14 @@ export interface OutfitWearHistory {
   wornAt: number; // Timestamp du port (date de sélection)
 }
 
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+}
+
+export interface ChatResponse {
+  message: string;
+  isRejected: boolean; // true si la question est hors-sujet
+}
+

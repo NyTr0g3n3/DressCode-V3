@@ -1,4 +1,4 @@
-import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis } from '../types';
+import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, ChatMessage, ChatResponse, OutfitItem } from '../types';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 
@@ -27,6 +27,9 @@ const generateOutfitsFunctionCall = httpsCallable(functions, 'generateOutfitsFun
 
 // Cloud Function pour la génération de variantes de tenues (remplacement d'une pièce)
 const generateOutfitVariantsFunctionCall = httpsCallable(functions, 'generateOutfitsFunction');
+
+// Cloud Function pour le chatbot styliste
+const generateChatResponseFunctionCall = httpsCallable(functions, 'generateOutfitsFunction');
 
 // --- GÉNÉRATION DE TENUES ---
 export async function generateOutfits(
@@ -269,6 +272,122 @@ Analyse la météo dans le contexte et applique :
     } catch (error) {
         console.error("Erreur génération variantes:", error);
         throw new Error("Erreur lors de la génération des variantes.");
+    }
+}
+
+// --- CHATBOT STYLISTE (CONSEILS UNIQUEMENT) ---
+export async function generateChatResponse(
+    outfit: OutfitSuggestion,
+    userMessage: string,
+    conversationHistory: ChatMessage[],
+    wardrobeItems: ClothingItem[],
+    wardrobeSets: ClothingSet[]
+): Promise<ChatResponse> {
+    const itemIdsInSets = new Set((wardrobeSets || []).flatMap(s => s.itemIds));
+    const individualItems = wardrobeItems.filter(item => !itemIdsInSets.has(item.id) && !item.isExcluded);
+
+    // Formater la garde-robe par catégorie
+    const wardrobeByCategory = {
+        Hauts: individualItems.filter(i => i.category === 'Hauts'),
+        Bas: individualItems.filter(i => i.category === 'Bas'),
+        Chaussures: individualItems.filter(i => i.category === 'Chaussures'),
+        Accessoires: individualItems.filter(i => i.category === 'Accessoires')
+    };
+
+    const wardrobeFormatted = Object.entries(wardrobeByCategory)
+        .map(([cat, items]) => {
+            if (items.length === 0) return '';
+            const itemsList = items.map(i => `  - ${i.analysis} (ID: ${i.id}, Matière: ${i.material})`).join('\n');
+            return `**${cat}** (${items.length}) :\n${itemsList}`;
+        })
+        .filter(Boolean)
+        .join('\n\n');
+
+    const setsFormatted = wardrobeSets.length > 0
+        ? `\n**Ensembles** (${wardrobeSets.length}) :\n${wardrobeSets.map(s => `  - ${s.name} (ID: ${s.id})`).join('\n')}`
+        : '';
+
+    // Formater l'historique de conversation
+    const historyFormatted = conversationHistory
+        .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+        .join('\n');
+
+    // Formater la tenue actuelle
+    const outfitFormatted = outfit.vetements
+        .map(item => `  - ${item.description} (ID: ${item.id})`)
+        .join('\n');
+
+    const prompt = `Tu es un ASSISTANT STYLISTE SPÉCIALISÉ pour l'application DressCode.
+
+🚫 **RÈGLES ABSOLUES** :
+1. Tu REFUSES CATÉGORIQUEMENT toute question hors mode/style/vêtements
+2. Si demande hors-sujet → Réponds: "Je suis ton styliste IA 👔 Je ne peux parler que de mode, tenues et style. Comment puis-je t'aider avec tes vêtements ?"
+3. PAS de recettes, code, math, histoire, etc.
+4. UNIQUEMENT : conseils de style, tenues, accessoires, couleurs, matières
+
+🔐 **RÈGLE CRITIQUE - SUGGESTIONS UNIQUEMENT DEPUIS LA GARDE-ROBE** :
+
+✅ TU DOIS :
+- TOUJOURS suggérer des pièces qui existent dans sa garde-robe
+- Référencer les items par leur ID exact (ex: "Tes Derbies marron (ID: abc123)")
+- Expliquer POURQUOI cette pièce spécifique irait mieux
+- Si aucune alternative n'existe, le dire clairement
+
+❌ TU NE DOIS JAMAIS :
+- Suggérer d'acheter quoi que ce soit
+- Inventer des pièces qu'il ne possède pas
+- Donner des conseils génériques sans référencer ses items réels
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 **TENUE ACTUELLE** : "${outfit.titre}"
+${outfit.description}
+
+Pièces composant cette tenue :
+${outfitFormatted}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+👔 **GARDE-ROBE COMPLÈTE DE L'UTILISATEUR** :
+
+${wardrobeFormatted}${setsFormatted}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💬 **HISTORIQUE DE CONVERSATION** :
+${historyFormatted || '(Pas d\'historique)'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📨 **NOUVEAU MESSAGE** :
+${userMessage}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 **INSTRUCTIONS DE RÉPONSE** :
+- Réponds en français, de manière concise et amicale (2-4 phrases max)
+- Si tu suggères une alternative, cite l'ID exact et explique pourquoi
+- Si l'utilisateur n'a pas d'alternative, sois honnête
+- Reste focus sur cette tenue spécifique
+- Pas d'actions (génération) pour le moment, uniquement des conseils
+
+**IMPORTANT** : Si la question est hors-sujet (recette, code, etc.), réponds poliment que tu es un assistant styliste et redirige vers la mode.`;
+
+    try {
+        const result = await generateChatResponseFunctionCall({ prompt });
+        const data = result.data as { tenues?: OutfitSuggestion[], message?: string };
+
+        // La Cloud Function retourne soit du texte, soit une structure
+        // Pour le MVP, on attend juste du texte dans le champ message
+        const message = data.message || JSON.stringify(data);
+
+        return {
+            message: message,
+            isRejected: false // On pourrait détecter si c'est un refus plus tard
+        };
+    } catch (error) {
+        console.error("Erreur génération chat:", error);
+        throw new Error("Erreur lors de la génération de la réponse.");
     }
 }
 
