@@ -38,30 +38,52 @@ const WornOutfitsModal: React.FC<WornOutfitsModalProps> = ({
 }) => {
   const isDarkMode = document.documentElement.classList.contains('dark');
 
+  // Fonction de recherche intelligente d'article (similaire à OutfitDisplay)
+  const findItemById = (id: string) => {
+    const cleanId = id ? id.trim() : '';
+
+    // 1. Recherche par ID exact dans les items individuels
+    let foundItem = allClothingItems.find(ci => ci.id === cleanId);
+    if (foundItem) return foundItem;
+
+    // 2. Recherche par ID exact dans les ensembles
+    let foundSet = allClothingSets.find(cs => cs.id === cleanId);
+    if (foundSet) return foundSet;
+
+    // 3. Recherche avec trim sur les deux côtés (au cas où il y aurait des espaces)
+    foundItem = allClothingItems.find(ci => ci.id.trim() === cleanId);
+    if (foundItem) return foundItem;
+
+    foundSet = allClothingSets.find(cs => cs.id.trim() === cleanId);
+    if (foundSet) return foundSet;
+
+    // 4. Recherche dans les items qui pourraient être dans des sets
+    // (au cas où l'article a été ajouté à un set après avoir été porté)
+    for (const set of allClothingSets) {
+      if (set.itemIds && set.itemIds.includes(cleanId)) {
+        // L'article fait maintenant partie d'un set, on retourne le set
+        return set;
+      }
+    }
+
+    return undefined;
+  };
+
   // Convertir OutfitWearHistory en OutfitSuggestion pour OutfitDisplay
   const outfitsToDisplay = useMemo(() => {
     return wornOutfits.map(history => {
       // Retrouver les items correspondants
       const vetements = history.itemIds.map(id => {
-        // Chercher d'abord dans les items individuels
-        const item = allClothingItems.find(ci => ci.id === id);
-        if (item) {
+        const found = findItemById(id);
+
+        if (found) {
           return {
-            id: item.id,
-            description: item.analysis
+            id: found.id,
+            description: 'name' in found ? found.name : found.analysis
           };
         }
 
-        // Chercher ensuite dans les ensembles
-        const set = allClothingSets.find(cs => cs.id === id);
-        if (set) {
-          return {
-            id: set.id,
-            description: set.name
-          };
-        }
-
-        // Si l'item n'existe plus, on garde juste l'ID
+        // Si l'item n'existe vraiment plus, on garde juste l'ID
         return {
           id: id,
           description: 'Article supprimé'

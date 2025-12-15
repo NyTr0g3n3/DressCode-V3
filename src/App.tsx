@@ -863,29 +863,40 @@ useEffect(() => {
             titre: history.outfitTitle,
             description: history.outfitDescription,
             vetements: history.itemIds.map(id => {
-              // Chercher d'abord dans les items individuels
-              const item = safeClothingItems.find(ci => ci.id === id);
+              const cleanId = id ? id.trim() : '';
+
+              // 1. Recherche par ID exact dans les items
+              let item = safeClothingItems.find(ci => ci.id === cleanId);
               if (item) {
-                return {
-                  id: id,
-                  description: item.analysis
-                };
+                return { id: item.id, description: item.analysis };
               }
 
-              // Chercher ensuite dans les ensembles
-              const set = safeClothingSets.find(cs => cs.id === id);
+              // 2. Recherche par ID exact dans les ensembles
+              let set = safeClothingSets.find(cs => cs.id === cleanId);
               if (set) {
-                return {
-                  id: id,
-                  description: set.name
-                };
+                return { id: set.id, description: set.name };
               }
 
-              // Si l'item n'existe plus
-              return {
-                id: id,
-                description: 'Article supprimé'
-              };
+              // 3. Recherche avec trim sur les deux côtés
+              item = safeClothingItems.find(ci => ci.id.trim() === cleanId);
+              if (item) {
+                return { id: item.id, description: item.analysis };
+              }
+
+              set = safeClothingSets.find(cs => cs.id.trim() === cleanId);
+              if (set) {
+                return { id: set.id, description: set.name };
+              }
+
+              // 4. Recherche si l'article fait partie d'un set
+              for (const currentSet of safeClothingSets) {
+                if (currentSet.itemIds && currentSet.itemIds.includes(cleanId)) {
+                  return { id: currentSet.id, description: currentSet.name };
+                }
+              }
+
+              // Si l'item n'existe vraiment plus
+              return { id: id, description: 'Article supprimé' };
             })
           }))}
           allClothingItems={safeClothingItems}
