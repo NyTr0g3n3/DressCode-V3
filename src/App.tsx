@@ -315,11 +315,19 @@ const AppContent: React.FC = () => {
   const handleOpenChat = useCallback((outfit: OutfitSuggestion) => {
     setChatOutfit(outfit);
     setChatMessages([]);
+    // Fermer la modale de tenue pour éviter l'empilement
+    setShowOutfitModal(false);
+    setShowFavoriteModal(false);
+    setShowWornOutfitsModal(false);
+    // Ouvrir le chat
     setShowChatModal(true);
   }, []);
 
   const handleChatMessage = useCallback(async (message: string, history: ChatMessage[]) => {
     if (!chatOutfit) return;
+
+    // Mettre à jour les messages pour inclure le message de l'utilisateur
+    setChatMessages(history);
 
     setIsChatGenerating(true);
     try {
