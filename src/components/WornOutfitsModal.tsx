@@ -43,6 +43,7 @@ const WornOutfitsModal: React.FC<WornOutfitsModalProps> = ({
     return wornOutfits.map(history => {
       // Retrouver les items correspondants
       const vetements = history.itemIds.map(id => {
+        // Chercher d'abord dans les items individuels
         const item = allClothingItems.find(ci => ci.id === id);
         if (item) {
           return {
@@ -50,6 +51,16 @@ const WornOutfitsModal: React.FC<WornOutfitsModalProps> = ({
             description: item.analysis
           };
         }
+
+        // Chercher ensuite dans les ensembles
+        const set = allClothingSets.find(cs => cs.id === id);
+        if (set) {
+          return {
+            id: set.id,
+            description: set.name
+          };
+        }
+
         // Si l'item n'existe plus, on garde juste l'ID
         return {
           id: id,
@@ -63,7 +74,7 @@ const WornOutfitsModal: React.FC<WornOutfitsModalProps> = ({
         vetements
       } as OutfitSuggestion;
     });
-  }, [wornOutfits, allClothingItems]);
+  }, [wornOutfits, allClothingItems, allClothingSets]);
 
   return (
     <BottomSheet

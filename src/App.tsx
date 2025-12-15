@@ -863,10 +863,28 @@ useEffect(() => {
             titre: history.outfitTitle,
             description: history.outfitDescription,
             vetements: history.itemIds.map(id => {
+              // Chercher d'abord dans les items individuels
               const item = safeClothingItems.find(ci => ci.id === id);
+              if (item) {
+                return {
+                  id: id,
+                  description: item.analysis
+                };
+              }
+
+              // Chercher ensuite dans les ensembles
+              const set = safeClothingSets.find(cs => cs.id === id);
+              if (set) {
+                return {
+                  id: id,
+                  description: set.name
+                };
+              }
+
+              // Si l'item n'existe plus
               return {
                 id: id,
-                description: item ? item.analysis : 'Article supprimé'
+                description: 'Article supprimé'
               };
             })
           }))}
