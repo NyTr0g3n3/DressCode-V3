@@ -49,14 +49,26 @@ export async function generateOutfits(
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
     const anchorInstruction = anchorItemOrSet
-        ? `\n**RÈGLE D'ANCRAGE : La tenue DOIT inclure : "${('name' in anchorItemOrSet ? anchorItemOrSet.name : anchorItemOrSet.analysis)} (ID: ${anchorItemOrSet.id})".**\n`
+        ? `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴🔴 PRIORITÉ 0 - ARTICLE OBLIGATOIRE (RÈGLE ABSOLUE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ **CONTRAINTE NON NÉGOCIABLE** :
+CHACUNE DES 3 TENUES DOIT ABSOLUMENT INCLURE :
+✅ "${('name' in anchorItemOrSet ? anchorItemOrSet.name : anchorItemOrSet.analysis)}" (ID: ${anchorItemOrSet.id})
+
+Cette pièce doit apparaître dans TOUTES les tenues générées sans exception.
+Si une tenue n'inclut pas cet article, elle est INVALIDE.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`
         : '';
 
     const prompt = `Tu es un styliste expert. Crée 3 tenues complètes et harmonieuses pour : "${context}".
-
+${anchorInstruction}
 Vêtements disponibles :
 ${availableClothes}
-${anchorInstruction}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔴 PRIORITÉ 1 - TEMPÉRATURE (RÈGLE ABSOLUE)
@@ -133,7 +145,14 @@ Analyse la météo dans le contexte et applique :
 - Ceinture : Pour pantalon classique
 - Écharpe : Si < 10°C
 
-**IMPORTANT** : Utilise les IDs EXACTS des articles. Sois créatif dans les limites.`;
+**IMPORTANT** : Utilise les IDs EXACTS des articles. Sois créatif dans les limites.${anchorItemOrSet ? `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ RAPPEL FINAL - ARTICLE OBLIGATOIRE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VÉRIFIE que CHACUNE des 3 tenues inclut bien :
+✅ "${('name' in anchorItemOrSet ? anchorItemOrSet.name : anchorItemOrSet.analysis)}" (ID: ${anchorItemOrSet.id})
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : ''}`;
 
     try {
         const result = await generateOutfitsFunctionCall({ prompt });
