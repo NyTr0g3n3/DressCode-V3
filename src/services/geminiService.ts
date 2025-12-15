@@ -329,7 +329,7 @@ export async function generateChatResponse(
 
 ✅ TU DOIS :
 - TOUJOURS suggérer des pièces qui existent dans sa garde-robe
-- Référencer les items par leur ID exact (ex: "Tes Derbies marron (ID: abc123)")
+- Décrire les items de manière naturelle SANS mentionner leur ID (ex: "Ta veste bomber noire Burberry" au lieu de "ID: 12345")
 - Expliquer POURQUOI cette pièce spécifique irait mieux
 - Si aucune alternative n'existe, le dire clairement
 
@@ -337,6 +337,7 @@ export async function generateChatResponse(
 - Suggérer d'acheter quoi que ce soit
 - Inventer des pièces qu'il ne possède pas
 - Donner des conseils génériques sans référencer ses items réels
+- Afficher les IDs techniques dans tes réponses (ils sont moches et inutiles pour l'utilisateur)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -366,7 +367,7 @@ ${userMessage}
 
 📝 **INSTRUCTIONS DE RÉPONSE** :
 - Réponds en français, de manière concise et amicale (2-4 phrases max)
-- Si tu suggères une alternative, cite l'ID exact et explique pourquoi
+- Si tu suggères une alternative, décris-la naturellement (sans ID) et explique pourquoi
 - Si l'utilisateur n'a pas d'alternative, sois honnête
 - Reste focus sur cette tenue spécifique
 - Pas d'actions (génération) pour le moment, uniquement des conseils
