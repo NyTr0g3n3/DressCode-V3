@@ -28,6 +28,7 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
     const [formData, setFormData] = useState<Omit<ClothingItem, 'id' | 'imageSrc'>>({
         analysis: item.analysis,
         category: item.category,
+        subcategory: item.subcategory,
         color: item.color,
         material: item.material
     });
@@ -44,6 +45,7 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
         setFormData({
             analysis: item.analysis,
             category: item.category,
+            subcategory: item.subcategory,
             color: item.color,
             material: item.material
         });
@@ -167,6 +169,28 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                                 />
                             </div>
                         </div>
+
+                        {/* Sous-catégorie (uniquement pour les accessoires) */}
+                        {formData.category === 'Accessoires' && (
+                            <div>
+                                <label htmlFor="subcategory" className="block text-sm font-medium text-gray-500 dark:text-gray-400">Type d'accessoire</label>
+                                <select
+                                    id="subcategory"
+                                    name="subcategory"
+                                    value={formData.subcategory || ''}
+                                    onChange={handleChange}
+                                    className="mt-1 w-full appearance-none px-3 py-2 bg-snow dark:bg-onyx border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-gold focus:border-gold transition-colors text-sm text-raisin-black dark:text-snow"
+                                >
+                                    <option value="">-- Sélectionner --</option>
+                                    <option value="Montres & Bijoux">Montres & Bijoux</option>
+                                    <option value="Écharpes & Foulards">Écharpes & Foulards</option>
+                                    <option value="Ceintures">Ceintures</option>
+                                    <option value="Lunettes">Lunettes</option>
+                                    <option value="Chapeaux">Chapeaux</option>
+                                    <option value="Sacs">Sacs</option>
+                                </select>
+                            </div>
+                        )}
 
                         {/* Statistique de port */}
                         <div className="bg-gradient-to-r from-gold/5 to-gold-dark/5 dark:from-gold/10 dark:to-gold-dark/10 p-3 rounded-lg border border-gold/20">
