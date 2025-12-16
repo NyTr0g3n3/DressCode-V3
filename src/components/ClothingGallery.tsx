@@ -155,6 +155,19 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
   // Fonction de tri
   const sortItems = (items: ClothingItemType[]): ClothingItemType[] => {
     return [...items].sort((a, b) => {
+      // Pour les accessoires, on trie d'abord par sous-catégorie
+      if (openCategory === 'Accessoires') {
+        const subcatA = a.subcategory || 'zzz'; // Items sans subcategory à la fin
+        const subcatB = b.subcategory || 'zzz';
+        const subcatCompare = subcatA.localeCompare(subcatB);
+
+        // Si les sous-catégories sont différentes, on trie par sous-catégorie
+        if (subcatCompare !== 0) return subcatCompare;
+
+        // Sinon, on applique le tri secondaire choisi par l'utilisateur
+      }
+
+      // Tri selon l'option sélectionnée
       switch (sortBy) {
         case 'favorites':
           return (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0);
@@ -211,7 +224,7 @@ const filteredItems = useMemo(() => {
 }, [searchFilteredItems, openCategory, filters[openCategory]?.color, filters[openCategory]?.material, filters[openCategory]?.subcategory]);
 
   // Appliquer le tri
-  const sortedFilteredItems = useMemo(() => sortItems(filteredItems), [filteredItems, sortBy]);
+  const sortedFilteredItems = useMemo(() => sortItems(filteredItems), [filteredItems, sortBy, openCategory]);
 
   // Compter les items par catégorie (après recherche)
   const categoryCounts = useMemo(() => {
@@ -239,11 +252,20 @@ const filteredItems = useMemo(() => {
 
   const availableSubcategories = useMemo(() => {
     if (!openCategory || openCategory !== 'Accessoires') return [];
-    const subcategoriesInCategory = searchFilteredItems
-      .filter(item => item.category === openCategory && item.subcategory)
-      .map(item => item.subcategory as string);
-    return ['Toutes', ...Array.from(new Set(subcategoriesInCategory))];
-  }, [searchFilteredItems, openCategory]);
+
+    // Toujours afficher toutes les sous-catégories possibles pour les accessoires
+    const allSubcategories = [
+      'Toutes',
+      'Ceintures',
+      'Chapeaux',
+      'Écharpes & Foulards',
+      'Lunettes',
+      'Montres & Bijoux',
+      'Sacs'
+    ];
+
+    return allSubcategories;
+  }, [openCategory]);
 
   const handleColorChange = (color: string) => {
     if (!openCategory) return;
@@ -543,7 +565,7 @@ const filteredItems = useMemo(() => {
                     </div>
 
                     {/* Filtre sous-catégorie (uniquement pour Accessoires) */}
-                    {name === 'Accessoires' && availableSubcategories.length > 1 && (
+                    {name === 'Accessoires' && (
                       <div className="flex-1 min-w-[150px]">
                         <label className="block text-sm font-medium mb-2">Type</label>
                         <select
