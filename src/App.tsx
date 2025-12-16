@@ -99,6 +99,7 @@ const AppContent: React.FC = () => {
   const [chatOutfit, setChatOutfit] = useState<OutfitSuggestion | null>(null);
   const [isChatGenerating, setIsChatGenerating] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [previousModalBeforeChat, setPreviousModalBeforeChat] = useState<'outfit' | 'favorites' | 'worn' | null>(null);
 
   useEffect(() => {
     if (error) {
@@ -315,13 +316,24 @@ const AppContent: React.FC = () => {
   const handleOpenChat = useCallback((outfit: OutfitSuggestion) => {
     setChatOutfit(outfit);
     setChatMessages([]);
-    // Fermer la modale de tenue pour éviter l'empilement
+
+    // Sauvegarder quelle modale était ouverte pour la réouvrir après
+    if (showOutfitModal) {
+      setPreviousModalBeforeChat('outfit');
+    } else if (showFavoriteModal) {
+      setPreviousModalBeforeChat('favorites');
+    } else if (showWornOutfitsModal) {
+      setPreviousModalBeforeChat('worn');
+    }
+
+    // Fermer les modales pour éviter l'empilement
     setShowOutfitModal(false);
     setShowFavoriteModal(false);
     setShowWornOutfitsModal(false);
+
     // Ouvrir le chat
     setShowChatModal(true);
-  }, []);
+  }, [showOutfitModal, showFavoriteModal, showWornOutfitsModal]);
 
   const handleChatMessage = useCallback(async (message: string, history: ChatMessage[]) => {
     if (!chatOutfit) return;
@@ -1015,7 +1027,18 @@ useEffect(() => {
       <OutfitChatModal
         open={showChatModal}
         outfit={chatOutfit}
-        onClose={() => setShowChatModal(false)}
+        onClose={() => {
+          setShowChatModal(false);
+          // Réouvrir la modale qui était ouverte avant le chat
+          if (previousModalBeforeChat === 'outfit') {
+            setShowOutfitModal(true);
+          } else if (previousModalBeforeChat === 'favorites') {
+            setShowFavoriteModal(true);
+          } else if (previousModalBeforeChat === 'worn') {
+            setShowWornOutfitsModal(true);
+          }
+          setPreviousModalBeforeChat(null);
+        }}
         onSendMessage={async (message, history) => {
           await handleChatMessage(message, history);
         }}

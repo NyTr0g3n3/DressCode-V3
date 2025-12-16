@@ -83,7 +83,8 @@ const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onPreview, isS
       <p className="text-white text-sm font-medium line-clamp-2">{analysis}</p>
     </div>
   </div>
-);
+  );
+};
 
 type SortOption = 'favorites' | 'newest' | 'oldest' | 'color' | 'category';
 
