@@ -252,11 +252,20 @@ const filteredItems = useMemo(() => {
 
   const availableSubcategories = useMemo(() => {
     if (!openCategory || openCategory !== 'Accessoires') return [];
-    const subcategoriesInCategory = searchFilteredItems
-      .filter(item => item.category === openCategory && item.subcategory)
-      .map(item => item.subcategory as string);
-    return ['Toutes', ...Array.from(new Set(subcategoriesInCategory))];
-  }, [searchFilteredItems, openCategory]);
+
+    // Toujours afficher toutes les sous-catégories possibles pour les accessoires
+    const allSubcategories = [
+      'Toutes',
+      'Ceintures',
+      'Chapeaux',
+      'Écharpes & Foulards',
+      'Lunettes',
+      'Montres & Bijoux',
+      'Sacs'
+    ];
+
+    return allSubcategories;
+  }, [openCategory]);
 
   const handleColorChange = (color: string) => {
     if (!openCategory) return;
@@ -556,7 +565,7 @@ const filteredItems = useMemo(() => {
                     </div>
 
                     {/* Filtre sous-catégorie (uniquement pour Accessoires) */}
-                    {name === 'Accessoires' && availableSubcategories.length > 1 && (
+                    {name === 'Accessoires' && (
                       <div className="flex-1 min-w-[150px]">
                         <label className="block text-sm font-medium mb-2">Type</label>
                         <select
