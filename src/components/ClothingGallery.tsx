@@ -1,27 +1,63 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { ClothingItem as ClothingItemType, ClothingSet, Category } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SkeletonCard } from './SkeletonCard';
 import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, HeartIconSolid, SearchIcon, SortIcon, EyeSlashIcon } from './icons.tsx';
- 
+
 interface CardProps {
   imageSrc: string;
   analysis: string;
   onClick: () => void;
+  onPreview?: (imageSrc: string, analysis: string) => void;
   isSelected: boolean;
   isSet?: boolean;
   isFavorite?: boolean;
   isExcluded?: boolean;
 }
 
-const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, isSelected, isSet, isFavorite, isExcluded }) => (
-  <div onClick={onClick} className="group relative aspect-square bg-raisin-black rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer">
-    <img
-      src={imageSrc}
-      alt={analysis}
-      loading="lazy"
-      className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 ${isExcluded ? 'opacity-40' : ''}`}
-    />
+const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onPreview, isSelected, isSet, isFavorite, isExcluded }) => {
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const [isLongPressing, setIsLongPressing] = useState(false);
+
+  const handleTouchStart = () => {
+    longPressTimer.current = setTimeout(() => {
+      setIsLongPressing(true);
+      if (onPreview) {
+        onPreview(imageSrc, analysis);
+      }
+    }, 500); // 500ms pour déclencher le long-press
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+    if (!isLongPressing) {
+      onClick();
+    }
+    setIsLongPressing(false);
+  };
+
+  const handleMouseEnter = () => {
+    if (onPreview && window.innerWidth >= 1024) { // Desktop only (lg breakpoint)
+      onPreview(imageSrc, analysis);
+    }
+  };
+
+  return (
+    <div
+      onClick={onClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onMouseEnter={handleMouseEnter}
+      className="group relative aspect-square bg-raisin-black rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer"
+    >
+      <img
+        src={imageSrc}
+        alt={analysis}
+        loading="lazy"
+        className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 ${isExcluded ? 'opacity-40' : ''}`}
+      />
 
     <div className={`absolute inset-0 transition-all duration-300 ${isSelected ? 'ring-4 ring-gold' : 'ring-2 ring-transparent'} rounded-lg`}></div>
     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
@@ -72,9 +108,13 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
   const [filters, setFilters] = useState(initialFilters);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('favorites');
-  
+
   const [isSetCreationMode, setIsSetCreationMode] = useState(false);
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
+
+  // État pour la preview d'image
+  const [previewImage, setPreviewImage] = useState<{ src: string; description: string } | null>(null);
+  const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const safeClothingSets = useMemo(() => clothingSets || [], [clothingSets]);
   const itemIdsInSets = useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
@@ -230,6 +270,52 @@ const filteredItems = useMemo(() => {
     setSearchQuery('');
   };
 
+  // Gestion de la preview d'image
+  const handlePreview = (imageSrc: string, description: string) => {
+    // Clear any existing timeout
+    if (previewTimeoutRef.current) {
+      clearTimeout(previewTimeoutRef.current);
+    }
+
+    // Sur desktop, ajouter un petit délai pour éviter les previews accidentelles
+    if (window.innerWidth >= 1024) {
+      previewTimeoutRef.current = setTimeout(() => {
+        setPreviewImage({ src: imageSrc, description });
+      }, 300);
+    } else {
+      // Sur mobile (long-press), afficher immédiatement
+      setPreviewImage({ src: imageSrc, description });
+    }
+  };
+
+  const closePreview = () => {
+    if (previewTimeoutRef.current) {
+      clearTimeout(previewTimeoutRef.current);
+    }
+    setPreviewImage(null);
+  };
+
+  // Fermer la preview avec la touche Escape
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && previewImage) {
+        closePreview();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [previewImage]);
+
+  // Cleanup du timeout au démontage
+  useEffect(() => {
+    return () => {
+      if (previewTimeoutRef.current) {
+        clearTimeout(previewTimeoutRef.current);
+      }
+    };
+  }, []);
+
   if (isLoading) {
   return (
     <div className="bg-white dark:bg-raisin-black rounded-xl shadow-2xl p-6 lg:p-8">
@@ -257,7 +343,48 @@ const filteredItems = useMemo(() => {
   }
 
   return (
-    <div className="bg-white dark:bg-raisin-black rounded-xl shadow-2xl shadow-black/10 dark:shadow-black/20 ring-1 ring-black/5 dark:ring-white/10 p-6 lg:p-8">
+    <>
+      {/* Modal de preview d'image */}
+      <AnimatePresence>
+        {previewImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={closePreview}
+            onMouseLeave={closePreview} // Ferme au survol sortant (desktop)
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm cursor-pointer p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.2, type: "spring", bounce: 0.3 }}
+              className="relative max-w-2xl max-h-[80vh] rounded-xl overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()} // Empêche la fermeture si on clique sur l'image
+            >
+              <img
+                src={previewImage.src}
+                alt={previewImage.description}
+                className="w-full h-full object-contain"
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4">
+                <p className="text-white text-sm font-medium">{previewImage.description}</p>
+              </div>
+              <button
+                onClick={closePreview}
+                className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full text-white transition-colors"
+                aria-label="Fermer la preview"
+              >
+                <RemoveIcon />
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="bg-white dark:bg-raisin-black rounded-xl shadow-2xl shadow-black/10 dark:shadow-black/20 ring-1 ring-black/5 dark:ring-white/10 p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-3">
@@ -423,6 +550,7 @@ const filteredItems = useMemo(() => {
                               imageSrc={item.imageSrc}
                               analysis={item.analysis}
                               onClick={() => handleCardClick(item)}
+                              onPreview={handlePreview}
                               isSelected={selectedItemIds.has(item.id)}
                               isSet={itemIdsInSets.has(item.id)}
                               isFavorite={item.isFavorite}
@@ -444,6 +572,7 @@ const filteredItems = useMemo(() => {
         })}
       </div>
     </div>
+    </>
   );
 };
 
