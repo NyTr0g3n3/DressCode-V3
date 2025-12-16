@@ -113,8 +113,9 @@ export const analyzeClothingImages = onCall(
         text: `Analyse chacune des images de vêtements fournies. Pour chaque image, dans l'ordre, extrais les informations suivantes en français :
     1. Une description concise incluant son type (ex: T-shirt, jean), sa couleur principale, et son style.
     2. Sa catégorie : "Hauts", "Bas", "Chaussures", ou "Accessoires".
-    3. Sa couleur principale (ex: "Bleu", "Noir"). Sois concis.
-    4. Sa matière principale (ex: "Coton", "Cuir"). Sois concis.
+    3. Sa sous-catégorie (UNIQUEMENT si catégorie = "Accessoires") : "Montres & Bijoux", "Écharpes & Foulards", "Ceintures", "Lunettes", "Chapeaux", ou "Sacs". Si la catégorie n'est pas "Accessoires", ne remplis pas ce champ.
+    4. Sa couleur principale (ex: "Bleu", "Noir"). Sois concis.
+    5. Sa matière principale (ex: "Coton", "Cuir"). Sois concis.
 
     Retourne le résultat sous la forme d'un objet JSON unique contenant une clé "items", qui est un tableau d'objets.`,
       };
@@ -143,6 +144,10 @@ export const analyzeClothingImages = onCall(
                     category: {
                       type: Type.STRING,
                       enum: ["Hauts", "Bas", "Chaussures", "Accessoires"],
+                    },
+                    subcategory: {
+                      type: Type.STRING,
+                      enum: ["Montres & Bijoux", "Écharpes & Foulards", "Ceintures", "Lunettes", "Chapeaux", "Sacs"],
                     },
                     color: {type: Type.STRING},
                     material: {type: Type.STRING},
