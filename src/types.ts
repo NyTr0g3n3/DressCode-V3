@@ -6,6 +6,7 @@ export interface ClothingItem {
   imageSrc: string;
   analysis: string;
   category: Category;
+  subcategory?: string; // Sous-catégorie pour les accessoires (Montres & Bijoux, Écharpes & Foulards, Ceintures, Lunettes, Chapeaux, Sacs)
   color: string;
   material: string;
   isFavorite?: boolean;

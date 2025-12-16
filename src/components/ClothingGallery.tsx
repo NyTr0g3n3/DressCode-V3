@@ -97,11 +97,11 @@ interface ClothingGalleryProps {
   isLoading: boolean;
 }
 
-const initialFilters: Record<Category, { color: string; material: string }> = {
+const initialFilters: Record<Category, { color: string; material: string; subcategory?: string }> = {
   Hauts: { color: 'Toutes', material: 'Toutes' },
   Bas: { color: 'Toutes', material: 'Toutes' },
   Chaussures: { color: 'Toutes', material: 'Toutes' },
-  Accessoires: { color: 'Toutes', material: 'Toutes' },
+  Accessoires: { color: 'Toutes', material: 'Toutes', subcategory: 'Toutes' },
 };
 
 const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoading, clothingSets = [], onItemClick, onDeleteItem, onCreateSet }) => {
@@ -193,21 +193,22 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
     );
   }, [clothingItems, searchQuery]);
 
- // Filtrage par catégorie, couleur et matière
+ // Filtrage par catégorie, couleur, matière et sous-catégorie
 const filteredItems = useMemo(() => {
   if (!openCategory) return [];
-  
+
   const itemsInCategory = searchFilteredItems.filter(item => item.category === openCategory);
   const categoryFilters = filters[openCategory];
-  
+
   if (!categoryFilters) return itemsInCategory;
-  
+
   return itemsInCategory.filter(item => {
     const colorMatch = categoryFilters.color === 'Toutes' || item.color === categoryFilters.color;
     const materialMatch = categoryFilters.material === 'Toutes' || item.material === categoryFilters.material;
-    return colorMatch && materialMatch;
+    const subcategoryMatch = !categoryFilters.subcategory || categoryFilters.subcategory === 'Toutes' || item.subcategory === categoryFilters.subcategory;
+    return colorMatch && materialMatch && subcategoryMatch;
   });
-}, [searchFilteredItems, openCategory, filters[openCategory]?.color, filters[openCategory]?.material]);
+}, [searchFilteredItems, openCategory, filters[openCategory]?.color, filters[openCategory]?.material, filters[openCategory]?.subcategory]);
 
   // Appliquer le tri
   const sortedFilteredItems = useMemo(() => sortItems(filteredItems), [filteredItems, sortBy]);
@@ -236,6 +237,14 @@ const filteredItems = useMemo(() => {
     return ['Toutes', ...Array.from(new Set(materialsInCategory))];
   }, [searchFilteredItems, openCategory]);
 
+  const availableSubcategories = useMemo(() => {
+    if (!openCategory || openCategory !== 'Accessoires') return [];
+    const subcategoriesInCategory = searchFilteredItems
+      .filter(item => item.category === openCategory && item.subcategory)
+      .map(item => item.subcategory as string);
+    return ['Toutes', ...Array.from(new Set(subcategoriesInCategory))];
+  }, [searchFilteredItems, openCategory]);
+
   const handleColorChange = (color: string) => {
     if (!openCategory) return;
     setFilters(prev => ({ ...prev, [openCategory]: { ...prev[openCategory], color } }));
@@ -244,6 +253,11 @@ const filteredItems = useMemo(() => {
   const handleMaterialChange = (material: string) => {
     if (!openCategory) return;
     setFilters(prev => ({ ...prev, [openCategory]: { ...prev[openCategory], material } }));
+  };
+
+  const handleSubcategoryChange = (subcategory: string) => {
+    if (!openCategory) return;
+    setFilters(prev => ({ ...prev, [openCategory]: { ...prev[openCategory], subcategory } }));
   };
 
   const handleToggleCategory = (categoryName: Category) => {
@@ -500,7 +514,7 @@ const filteredItems = useMemo(() => {
 
               {isOpen && (
                 <div className="p-6 space-y-6">
-                  {/* Filtres couleur/matière */}
+                  {/* Filtres couleur/matière/sous-catégorie */}
                   <div className="flex flex-wrap gap-4">
                     <div className="flex-1 min-w-[150px]">
                       <label className="block text-sm font-medium mb-2">Couleur</label>
@@ -527,6 +541,22 @@ const filteredItems = useMemo(() => {
                         ))}
                       </select>
                     </div>
+
+                    {/* Filtre sous-catégorie (uniquement pour Accessoires) */}
+                    {name === 'Accessoires' && availableSubcategories.length > 1 && (
+                      <div className="flex-1 min-w-[150px]">
+                        <label className="block text-sm font-medium mb-2">Type</label>
+                        <select
+                          value={filters[name].subcategory || 'Toutes'}
+                          onChange={(e) => handleSubcategoryChange(e.target.value)}
+                          className="w-full px-4 py-2 border border-black/10 dark:border-white/10 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-gold focus:border-transparent"
+                        >
+                          {availableSubcategories.map(subcategory => (
+                            <option key={subcategory} value={subcategory}>{subcategory}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
 
                   {/* Grille des vêtements */}
