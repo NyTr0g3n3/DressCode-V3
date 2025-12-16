@@ -94,6 +94,9 @@ const AppContent: React.FC = () => {
   const [isWornOutfitsOpen, setIsWornOutfitsOpen] = useState(false);
   const [mobileSearchQuery, setMobileSearchQuery] = useState('');
   const [mobileSortBy, setMobileSortBy] = useState<'favorites' | 'newest' | 'oldest' | 'color'>('favorites');
+  const [mobileColorFilter, setMobileColorFilter] = useState('Toutes');
+  const [mobileMaterialFilter, setMobileMaterialFilter] = useState('Toutes');
+  const [mobileSubcategoryFilter, setMobileSubcategoryFilter] = useState('Toutes');
   const [anchorItemForGeneration, setAnchorItemForGeneration] = useState<ClothingItem | ClothingSet | null>(null);
   const [showChatModal, setShowChatModal] = useState(false);
   const [chatOutfit, setChatOutfit] = useState<OutfitSuggestion | null>(null);
@@ -108,6 +111,14 @@ const AppContent: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [error]);
+
+  // Réinitialiser les filtres mobiles quand on change d'onglet
+  useEffect(() => {
+    setMobileColorFilter('Toutes');
+    setMobileMaterialFilter('Toutes');
+    setMobileSubcategoryFilter('Toutes');
+    setMobileSearchQuery('');
+  }, [activeTab]);
 
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem('dressmup_onboarding_complete');
@@ -487,7 +498,7 @@ const AppContent: React.FC = () => {
 
   const filteredItems = useMemo(() => {
   if (activeTab === 'home') return [];
-  
+
   // Filtrer par catégorie
   let items = safeClothingItems.filter(item => {
     if (activeTab === 'hauts') return item.category === 'Hauts';
@@ -496,7 +507,7 @@ const AppContent: React.FC = () => {
     if (activeTab === 'accessoires') return item.category === 'Accessoires';
     return false;
   });
-  
+
   // Filtrer par recherche
   if (mobileSearchQuery.trim()) {
     const query = mobileSearchQuery.toLowerCase();
@@ -506,9 +517,33 @@ const AppContent: React.FC = () => {
       item.material.toLowerCase().includes(query)
     );
   }
-  
+
+  // Filtrer par couleur
+  if (mobileColorFilter !== 'Toutes') {
+    items = items.filter(item => item.color === mobileColorFilter);
+  }
+
+  // Filtrer par matière
+  if (mobileMaterialFilter !== 'Toutes') {
+    items = items.filter(item => item.material === mobileMaterialFilter);
+  }
+
+  // Filtrer par sous-catégorie (accessoires uniquement)
+  if (activeTab === 'accessoires' && mobileSubcategoryFilter !== 'Toutes') {
+    items = items.filter(item => item.subcategory === mobileSubcategoryFilter);
+  }
+
   // Trier
   return [...items].sort((a, b) => {
+    // Pour les accessoires, trier d'abord par sous-catégorie
+    if (activeTab === 'accessoires') {
+      const subcatA = a.subcategory || 'zzz';
+      const subcatB = b.subcategory || 'zzz';
+      const subcatCompare = subcatA.localeCompare(subcatB);
+      if (subcatCompare !== 0) return subcatCompare;
+    }
+
+    // Tri secondaire selon l'option sélectionnée
     switch (mobileSortBy) {
       case 'favorites':
         return (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0);
@@ -522,7 +557,47 @@ const AppContent: React.FC = () => {
         return 0;
     }
   });
-}, [activeTab, safeClothingItems, mobileSearchQuery, mobileSortBy]);
+}, [activeTab, safeClothingItems, mobileSearchQuery, mobileSortBy, mobileColorFilter, mobileMaterialFilter, mobileSubcategoryFilter]);
+
+  // Valeurs disponibles pour les filtres mobiles
+  const availableMobileColors = useMemo(() => {
+    if (activeTab === 'home') return [];
+    const itemsInCategory = safeClothingItems.filter(item => {
+      if (activeTab === 'hauts') return item.category === 'Hauts';
+      if (activeTab === 'bas') return item.category === 'Bas';
+      if (activeTab === 'chaussures') return item.category === 'Chaussures';
+      if (activeTab === 'accessoires') return item.category === 'Accessoires';
+      return false;
+    });
+    const colors = itemsInCategory.map(item => item.color);
+    return ['Toutes', ...Array.from(new Set(colors))];
+  }, [activeTab, safeClothingItems]);
+
+  const availableMobileMaterials = useMemo(() => {
+    if (activeTab === 'home') return [];
+    const itemsInCategory = safeClothingItems.filter(item => {
+      if (activeTab === 'hauts') return item.category === 'Hauts';
+      if (activeTab === 'bas') return item.category === 'Bas';
+      if (activeTab === 'chaussures') return item.category === 'Chaussures';
+      if (activeTab === 'accessoires') return item.category === 'Accessoires';
+      return false;
+    });
+    const materials = itemsInCategory.map(item => item.material);
+    return ['Toutes', ...Array.from(new Set(materials))];
+  }, [activeTab, safeClothingItems]);
+
+  const availableMobileSubcategories = useMemo(() => {
+    if (activeTab !== 'accessoires') return [];
+    return [
+      'Toutes',
+      'Ceintures',
+      'Chapeaux',
+      'Écharpes & Foulards',
+      'Lunettes',
+      'Montres & Bijoux',
+      'Sacs'
+    ];
+  }, [activeTab]);
 
   const isModalOpen = 
     showOutfitModal || 
@@ -716,6 +791,53 @@ useEffect(() => {
           <option value="color">Couleur (A-Z)</option>
         </select>
         <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+      </div>
+
+      {/* Filtres Couleur/Matière/Type */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Filtre Couleur */}
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1.5">Couleur</label>
+          <select
+            value={mobileColorFilter}
+            onChange={(e) => setMobileColorFilter(e.target.value)}
+            className="w-full px-3 py-2 bg-white dark:bg-raisin-black border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent appearance-none cursor-pointer transition-all text-sm"
+          >
+            {availableMobileColors.map(color => (
+              <option key={color} value={color}>{color}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Filtre Matière */}
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1.5">Matière</label>
+          <select
+            value={mobileMaterialFilter}
+            onChange={(e) => setMobileMaterialFilter(e.target.value)}
+            className="w-full px-3 py-2 bg-white dark:bg-raisin-black border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent appearance-none cursor-pointer transition-all text-sm"
+          >
+            {availableMobileMaterials.map(material => (
+              <option key={material} value={material}>{material}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Filtre Type (uniquement pour accessoires) */}
+        {activeTab === 'accessoires' && (
+          <div className="col-span-2">
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Type</label>
+            <select
+              value={mobileSubcategoryFilter}
+              onChange={(e) => setMobileSubcategoryFilter(e.target.value)}
+              className="w-full px-3 py-2 bg-white dark:bg-raisin-black border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent appearance-none cursor-pointer transition-all text-sm"
+            >
+              {availableMobileSubcategories.map(subcategory => (
+                <option key={subcategory} value={subcategory}>{subcategory}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
     </div>
 
