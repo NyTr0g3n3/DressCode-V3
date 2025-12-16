@@ -155,6 +155,19 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
   // Fonction de tri
   const sortItems = (items: ClothingItemType[]): ClothingItemType[] => {
     return [...items].sort((a, b) => {
+      // Pour les accessoires, on trie d'abord par sous-catégorie
+      if (openCategory === 'Accessoires') {
+        const subcatA = a.subcategory || 'zzz'; // Items sans subcategory à la fin
+        const subcatB = b.subcategory || 'zzz';
+        const subcatCompare = subcatA.localeCompare(subcatB);
+
+        // Si les sous-catégories sont différentes, on trie par sous-catégorie
+        if (subcatCompare !== 0) return subcatCompare;
+
+        // Sinon, on applique le tri secondaire choisi par l'utilisateur
+      }
+
+      // Tri selon l'option sélectionnée
       switch (sortBy) {
         case 'favorites':
           return (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0);
@@ -211,7 +224,7 @@ const filteredItems = useMemo(() => {
 }, [searchFilteredItems, openCategory, filters[openCategory]?.color, filters[openCategory]?.material, filters[openCategory]?.subcategory]);
 
   // Appliquer le tri
-  const sortedFilteredItems = useMemo(() => sortItems(filteredItems), [filteredItems, sortBy]);
+  const sortedFilteredItems = useMemo(() => sortItems(filteredItems), [filteredItems, sortBy, openCategory]);
 
   // Compter les items par catégorie (après recherche)
   const categoryCounts = useMemo(() => {
