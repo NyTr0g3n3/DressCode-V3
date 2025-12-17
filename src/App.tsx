@@ -794,51 +794,50 @@ useEffect(() => {
       </div>
 
       {/* Filtres Couleur/Matière/Type */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Filtre Couleur */}
+      {activeTab === 'accessoires' ? (
+        // Pour les accessoires : uniquement le filtre Type
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1.5">Couleur</label>
+          <label className="block text-xs font-medium text-gray-500 mb-1.5">Type</label>
           <select
-            value={mobileColorFilter}
-            onChange={(e) => setMobileColorFilter(e.target.value)}
+            value={mobileSubcategoryFilter}
+            onChange={(e) => setMobileSubcategoryFilter(e.target.value)}
             className="w-full px-3 py-2 bg-white dark:bg-raisin-black border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent appearance-none cursor-pointer transition-all text-sm"
           >
-            {availableMobileColors.map(color => (
-              <option key={color} value={color}>{color}</option>
+            {availableMobileSubcategories.map(subcategory => (
+              <option key={subcategory} value={subcategory}>{subcategory}</option>
             ))}
           </select>
         </div>
-
-        {/* Filtre Matière */}
-        <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1.5">Matière</label>
-          <select
-            value={mobileMaterialFilter}
-            onChange={(e) => setMobileMaterialFilter(e.target.value)}
-            className="w-full px-3 py-2 bg-white dark:bg-raisin-black border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent appearance-none cursor-pointer transition-all text-sm"
-          >
-            {availableMobileMaterials.map(material => (
-              <option key={material} value={material}>{material}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Filtre Type (uniquement pour accessoires) */}
-        {activeTab === 'accessoires' && (
-          <div className="col-span-2">
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">Type</label>
+      ) : (
+        // Pour les autres catégories : filtres Couleur et Matière
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Couleur</label>
             <select
-              value={mobileSubcategoryFilter}
-              onChange={(e) => setMobileSubcategoryFilter(e.target.value)}
+              value={mobileColorFilter}
+              onChange={(e) => setMobileColorFilter(e.target.value)}
               className="w-full px-3 py-2 bg-white dark:bg-raisin-black border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent appearance-none cursor-pointer transition-all text-sm"
             >
-              {availableMobileSubcategories.map(subcategory => (
-                <option key={subcategory} value={subcategory}>{subcategory}</option>
+              {availableMobileColors.map(color => (
+                <option key={color} value={color}>{color}</option>
               ))}
             </select>
           </div>
-        )}
-      </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">Matière</label>
+            <select
+              value={mobileMaterialFilter}
+              onChange={(e) => setMobileMaterialFilter(e.target.value)}
+              className="w-full px-3 py-2 bg-white dark:bg-raisin-black border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent appearance-none cursor-pointer transition-all text-sm"
+            >
+              {availableMobileMaterials.map(material => (
+                <option key={material} value={material}>{material}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
     </div>
 
     {/* Résultats */}
