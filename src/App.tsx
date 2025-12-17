@@ -26,6 +26,7 @@ import WardrobeSuggestions from './components/WardrobeSuggestions.tsx';
 import OutfitModal from './components/OutfitModal.tsx';
 import VacationModal from './components/VacationModal.tsx';
 import SetCreatorModal from './components/SetCreatorModal.tsx';
+import ClothingSetsModal from './components/ClothingSetsModal.tsx';
 import ModelProfileModal from './components/ModelProfileModal.tsx';
 import OutfitChatModal from './components/OutfitChatModal.tsx';
 import { LinkIcon, HeartIconSolid, ChevronDownIcon, SearchIcon, SortIcon } from './components/icons.tsx';
@@ -80,6 +81,7 @@ const AppContent: React.FC = () => {
   const [showOutfitModal, setShowOutfitModal] = useState(false);
   const [showVacationModal, setShowVacationModal] = useState(false);
   const [showSetModal, setShowSetModal] = useState(false);
+  const [showSetsModal, setShowSetsModal] = useState(false);
   const [showFavoriteModal, setShowFavoriteModal] = useState(false);
   const [showWornOutfitsModal, setShowWornOutfitsModal] = useState(false);
   const [showModelProfileModal, setShowModelProfileModal] = useState(false); // État pour la modale profil
@@ -599,11 +601,12 @@ const AppContent: React.FC = () => {
     ];
   }, [activeTab]);
 
-  const isModalOpen = 
-    showOutfitModal || 
-    showVacationModal || 
-    showSetModal || 
-    !!selectedItem ||  
+  const isModalOpen =
+    showOutfitModal ||
+    showVacationModal ||
+    showSetModal ||
+    showSetsModal ||
+    !!selectedItem ||
     !!wardrobeAnalysis ||
     !!generatedImageUrl ||
     showModelProfileModal; // Ajout de la modale profil
@@ -724,13 +727,14 @@ useEffect(() => {
                 onAnalyzeWardrobe={handleAnalyzeWardrobe}
                 onScrollToOutfits={handleScrollToOutfits}
                 onScrollToVacation={handleScrollToVacation}
-                onStartSetCreation={() => setShowSetModal(true)}
+                onShowSets={() => setShowSetsModal(true)}
                 onShowFavorites={() => setShowFavoriteModal(true)}
                 onShowWornOutfits={() => setShowWornOutfitsModal(true)}
                 isAnalyzingWardrobe={isAnalyzingWardrobe}
                 clothingCount={safeClothingItems.length}
                 favoriteOutfitCount={favoriteOutfits.length}
                 wornOutfitCount={wornOutfitsLast7Days.length}
+                setsCount={safeClothingSets.length}
               />
             )}
            {activeTab !== 'home' && (
@@ -1167,7 +1171,7 @@ useEffect(() => {
         messages={chatMessages}
       />
 
-      <SetCreatorModal 
+      <SetCreatorModal
               open={showSetModal}
               clothingItems={safeClothingItems}
               clothingSets={safeClothingSets}
@@ -1177,6 +1181,18 @@ useEffect(() => {
                 setShowSetModal(false);
               }}
             />
+
+      <ClothingSetsModal
+        open={showSetsModal}
+        onClose={() => setShowSetsModal(false)}
+        clothingSets={safeClothingSets}
+        clothingItems={safeClothingItems}
+        onCreateNewSet={() => {
+          setShowSetsModal(false);
+          setShowSetModal(true);
+        }}
+        onDeleteSet={handleRemoveSet}
+      />
 
       <FavoriteOutfitsModal
         open={showFavoriteModal}
