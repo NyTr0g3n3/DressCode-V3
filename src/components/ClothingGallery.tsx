@@ -9,13 +9,14 @@ interface CardProps {
   analysis: string;
   onClick: () => void;
   onPreview?: (imageSrc: string, analysis: string) => void;
+  onCancelPreview?: () => void;
   isSelected: boolean;
   isSet?: boolean;
   isFavorite?: boolean;
   isExcluded?: boolean;
 }
 
-const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onPreview, isSelected, isSet, isFavorite, isExcluded }) => {
+const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onPreview, onCancelPreview, isSelected, isSet, isFavorite, isExcluded }) => {
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const [isLongPressing, setIsLongPressing] = useState(false);
 
@@ -44,12 +45,19 @@ const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onPreview, isS
     }
   };
 
+  const handleMouseLeave = () => {
+    if (onCancelPreview && window.innerWidth >= 1024) {
+      onCancelPreview();
+    }
+  };
+
   return (
     <div
       onClick={onClick}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className="group relative aspect-square bg-raisin-black rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer"
     >
       <img
@@ -115,7 +123,8 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
 
   // État pour la preview d'image
   const [previewImage, setPreviewImage] = useState<{ src: string; description: string } | null>(null);
-  const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const previewOpenTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const previewCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const safeClothingSets = useMemo(() => clothingSets || [], [clothingSets]);
   const itemIdsInSets = useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
@@ -309,14 +318,17 @@ const filteredItems = useMemo(() => {
 
   // Gestion de la preview d'image
   const handlePreview = (imageSrc: string, description: string) => {
-    // Clear any existing timeout
-    if (previewTimeoutRef.current) {
-      clearTimeout(previewTimeoutRef.current);
+    // Clear any existing timeouts
+    if (previewOpenTimeoutRef.current) {
+      clearTimeout(previewOpenTimeoutRef.current);
+    }
+    if (previewCloseTimeoutRef.current) {
+      clearTimeout(previewCloseTimeoutRef.current);
     }
 
     // Sur desktop, ajouter un petit délai pour éviter les previews accidentelles
     if (window.innerWidth >= 1024) {
-      previewTimeoutRef.current = setTimeout(() => {
+      previewOpenTimeoutRef.current = setTimeout(() => {
         setPreviewImage({ src: imageSrc, description });
       }, 300);
     } else {
@@ -325,9 +337,31 @@ const filteredItems = useMemo(() => {
     }
   };
 
+  const handleCancelPreview = () => {
+    // Cancel pending open if preview hasn't opened yet
+    if (previewOpenTimeoutRef.current) {
+      clearTimeout(previewOpenTimeoutRef.current);
+    }
+
+    // Schedule close with small delay to allow moving to preview
+    previewCloseTimeoutRef.current = setTimeout(() => {
+      setPreviewImage(null);
+    }, 150);
+  };
+
+  const handlePreviewMouseEnter = () => {
+    // Cancel close timeout if mouse enters preview area
+    if (previewCloseTimeoutRef.current) {
+      clearTimeout(previewCloseTimeoutRef.current);
+    }
+  };
+
   const closePreview = () => {
-    if (previewTimeoutRef.current) {
-      clearTimeout(previewTimeoutRef.current);
+    if (previewOpenTimeoutRef.current) {
+      clearTimeout(previewOpenTimeoutRef.current);
+    }
+    if (previewCloseTimeoutRef.current) {
+      clearTimeout(previewCloseTimeoutRef.current);
     }
     setPreviewImage(null);
   };
@@ -344,11 +378,14 @@ const filteredItems = useMemo(() => {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [previewImage]);
 
-  // Cleanup du timeout au démontage
+  // Cleanup des timeouts au démontage
   useEffect(() => {
     return () => {
-      if (previewTimeoutRef.current) {
-        clearTimeout(previewTimeoutRef.current);
+      if (previewOpenTimeoutRef.current) {
+        clearTimeout(previewOpenTimeoutRef.current);
+      }
+      if (previewCloseTimeoutRef.current) {
+        clearTimeout(previewCloseTimeoutRef.current);
       }
     };
   }, []);
@@ -388,16 +425,17 @@ const filteredItems = useMemo(() => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
             onClick={closePreview}
-            onMouseLeave={closePreview} // Ferme au survol sortant (desktop)
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm cursor-pointer p-4"
           >
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ duration: 0.2, type: "spring", bounce: 0.3 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              onMouseEnter={handlePreviewMouseEnter}
+              onMouseLeave={handleCancelPreview}
               className="relative max-w-2xl max-h-[80vh] rounded-xl overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()} // Empêche la fermeture si on clique sur l'image
             >
@@ -604,6 +642,7 @@ const filteredItems = useMemo(() => {
                               analysis={item.analysis}
                               onClick={() => handleCardClick(item)}
                               onPreview={handlePreview}
+                              onCancelPreview={handleCancelPreview}
                               isSelected={selectedItemIds.has(item.id)}
                               isSet={itemIdsInSets.has(item.id)}
                               isFavorite={item.isFavorite}
