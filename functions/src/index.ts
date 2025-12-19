@@ -100,6 +100,7 @@ export const analyzeClothingImages = onCall(
   },
   async (request) => {
     logger.info("Analyse de vêtements via Gemini...");
+    logger.info(`🤖 Modèle utilisé: ${GEMINI_MODEL}`);
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new HttpsError("failed-precondition", "Clé API Gemini manquante.");
@@ -185,6 +186,7 @@ export const generateOutfitsFunction = onCall(
   },
   async (request) => {
     logger.info("Génération de tenues via Gemini...");
+    logger.info(`🤖 Modèle utilisé: ${GEMINI_MODEL}`);
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new HttpsError("failed-precondition", "Clé API Gemini manquante.");
