@@ -3,6 +3,9 @@ import * as logger from "firebase-functions/logger";
 import Replicate from "replicate";
 import {GoogleGenAI, Type} from "@google/genai";
 
+// Configuration du modèle Gemini
+const GEMINI_MODEL = "gemini-3-flash-preview"; // Gemini 3.0 Flash (Preview)
+
 // Variables d'environnement (à configurer via Firebase Console ou CLI)
 // Plus besoin de Secret Manager - on utilise des variables d'environnement classiques
 
@@ -128,7 +131,7 @@ export const analyzeClothingImages = onCall(
       }));
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: GEMINI_MODEL,
         contents: {parts: [textPart, ...imageParts]},
         config: {
           responseMimeType: "application/json",
@@ -195,7 +198,7 @@ export const generateOutfitsFunction = onCall(
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: GEMINI_MODEL,
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -264,7 +267,7 @@ export const analyzeWardrobeGapsFunction = onCall(
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: GEMINI_MODEL,
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -360,7 +363,7 @@ export const generateVacationPlanFunction = onCall(
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: GEMINI_MODEL,
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -420,7 +423,7 @@ export const generateChatResponseFunction = onCall(
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: GEMINI_MODEL,
         contents: prompt,
         config: {
           responseMimeType: "application/json",
