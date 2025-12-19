@@ -145,23 +145,109 @@ Analyse la météo dans le contexte et applique :
 - Ceinture : Pour pantalon classique
 - Écharpe : Si < 10°C
 
-**IMPORTANT** : Utilise les IDs EXACTS des articles. Sois créatif dans les limites.${anchorItemOrSet ? `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴🔴 RÈGLE CRITIQUE - UTILISATION DES IDs (NON NÉGOCIABLE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+⚠️ **INTERDICTION ABSOLUE** :
+- ❌ JAMAIS inventer ou modifier un ID
+- ❌ JAMAIS utiliser un ID qui n'est pas dans la liste ci-dessus
+- ❌ JAMAIS tronquer, raccourcir ou modifier un ID
+
+✅ **OBLIGATION** :
+- Tu DOIS copier-coller les IDs EXACTEMENT comme fournis
+- Chaque ID est unique et doit être utilisé TEL QUEL (avec tirets, chiffres, lettres)
+- Si un ID ressemble à "abc-123-def-456", tu DOIS utiliser "abc-123-def-456"
+
+📝 **EXEMPLE DE FORMAT ATTENDU** :
+Si la liste contient : "Pull bleu marine col V (ID: a1b2c3d4-e5f6-7890)"
+Dans ta réponse JSON, tu DOIS mettre :
+{
+  "id": "a1b2c3d4-e5f6-7890",
+  "description": "Pull bleu marine col V"
+}
+
+🚨 **VÉRIFICATION AVANT ENVOI** :
+Avant de finaliser ta réponse, vérifie que CHAQUE ID dans ta réponse JSON existe EXACTEMENT dans la liste des vêtements disponibles ci-dessus.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${anchorItemOrSet ? `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚠️ RAPPEL FINAL - ARTICLE OBLIGATOIRE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 VÉRIFIE que CHACUNE des 3 tenues inclut bien :
 ✅ "${('name' in anchorItemOrSet ? anchorItemOrSet.name : anchorItemOrSet.analysis)}" (ID: ${anchorItemOrSet.id})
+Et que tu utilises EXACTEMENT cet ID : ${anchorItemOrSet.id}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : ''}`;
 
     try {
         const result = await generateOutfitsFunctionCall({ prompt });
         const data = result.data as { tenues: OutfitSuggestion[] };
-        return data.tenues;
+
+        // Validation et correction des IDs
+        const validatedOutfits = validateAndFixOutfitIds(data.tenues, individualItems, sets);
+
+        return validatedOutfits;
     } catch (error) {
         console.error("Erreur génération tenues:", error);
         throw new Error("Erreur lors de la génération des tenues.");
     }
+}
+
+// Fonction de validation et correction des IDs
+function validateAndFixOutfitIds(
+    outfits: OutfitSuggestion[],
+    items: ClothingItem[],
+    sets: ClothingSet[]
+): OutfitSuggestion[] {
+    const allValidIds = new Set([
+        ...items.map(item => item.id),
+        ...sets.map(set => set.id)
+    ]);
+
+    const allItemsAndSets = [...items, ...sets];
+
+    return outfits.map(outfit => ({
+        ...outfit,
+        vetements: outfit.vetements.map(vetement => {
+            const cleanId = vetement.id.trim();
+
+            // Si l'ID est valide, on le garde
+            if (allValidIds.has(cleanId)) {
+                return vetement;
+            }
+
+            // Sinon, on cherche le bon ID par fuzzy matching
+            console.warn(`⚠️ ID invalide détecté: "${cleanId}" pour "${vetement.description}"`);
+
+            // 1. Recherche par description exacte
+            let found = allItemsAndSets.find(item => {
+                const itemDesc = 'name' in item ? item.name : item.analysis;
+                return itemDesc.toLowerCase() === vetement.description.toLowerCase();
+            });
+
+            // 2. Recherche par description partielle
+            if (!found) {
+                found = allItemsAndSets.find(item => {
+                    const itemDesc = 'name' in item ? item.name : item.analysis;
+                    const desc = vetement.description.toLowerCase();
+                    return itemDesc.toLowerCase().includes(desc) || desc.includes(itemDesc.toLowerCase());
+                });
+            }
+
+            if (found) {
+                console.log(`✅ ID corrigé: "${cleanId}" → "${found.id}" pour "${vetement.description}"`);
+                return {
+                    ...vetement,
+                    id: found.id
+                };
+            }
+
+            // Si vraiment aucun match, on garde l'ID invalide (sera affiché comme "?")
+            console.error(`❌ Aucun match trouvé pour: "${vetement.description}" (ID: ${cleanId})`);
+            return vetement;
+        })
+    }));
 }
 
 // --- GÉNÉRATION DE VARIANTES (REMPLACEMENT D'UNE PIÈCE) ---
@@ -282,12 +368,43 @@ Analyse la météo dans le contexte et applique :
 - Ceinture : Pour pantalon classique
 - Écharpe : Si < 10°C
 
-**IMPORTANT** : Utilise les IDs EXACTS des articles. Génère 3 variantes qui respectent TOUTES les règles ci-dessus.`;
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴🔴 RÈGLE CRITIQUE - UTILISATION DES IDs (NON NÉGOCIABLE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ **INTERDICTION ABSOLUE** :
+- ❌ JAMAIS inventer ou modifier un ID
+- ❌ JAMAIS utiliser un ID qui n'est pas dans la liste ci-dessus
+- ❌ JAMAIS tronquer, raccourcir ou modifier un ID
+
+✅ **OBLIGATION** :
+- Tu DOIS copier-coller les IDs EXACTEMENT comme fournis
+- Pour les articles à GARDER (✅), tu DOIS utiliser EXACTEMENT les mêmes IDs
+- Chaque ID est unique et doit être utilisé TEL QUEL (avec tirets, chiffres, lettres)
+
+📝 **EXEMPLE DE FORMAT ATTENDU** :
+Si un article à garder a l'ID "a1b2c3d4-e5f6-7890", dans ta réponse JSON tu DOIS mettre :
+{
+  "id": "a1b2c3d4-e5f6-7890",
+  "description": "Description de l'article"
+}
+
+🚨 **VÉRIFICATION AVANT ENVOI** :
+1. Vérifie que les articles marqués "✅ GARDER" ont EXACTEMENT les mêmes IDs
+2. Vérifie que l'article de remplacement a un ID qui existe dans la liste disponible
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Génère 3 variantes qui respectent TOUTES les règles ci-dessus.`;
 
     try {
         const result = await generateOutfitVariantsFunctionCall({ prompt });
         const data = result.data as { tenues: OutfitSuggestion[] };
-        return data.tenues;
+
+        // Validation et correction des IDs
+        const validatedOutfits = validateAndFixOutfitIds(data.tenues, individualItems, sets);
+
+        return validatedOutfits;
     } catch (error) {
         console.error("Erreur génération variantes:", error);
         throw new Error("Erreur lors de la génération des variantes.");
