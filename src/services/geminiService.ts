@@ -263,13 +263,49 @@ function validateAndFixVacationPlanIds(
 
     const allItemsAndSets = [...items, ...sets];
 
+    // Map pour savoir à quel set appartient chaque item
+    const itemIdToSetId = new Map<string, string>();
+    sets.forEach(set => {
+        set.itemIds.forEach(itemId => {
+            itemIdToSetId.set(itemId, set.id);
+        });
+    });
+
+    const processedSetIds = new Set<string>(); // Pour éviter les doublons d'ensembles
+
     return {
         ...plan,
         valise: plan.valise.map(item => {
             const cleanId = item.id.trim();
 
-            // Si l'ID est valide, on le garde
+            // 🔴 RÈGLE CRITIQUE : Si c'est un item individuel qui fait partie d'un set
+            if (itemIdToSetId.has(cleanId)) {
+                const setId = itemIdToSetId.get(cleanId)!;
+                const set = sets.find(s => s.id === setId)!;
+
+                // Si on a déjà traité cet ensemble, on skip (évite les doublons)
+                if (processedSetIds.has(setId)) {
+                    console.warn(`⚠️ [VALISE] Item "${item.description}" fait partie du set "${set.name}" déjà inclus, ignoré`);
+                    return null; // Sera filtré après
+                }
+
+                processedSetIds.add(setId);
+
+                console.warn(`🔄 [VALISE] Item individuel "${item.description}" (${cleanId}) fait partie du set "${set.name}"`);
+                console.log(`✅ [VALISE] Remplacement par l'ensemble complet (ID: ${setId})`);
+
+                return {
+                    id: setId,
+                    description: set.name
+                };
+            }
+
+            // Si l'ID est valide (item individuel OU set), on le garde
             if (allValidIds.has(cleanId)) {
+                // Si c'est un set, marquer comme traité
+                if (sets.some(s => s.id === cleanId)) {
+                    processedSetIds.add(cleanId);
+                }
                 return item;
             }
 
@@ -292,6 +328,23 @@ function validateAndFixVacationPlanIds(
             }
 
             if (found) {
+                // Si l'item trouvé fait partie d'un set, utiliser le set complet
+                if ('analysis' in found && itemIdToSetId.has(found.id)) {
+                    const setId = itemIdToSetId.get(found.id)!;
+                    const set = sets.find(s => s.id === setId)!;
+
+                    if (!processedSetIds.has(setId)) {
+                        processedSetIds.add(setId);
+                        console.log(`✅ [VALISE] ID corrigé: "${cleanId}" → Ensemble "${set.name}" (${setId})`);
+                        return {
+                            id: setId,
+                            description: set.name
+                        };
+                    } else {
+                        return null; // Set déjà ajouté
+                    }
+                }
+
                 console.log(`✅ [VALISE] ID corrigé: "${cleanId}" → "${found.id}" pour "${item.description}"`);
                 return {
                     ...item,
@@ -302,7 +355,7 @@ function validateAndFixVacationPlanIds(
             // Si vraiment aucun match, on garde l'ID invalide (sera affiché comme "?")
             console.error(`❌ [VALISE] Aucun match trouvé pour: "${item.description}" (ID: ${cleanId})`);
             return item;
-        })
+        }).filter((item): item is OutfitItem => item !== null) // Retirer les doublons
     };
 }
 
@@ -691,8 +744,21 @@ export async function generateVacationPlan(
     const individualItemsFormatted = individualItems.map(item =>
       `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Couleur: ${item.color}, Matière: ${item.material})`
     ).join('\n');
-    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
-    const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
+
+    // Formatter les sets avec TOUS leurs items détaillés
+    const setsFormatted = sets.map(set => {
+        const setItems = set.itemIds
+            .map(itemId => clothingList.find(item => item.id === itemId))
+            .filter((item): item is ClothingItem => item !== undefined);
+
+        const itemsDetail = setItems.map(item =>
+            `    • ${item.analysis} (Cat: ${item.category}, Couleur: ${item.color}, Matière: ${item.material})`
+        ).join('\n');
+
+        return `- **ENSEMBLE "${set.name}"** (ID Ensemble: ${set.id}) - ⚠️ INDIVISIBLE (utiliser tous les items ou aucun) :\n${itemsDetail}`;
+    }).join('\n\n');
+
+    const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n\n');
 
     const weightInstruction = maxWeight
         ? `\n**CONTRAINTE POIDS** : Le poids total DOIT être proche de ${maxWeight} kg (marge : ${maxWeight - 0.5} - ${maxWeight} kg). Utilise bien la capacité disponible !
@@ -733,12 +799,17 @@ export async function generateVacationPlan(
    | **10-15°C (FRAIS)** | Pulls, pantalons, veste, chaussures fermées |
    | **< 10°C (FROID)** | Layering complet : sous-couche + pull + manteau chaud |
 
-2. **INTERDICTIONS ABSOLUES** :
-   - ❌ Doudoune/veste ski/polaire épaisse si > 20°C
+2. **INTERDICTIONS ABSOLUES** (NON NÉGOCIABLE) :
+   - ❌ **TOUTE veste/blouson/manteau si > 25°C** (veste légère, suède, cuir, toile - TOUTES interdites)
+   - ❌ Doudoune/veste ski/polaire si > 20°C
    - ❌ Shorts si < 15°C
    - ❌ Sandales si < 18°C
    - ❌ Pulls en laine si > 25°C
    - ❌ Jeans épais si > 32°C
+
+   **EXEMPLES D'INTERDICTIONS** :
+   - Destination : Espagne 35°C → INTERDIT : veste suède, veste légère, blouson, pull, jean épais
+   - Destination : Ski -5°C → INTERDIT : shorts, t-shirts seuls, sandales
 
 3. **MATIÈRES ADAPTÉES** :
    - **Climat chaud** : Coton léger, lin, matières respirantes uniquement
@@ -767,6 +838,13 @@ export async function generateVacationPlan(
 7. **LAYERING INTELLIGENT (si climat variable)** :
    - Prévoir des couches qui s'empilent : t-shirt → chemise/pull léger → veste
    - Chaque couche doit être portable seule ET en combinaison
+
+8. **🔴 RÈGLE CRITIQUE SUR LES ENSEMBLES** :
+   - Les ENSEMBLES sont INDIVISIBLES : tu DOIS inclure TOUS les items d'un ensemble ou AUCUN
+   - ❌ INTERDIT : Prendre seulement le t-shirt d'un ensemble sans son short
+   - ✅ CORRECT : Prendre l'ensemble complet OU ne pas le prendre du tout
+   - Dans ta réponse JSON, utilise l'ID de l'ENSEMBLE (pas les IDs individuels des items)
+   - Si un ensemble ne respecte pas le climat, NE PAS le prendre du tout
 
 ${weightInstruction}
 
