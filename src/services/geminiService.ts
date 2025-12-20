@@ -639,13 +639,15 @@ export async function generateVacationPlan(
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
     const weightInstruction = maxWeight
-        ? `\n**CONTRAINTE POIDS** : Le poids total NE DOIT PAS dépasser ${maxWeight} kg. Estime le poids moyen selon ces références réalistes :
+        ? `\n**CONTRAINTE POIDS** : Le poids total DOIT être proche de ${maxWeight} kg (marge : ${maxWeight - 0.5} - ${maxWeight} kg). Utilise bien la capacité disponible !
+
+**Poids de référence réalistes** :
 - T-shirt : ~150g
 - Chemise : ~200g
-- Jean/Denim : ~900g
+- Jean/Denim : ~650g
 - Pantalon coton/chino : ~500g
 - Jogging/Pantalon léger : ~350g
-- Pull laine : ~700g
+- Pull laine : ~350g
 - Sweat : ~400g
 - Veste légère : ~500g
 - Manteau/Doudoune : ~1kg
@@ -653,14 +655,15 @@ export async function generateVacationPlan(
 - Baskets (par paire) : ~1kg
 - Chaussures de ville cuir : ~1,2kg
 - Sous-vêtements : ~50g
-- Chaussettes : ~50g`
+- Chaussettes : ~50g
+- Accessoires (lunettes, casquette, etc.) : ~100g`
         : '';
 
     const prompt = `Tu es un expert en préparation de valise. Crée une **CAPSULE WARDROBE** optimisée pour ${days} jours.
 
 **DESTINATION & CONTEXTE** : ${context}
 
-**PRINCIPE CAPSULE WARDROBE** : Sélectionner peu de pièces qui se combinent TOUTES entre elles pour créer un maximum de tenues différentes.
+**PRINCIPE CAPSULE WARDROBE** : Sélectionner des pièces polyvalentes qui se combinent entre elles pour créer un maximum de tenues différentes.
 
 **RÈGLES CRITIQUES** :
 
@@ -691,13 +694,21 @@ export async function generateVacationPlan(
    - **Motifs** : Maximum 2 pièces à motifs dans toute la valise, le reste UNI
    - **Neutralité** : Au moins 50% de pièces en couleurs neutres (noir, blanc, gris, beige, marine)
 
-5. **QUANTITÉS RECOMMANDÉES pour ${days} jours** :
-   - Hauts : ${Math.min(days + 1, 7)} pièces max (on peut reporter un t-shirt)
-   - Bas : ${Math.min(Math.ceil(days / 2) + 1, 4)} pièces max
-   - Chaussures : 2-3 paires max
-   - Accessoires : selon besoin
+5. **QUANTITÉS ADAPTÉES pour ${days} jours** :
+   - **Hauts** : ${Math.max(Math.ceil(days / 2), 5)}-${Math.max(Math.ceil(days / 1.5), 8)} pièces (mix t-shirts/chemises)
+   - **Bas** : ${Math.max(Math.ceil(days / 3), 3)}-${Math.max(Math.ceil(days / 2.5), 5)} pièces
+   - **Chaussures** : 2-3 paires (confort + sport/ville + option soirée)
+   - **Sous-vêtements** : ${Math.min(days + 2, 10)} pièces minimum
+   - **Chaussettes** : ${Math.min(days + 2, 10)} paires minimum
+   ${days > 7 ? `   - Pour un séjour de ${days} jours, prévoir SUFFISAMMENT de vêtements pour éviter les lessives fréquentes` : ''}
 
-6. **LAYERING INTELLIGENT (si climat variable)** :
+6. **ACCESSOIRES ESSENTIELS** (OBLIGATOIRE) :
+   - **Soleil/Chaleur** (si > 25°C ou destination ensoleillée) : Lunettes de soleil, casquette/chapeau
+   - **Froid** (si < 15°C) : Écharpe, bonnet, gants
+   - **Voyage** : Ceinture si pantalons formels
+   - Privilégier les accessoires disponibles dans la garde-robe
+
+7. **LAYERING INTELLIGENT (si climat variable)** :
    - Prévoir des couches qui s'empilent : t-shirt → chemise/pull léger → veste
    - Chaque couche doit être portable seule ET en combinaison
 
@@ -706,10 +717,17 @@ ${weightInstruction}
 **VÊTEMENTS DISPONIBLES** :
 ${availableClothes}
 
+**INSTRUCTIONS FINALES** :
+- Utilise les IDs EXACTS des vêtements disponibles
+- Crée une valise COMPLÈTE et PERTINENTE pour ${days} jours
+- Si contrainte de poids : MAXIMISE l'utilisation (proche de ${maxWeight}kg)
+- N'oublie PAS les accessoires essentiels selon le climat
+- Pour les longs séjours (> 14 jours), prévoir PLUS de vêtements
+
 **SORTIE** :
 - Un titre accrocheur pour cette valise
 - Un résumé expliquant tes choix (météo, style, combinaisons possibles)
-- La liste des articles avec leur ID exact`;
+- La liste COMPLÈTE des articles avec leur ID exact`;
 
     try {
         const result = await generateVacationPlanFunctionCall({ prompt });
