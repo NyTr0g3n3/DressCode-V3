@@ -250,6 +250,62 @@ function validateAndFixOutfitIds(
     }));
 }
 
+// Validation spécifique pour le planificateur de valise
+function validateAndFixVacationPlanIds(
+    plan: VacationPlan,
+    items: ClothingItem[],
+    sets: ClothingSet[]
+): VacationPlan {
+    const allValidIds = new Set([
+        ...items.map(item => item.id),
+        ...sets.map(set => set.id)
+    ]);
+
+    const allItemsAndSets = [...items, ...sets];
+
+    return {
+        ...plan,
+        valise: plan.valise.map(item => {
+            const cleanId = item.id.trim();
+
+            // Si l'ID est valide, on le garde
+            if (allValidIds.has(cleanId)) {
+                return item;
+            }
+
+            // Sinon, on cherche le bon ID par fuzzy matching
+            console.warn(`⚠️ [VALISE] ID invalide détecté: "${cleanId}" pour "${item.description}"`);
+
+            // 1. Recherche par description exacte
+            let found = allItemsAndSets.find(existingItem => {
+                const itemDesc = 'name' in existingItem ? existingItem.name : existingItem.analysis;
+                return itemDesc.toLowerCase() === item.description.toLowerCase();
+            });
+
+            // 2. Recherche par description partielle
+            if (!found) {
+                found = allItemsAndSets.find(existingItem => {
+                    const itemDesc = 'name' in existingItem ? existingItem.name : existingItem.analysis;
+                    const desc = item.description.toLowerCase();
+                    return itemDesc.toLowerCase().includes(desc) || desc.includes(itemDesc.toLowerCase());
+                });
+            }
+
+            if (found) {
+                console.log(`✅ [VALISE] ID corrigé: "${cleanId}" → "${found.id}" pour "${item.description}"`);
+                return {
+                    ...item,
+                    id: found.id
+                };
+            }
+
+            // Si vraiment aucun match, on garde l'ID invalide (sera affiché comme "?")
+            console.error(`❌ [VALISE] Aucun match trouvé pour: "${item.description}" (ID: ${cleanId})`);
+            return item;
+        })
+    };
+}
+
 // --- GÉNÉRATION DE VARIANTES (REMPLACEMENT D'UNE PIÈCE) ---
 export async function generateOutfitVariants(
     clothingList: ClothingItem[],
@@ -717,8 +773,30 @@ ${weightInstruction}
 **VÊTEMENTS DISPONIBLES** :
 ${availableClothes}
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴🔴 RÈGLE CRITIQUE - UTILISATION DES IDs (NON NÉGOCIABLE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ **INTERDICTION ABSOLUE** :
+- ❌ JAMAIS inventer ou modifier un ID
+- ❌ JAMAIS utiliser un ID qui n'est pas dans la liste ci-dessus
+- ❌ JAMAIS tronquer, raccourcir ou modifier un ID
+
+✅ **OBLIGATION** :
+- Tu DOIS copier-coller les IDs EXACTEMENT comme fournis dans la liste
+- Chaque article de la valise DOIT avoir un ID présent dans "VÊTEMENTS DISPONIBLES"
+
+📝 **EXEMPLE DE FORMAT ATTENDU** :
+Si la liste contient : "T-shirt blanc en coton (ID: a1b2c3d4-e5f6-7890)"
+Dans ta réponse JSON, tu DOIS mettre :
+{
+  "id": "a1b2c3d4-e5f6-7890",
+  "description": "T-shirt blanc en coton"
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 **INSTRUCTIONS FINALES** :
-- Utilise les IDs EXACTS des vêtements disponibles
 - Crée une valise COMPLÈTE et PERTINENTE pour ${days} jours
 - Si contrainte de poids : MAXIMISE l'utilisation (proche de ${maxWeight}kg)
 - N'oublie PAS les accessoires essentiels selon le climat
@@ -727,11 +805,16 @@ ${availableClothes}
 **SORTIE** :
 - Un titre accrocheur pour cette valise
 - Un résumé expliquant tes choix (météo, style, combinaisons possibles)
-- La liste COMPLÈTE des articles avec leur ID exact`;
+- La liste COMPLÈTE des articles avec leur ID EXACT copié-collé`;
 
     try {
         const result = await generateVacationPlanFunctionCall({ prompt });
-        return result.data as VacationPlan;
+        const rawPlan = result.data as VacationPlan;
+
+        // ✅ Validation et correction automatique des IDs
+        const validatedPlan = validateAndFixVacationPlanIds(rawPlan, clothingList, sets);
+
+        return validatedPlan;
     } catch (error) {
         console.error("Erreur génération plan vacances:", error);
         throw new Error("Erreur lors de la génération du plan vacances.");
