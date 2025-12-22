@@ -266,6 +266,14 @@ const filteredItems = useMemo(() => {
     // Récupérer les sous-catégories disponibles pour la catégorie actuelle
     const subcategoriesForCategory = SUBCATEGORIES[openCategory];
 
+    console.log('🔍 DEBUG availableSubcategories:', {
+      openCategory,
+      subcategoriesForCategory,
+      SUBCATEGORIES,
+      hasSubcategories: !!subcategoriesForCategory,
+      length: subcategoriesForCategory?.length || 0
+    });
+
     if (!subcategoriesForCategory || subcategoriesForCategory.length === 0) return [];
 
     return ['Toutes', ...subcategoriesForCategory];
