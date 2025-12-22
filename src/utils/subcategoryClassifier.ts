@@ -18,28 +18,28 @@ export const SUBCATEGORIES = {
 // Mots-clés pour détecter les sous-catégories
 const KEYWORDS = {
   // Hauts
-  'T-shirts': ['t-shirt', 'tee-shirt', 'tshirt', 'débardeur', 'tank top', 'maillot'],
-  'Chemises': ['chemise', 'shirt', 'blouse', 'tunique'],
-  'Pulls': ['pull', 'sweater', 'sweat', 'hoodie', 'gilet', 'cardigan', 'tricot'],
-  'Vestes': ['veste', 'blouson', 'manteau', 'parka', 'doudoune', 'blazer', 'jacket', 'coat', 'trench'],
+  'T-shirts': ['t-shirt', 'tee-shirt', 'tshirt', 'débardeur', 'tank top', 'maillot', 'polo', 'top'],
+  'Chemises': ['chemise', 'shirt', 'blouse', 'tunique', 'chemisier'],
+  'Pulls': ['pull', 'sweater', 'sweat', 'hoodie', 'gilet', 'cardigan', 'tricot', 'col roulé', 'col v'],
+  'Vestes': ['veste', 'blouson', 'manteau', 'parka', 'doudoune', 'blazer', 'jacket', 'coat', 'trench', 'bomber', 'perfecto', 'teddy'],
 
   // Bas
-  'Pantalons': ['pantalon', 'jean', 'chino', 'trouser', 'cargo'],
+  'Pantalons': ['pantalon', 'jean', 'chino', 'trouser', 'cargo', 'jogging', 'survêtement', 'slim', 'regular', 'straight'],
   'Shorts': ['short', 'bermuda'],
-  'Shorts sportifs': ['short sport', 'short jogging', 'short running', 'short gym'],
+  'Shorts sportifs': ['short sport', 'short jogging', 'short running', 'short gym', 'short fitness'],
 
   // Chaussures
-  'Sneakers': ['sneaker', 'basket', 'tennis', 'running', 'sport'],
-  'Classiques': ['derby', 'richelieu', 'mocassin', 'loafer', 'oxford', 'chaussure de ville', 'escarpin', 'talon'],
-  'Bottines': ['bottine', 'boot', 'chelsea', 'timberland', 'ranger'],
+  'Sneakers': ['sneaker', 'basket', 'tennis', 'running', 'sport', 'air force', 'dunk', 'jordan', 'stan smith', 'adidas', 'nike'],
+  'Classiques': ['derby', 'richelieu', 'mocassin', 'loafer', 'oxford', 'chaussure de ville', 'escarpin', 'talon', 'cuir ville'],
+  'Bottines': ['bottine', 'boot', 'chelsea', 'timberland', 'ranger', 'boots'],
 
   // Accessoires (déjà existant)
   'Ceintures': ['ceinture', 'belt'],
   'Chapeaux': ['chapeau', 'casquette', 'bonnet', 'bob', 'béret', 'cap', 'hat'],
-  'Écharpes & Foulards': ['écharpe', 'foulard', 'scarf', 'cheche'],
-  'Lunettes': ['lunettes', 'glasses'],
-  'Montres & Bijoux': ['montre', 'bracelet', 'collier', 'bague', 'boucle', 'watch', 'jewelry'],
-  'Sacs': ['sac', 'bag', 'besace', 'cartable', 'pochette']
+  'Écharpes & Foulards': ['écharpe', 'foulard', 'scarf', 'cheche', 'châle'],
+  'Lunettes': ['lunettes', 'glasses', 'soleil'],
+  'Montres & Bijoux': ['montre', 'bracelet', 'collier', 'bague', 'boucle', 'watch', 'jewelry', 'bijou'],
+  'Sacs': ['sac', 'bag', 'besace', 'cartable', 'pochette', 'bandoulière']
 };
 
 /**
@@ -74,13 +74,32 @@ export function detectSubcategory(analysis: string, category: Category): string 
 export function classifyItems<T extends { analysis: string; category: Category; subcategory?: string }>(
   items: T[]
 ): T[] {
-  return items.map(item => {
+  let classified = 0;
+  let alreadyClassified = 0;
+  let unclassified = 0;
+
+  const result = items.map(item => {
     // Si l'item a déjà une subcategory, on la garde
-    if (item.subcategory) return item;
+    if (item.subcategory) {
+      alreadyClassified++;
+      return item;
+    }
 
     // Sinon, on essaie de la détecter
     const detected = detectSubcategory(item.analysis, item.category);
 
-    return detected ? { ...item, subcategory: detected } : item;
+    if (detected) {
+      classified++;
+      console.log(`✅ Classifié: "${item.analysis}" → ${detected}`);
+      return { ...item, subcategory: detected };
+    } else {
+      unclassified++;
+      console.warn(`⚠️ Non classifié: "${item.analysis}" (${item.category})`);
+      return item;
+    }
   });
+
+  console.log(`📊 Classification: ${classified} nouveaux, ${alreadyClassified} existants, ${unclassified} non classifiés`);
+
+  return result;
 }
