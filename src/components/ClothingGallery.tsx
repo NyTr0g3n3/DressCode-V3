@@ -616,21 +616,20 @@ const filteredItems = useMemo(() => {
                       </select>
                     </div>
 
-                    {/* Filtre sous-catégorie (pour toutes les catégories) */}
-                    {availableSubcategories.length > 1 && (
-                      <div className="flex-1 min-w-[150px]" style={{ border: '2px solid red' }}>
-                        <label className="block text-sm font-medium mb-2">Type</label>
-                        <select
-                          value={filters[name].subcategory}
-                          onChange={(e) => handleSubcategoryChange(e.target.value)}
-                          className="w-full px-4 py-2 border border-black/10 dark:border-white/10 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-gold focus:border-transparent"
-                        >
-                          {availableSubcategories.map(subcategory => (
-                            <option key={subcategory} value={subcategory}>{subcategory}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
+                    {/* Filtre sous-catégorie (pour toutes les catégories) - FORCE RENDERING */}
+                    <div className="flex-1 min-w-[150px]" style={{ border: '3px solid red', backgroundColor: 'yellow' }}>
+                      <label className="block text-sm font-medium mb-2">Type (DEBUG)</label>
+                      <select
+                        value={filters[name].subcategory || 'Toutes'}
+                        onChange={(e) => handleSubcategoryChange(e.target.value)}
+                        className="w-full px-4 py-2 border border-black/10 dark:border-white/10 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-gold focus:border-transparent"
+                      >
+                        <option value="Toutes">Toutes</option>
+                        {availableSubcategories.filter(s => s !== 'Toutes').map(subcategory => (
+                          <option key={subcategory} value={subcategory}>{subcategory}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
                   {/* Grille des vêtements */}
