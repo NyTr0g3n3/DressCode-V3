@@ -261,17 +261,28 @@ const filteredItems = useMemo(() => {
   }, [searchFilteredItems, openCategory]);
 
   const availableSubcategories = useMemo(() => {
-    if (!openCategory) return [];
+    if (!openCategory) {
+      console.log('🔍 availableSubcategories: no openCategory');
+      return [];
+    }
 
     // Récupérer les sous-catégories disponibles pour la catégorie actuelle
     const subcategoriesForCategory = SUBCATEGORIES[openCategory];
+    const result = !subcategoriesForCategory || subcategoriesForCategory.length === 0
+      ? []
+      : ['Toutes', ...subcategoriesForCategory];
 
     console.log('🔍 DEBUG availableSubcategories:', {
       openCategory,
       subcategoriesForCategory,
-      SUBCATEGORIES,
+      'SUBCATEGORIES type': typeof SUBCATEGORIES,
+      'SUBCATEGORIES keys': Object.keys(SUBCATEGORIES),
+      'SUBCATEGORIES[openCategory]': SUBCATEGORIES[openCategory],
       hasSubcategories: !!subcategoriesForCategory,
-      length: subcategoriesForCategory?.length || 0
+      subcategoriesLength: subcategoriesForCategory?.length || 0,
+      resultLength: result.length,
+      result: result,
+      'condition passes': result.length > 1
     });
 
     if (!subcategoriesForCategory || subcategoriesForCategory.length === 0) return [];
@@ -606,20 +617,29 @@ const filteredItems = useMemo(() => {
                     </div>
 
                     {/* Filtre sous-catégorie (pour toutes les catégories) */}
-                    {availableSubcategories.length > 1 && (
-                      <div className="flex-1 min-w-[150px]">
-                        <label className="block text-sm font-medium mb-2">Type</label>
-                        <select
-                          value={filters[name].subcategory}
-                          onChange={(e) => handleSubcategoryChange(e.target.value)}
-                          className="w-full px-4 py-2 border border-black/10 dark:border-white/10 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-gold focus:border-transparent"
-                        >
-                          {availableSubcategories.map(subcategory => (
-                            <option key={subcategory} value={subcategory}>{subcategory}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
+                    {(() => {
+                      const shouldRender = availableSubcategories.length > 1;
+                      console.log('🎨 Rendering subcategory dropdown:', {
+                        category: name,
+                        availableSubcategoriesLength: availableSubcategories.length,
+                        shouldRender,
+                        availableSubcategories
+                      });
+                      return shouldRender ? (
+                        <div className="flex-1 min-w-[150px]">
+                          <label className="block text-sm font-medium mb-2">Type</label>
+                          <select
+                            value={filters[name].subcategory}
+                            onChange={(e) => handleSubcategoryChange(e.target.value)}
+                            className="w-full px-4 py-2 border border-black/10 dark:border-white/10 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-gold focus:border-transparent"
+                          >
+                            {availableSubcategories.map(subcategory => (
+                              <option key={subcategory} value={subcategory}>{subcategory}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : null;
+                    })()}
                   </div>
 
                   {/* Grille des vêtements */}
