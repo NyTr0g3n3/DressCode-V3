@@ -617,29 +617,20 @@ const filteredItems = useMemo(() => {
                     </div>
 
                     {/* Filtre sous-catégorie (pour toutes les catégories) */}
-                    {(() => {
-                      const shouldRender = availableSubcategories.length > 1;
-                      console.log('🎨 Rendering subcategory dropdown:', {
-                        category: name,
-                        availableSubcategoriesLength: availableSubcategories.length,
-                        shouldRender,
-                        availableSubcategories
-                      });
-                      return shouldRender ? (
-                        <div className="flex-1 min-w-[150px]">
-                          <label className="block text-sm font-medium mb-2">Type</label>
-                          <select
-                            value={filters[name].subcategory}
-                            onChange={(e) => handleSubcategoryChange(e.target.value)}
-                            className="w-full px-4 py-2 border border-black/10 dark:border-white/10 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-gold focus:border-transparent"
-                          >
-                            {availableSubcategories.map(subcategory => (
-                              <option key={subcategory} value={subcategory}>{subcategory}</option>
-                            ))}
-                          </select>
-                        </div>
-                      ) : null;
-                    })()}
+                    {availableSubcategories.length > 1 && (
+                      <div className="flex-1 min-w-[150px]" style={{ border: '2px solid red' }}>
+                        <label className="block text-sm font-medium mb-2">Type</label>
+                        <select
+                          value={filters[name].subcategory}
+                          onChange={(e) => handleSubcategoryChange(e.target.value)}
+                          className="w-full px-4 py-2 border border-black/10 dark:border-white/10 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-gold focus:border-transparent"
+                        >
+                          {availableSubcategories.map(subcategory => (
+                            <option key={subcategory} value={subcategory}>{subcategory}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
 
                   {/* Grille des vêtements */}
