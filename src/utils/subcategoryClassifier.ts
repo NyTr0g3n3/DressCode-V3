@@ -90,11 +90,9 @@ export function classifyItems<T extends { analysis: string; category: Category; 
 
     if (detected) {
       classified++;
-      console.log(`✅ Classifié: "${item.analysis}" → ${detected}`);
       return { ...item, subcategory: detected };
     } else {
       unclassified++;
-      console.warn(`⚠️ Non classifié: "${item.analysis}" (${item.category})`);
       return item;
     }
   });
