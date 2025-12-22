@@ -117,7 +117,11 @@ export const analyzeClothingImages = onCall(
         text: `Analyse chacune des images de vêtements fournies. Pour chaque image, dans l'ordre, extrais les informations suivantes en français :
     1. Une description concise incluant son type (ex: T-shirt, jean), sa couleur principale, et son style.
     2. Sa catégorie : "Hauts", "Bas", "Chaussures", ou "Accessoires".
-    3. Sa sous-catégorie (UNIQUEMENT si catégorie = "Accessoires") : "Montres & Bijoux", "Écharpes & Foulards", "Ceintures", "Lunettes", "Chapeaux", ou "Sacs". Si la catégorie n'est pas "Accessoires", ne remplis pas ce champ.
+    3. Sa sous-catégorie (selon la catégorie) :
+       - Si "Hauts" : "T-shirts", "Chemises", "Pulls", ou "Vestes"
+       - Si "Bas" : "Pantalons", "Shorts", ou "Shorts sportifs"
+       - Si "Chaussures" : "Sneakers", "Classiques", ou "Bottines"
+       - Si "Accessoires" : "Montres & Bijoux", "Écharpes & Foulards", "Ceintures", "Lunettes", "Chapeaux", ou "Sacs"
     4. Sa couleur principale (ex: "Bleu", "Noir"). Sois concis.
     5. Sa matière principale (ex: "Coton", "Cuir"). Sois concis.
 
@@ -151,12 +155,21 @@ export const analyzeClothingImages = onCall(
                     },
                     subcategory: {
                       type: Type.STRING,
-                      enum: ["Montres & Bijoux", "Écharpes & Foulards", "Ceintures", "Lunettes", "Chapeaux", "Sacs"],
+                      enum: [
+                        // Hauts
+                        "T-shirts", "Chemises", "Pulls", "Vestes",
+                        // Bas
+                        "Pantalons", "Shorts", "Shorts sportifs",
+                        // Chaussures
+                        "Sneakers", "Classiques", "Bottines",
+                        // Accessoires
+                        "Montres & Bijoux", "Écharpes & Foulards", "Ceintures", "Lunettes", "Chapeaux", "Sacs"
+                      ],
                     },
                     color: {type: Type.STRING},
                     material: {type: Type.STRING},
                   },
-                  required: ["analysis", "category", "color", "material"],
+                  required: ["analysis", "category", "subcategory", "color", "material"],
                 },
               },
             },
