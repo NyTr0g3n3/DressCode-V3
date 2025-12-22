@@ -1,7 +1,7 @@
 import type { Category } from '../types';
 
 // Définition des sous-catégories par catégorie
-export const SUBCATEGORIES = {
+export const SUBCATEGORIES: Record<Category, string[]> = {
   Hauts: ['T-shirts', 'Chemises', 'Pulls', 'Vestes'],
   Bas: ['Pantalons', 'Shorts', 'Shorts sportifs'],
   Chaussures: ['Sneakers', 'Classiques', 'Bottines'],
@@ -13,7 +13,7 @@ export const SUBCATEGORIES = {
     'Montres & Bijoux',
     'Sacs'
   ]
-} as const;
+};
 
 // Mots-clés pour détecter les sous-catégories
 const KEYWORDS = {
