@@ -3,6 +3,7 @@ import type { ClothingItem as ClothingItemType, ClothingSet, Category } from '..
 import { motion, AnimatePresence } from 'framer-motion';
 import { SkeletonCard } from './SkeletonCard';
 import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, HeartIconSolid, SearchIcon, SortIcon, EyeSlashIcon } from './icons.tsx';
+import { classifyItems, SUBCATEGORIES } from '../utils/subcategoryClassifier';
 
 interface CardProps {
   imageSrc: string;
@@ -105,10 +106,10 @@ interface ClothingGalleryProps {
   isLoading: boolean;
 }
 
-const initialFilters: Record<Category, { color: string; material: string; subcategory?: string }> = {
-  Hauts: { color: 'Toutes', material: 'Toutes' },
-  Bas: { color: 'Toutes', material: 'Toutes' },
-  Chaussures: { color: 'Toutes', material: 'Toutes' },
+const initialFilters: Record<Category, { color: string; material: string; subcategory: string }> = {
+  Hauts: { color: 'Toutes', material: 'Toutes', subcategory: 'Toutes' },
+  Bas: { color: 'Toutes', material: 'Toutes', subcategory: 'Toutes' },
+  Chaussures: { color: 'Toutes', material: 'Toutes', subcategory: 'Toutes' },
   Accessoires: { color: 'Toutes', material: 'Toutes', subcategory: 'Toutes' },
 };
 
@@ -126,9 +127,12 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
   const previewOpenTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const previewCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Appliquer la classification automatique des sous-catégories
+  const classifiedItems = useMemo(() => classifyItems(clothingItems), [clothingItems]);
+
   const safeClothingSets = useMemo(() => clothingSets || [], [clothingSets]);
   const itemIdsInSets = useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
-  const totalItemsCount = clothingItems.length;
+  const totalItemsCount = classifiedItems.length;
 
   const categories: { name: Category; icon: JSX.Element }[] = [
     { name: 'Hauts', icon: <TshirtIcon /> },
@@ -164,19 +168,15 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
   // Fonction de tri
   const sortItems = (items: ClothingItemType[]): ClothingItemType[] => {
     return [...items].sort((a, b) => {
-      // Pour les accessoires, on trie d'abord par sous-catégorie
-      if (openCategory === 'Accessoires') {
-        const subcatA = a.subcategory || 'zzz'; // Items sans subcategory à la fin
-        const subcatB = b.subcategory || 'zzz';
-        const subcatCompare = subcatA.localeCompare(subcatB);
+      // Tri primaire : par sous-catégorie (pour TOUTES les catégories)
+      const subcatA = a.subcategory || 'zzz'; // Items sans subcategory à la fin
+      const subcatB = b.subcategory || 'zzz';
+      const subcatCompare = subcatA.localeCompare(subcatB);
 
-        // Si les sous-catégories sont différentes, on trie par sous-catégorie
-        if (subcatCompare !== 0) return subcatCompare;
+      // Si les sous-catégories sont différentes, on trie par sous-catégorie
+      if (subcatCompare !== 0) return subcatCompare;
 
-        // Sinon, on applique le tri secondaire choisi par l'utilisateur
-      }
-
-      // Tri selon l'option sélectionnée
+      // Tri secondaire selon l'option sélectionnée par l'utilisateur
       switch (sortBy) {
         case 'favorites':
           return (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0);
@@ -204,16 +204,17 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
 
   // Filtrage global par recherche
   const searchFilteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return clothingItems;
-    
+    if (!searchQuery.trim()) return classifiedItems;
+
     const query = searchQuery.toLowerCase();
-    return clothingItems.filter(item => 
+    return classifiedItems.filter(item =>
       item.analysis.toLowerCase().includes(query) ||
       item.color.toLowerCase().includes(query) ||
       item.material.toLowerCase().includes(query) ||
-      item.category.toLowerCase().includes(query)
+      item.category.toLowerCase().includes(query) ||
+      (item.subcategory && item.subcategory.toLowerCase().includes(query))
     );
-  }, [clothingItems, searchQuery]);
+  }, [classifiedItems, searchQuery]);
 
  // Filtrage par catégorie, couleur, matière et sous-catégorie
 const filteredItems = useMemo(() => {
@@ -260,20 +261,14 @@ const filteredItems = useMemo(() => {
   }, [searchFilteredItems, openCategory]);
 
   const availableSubcategories = useMemo(() => {
-    if (!openCategory || openCategory !== 'Accessoires') return [];
+    if (!openCategory) return [];
 
-    // Toujours afficher toutes les sous-catégories possibles pour les accessoires
-    const allSubcategories = [
-      'Toutes',
-      'Ceintures',
-      'Chapeaux',
-      'Écharpes & Foulards',
-      'Lunettes',
-      'Montres & Bijoux',
-      'Sacs'
-    ];
+    // Récupérer les sous-catégories disponibles pour la catégorie actuelle
+    const subcategoriesForCategory = SUBCATEGORIES[openCategory];
 
-    return allSubcategories;
+    if (!subcategoriesForCategory || subcategoriesForCategory.length === 0) return [];
+
+    return ['Toutes', ...subcategoriesForCategory];
   }, [openCategory]);
 
   const handleColorChange = (color: string) => {
@@ -602,12 +597,12 @@ const filteredItems = useMemo(() => {
                       </select>
                     </div>
 
-                    {/* Filtre sous-catégorie (uniquement pour Accessoires) */}
-                    {name === 'Accessoires' && (
+                    {/* Filtre sous-catégorie (pour toutes les catégories) */}
+                    {availableSubcategories.length > 1 && (
                       <div className="flex-1 min-w-[150px]">
                         <label className="block text-sm font-medium mb-2">Type</label>
                         <select
-                          value={filters[name].subcategory || 'Toutes'}
+                          value={filters[name].subcategory}
                           onChange={(e) => handleSubcategoryChange(e.target.value)}
                           className="w-full px-4 py-2 border border-black/10 dark:border-white/10 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-gold focus:border-transparent"
                         >
