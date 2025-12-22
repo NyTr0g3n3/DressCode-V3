@@ -588,7 +588,22 @@ const filteredItems = useMemo(() => {
 
               {isOpen && (
                 <div className="p-6 space-y-6">
-                  {/* Filtres couleur/matière/sous-catégorie */}
+                  {/* TEST DROPDOWN - SEUL SUR UNE LIGNE */}
+                  <div style={{ backgroundColor: 'yellow', border: '5px solid red', padding: '20px', marginBottom: '20px' }}>
+                    <h2 style={{ fontSize: '24px', color: 'red', fontWeight: 'bold', marginBottom: '10px' }}>⚠️ TEST DROPDOWN TYPE ⚠️</h2>
+                    <select
+                      value={filters[name].subcategory || 'Toutes'}
+                      onChange={(e) => handleSubcategoryChange(e.target.value)}
+                      style={{ width: '100%', padding: '10px', fontSize: '18px', border: '2px solid black' }}
+                    >
+                      <option value="Toutes">Toutes</option>
+                      {availableSubcategories.filter(s => s !== 'Toutes').map(subcategory => (
+                        <option key={subcategory} value={subcategory}>{subcategory}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Filtres couleur/matière */}
                   <div className="flex flex-wrap gap-4">
                     <div className="flex-1 min-w-[150px]">
                       <label className="block text-sm font-medium mb-2">Couleur</label>
@@ -612,21 +627,6 @@ const filteredItems = useMemo(() => {
                       >
                         {availableMaterials.map(material => (
                           <option key={material} value={material}>{material}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Filtre sous-catégorie (pour toutes les catégories) - FORCE RENDERING */}
-                    <div className="flex-1 min-w-[150px]" style={{ border: '3px solid red', backgroundColor: 'yellow' }}>
-                      <label className="block text-sm font-medium mb-2">Type (DEBUG)</label>
-                      <select
-                        value={filters[name].subcategory || 'Toutes'}
-                        onChange={(e) => handleSubcategoryChange(e.target.value)}
-                        className="w-full px-4 py-2 border border-black/10 dark:border-white/10 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-gold focus:border-transparent"
-                      >
-                        <option value="Toutes">Toutes</option>
-                        {availableSubcategories.filter(s => s !== 'Toutes').map(subcategory => (
-                          <option key={subcategory} value={subcategory}>{subcategory}</option>
                         ))}
                       </select>
                     </div>
