@@ -5,7 +5,7 @@ import type { ClothingItem, ClothingSet, Category } from '../types.ts';
 import { SparklesIcon, UnlinkIcon, CheckCircleIcon, RemoveIcon, HeartIcon, HeartIconSolid, EyeSlashIcon } from './icons.tsx';
 
 interface ClothingDetailModalProps {
-  item: ClothingItem;
+  item: ClothingItem; 
   clothingSets: ClothingSet[];
   onClose: () => void;
   onUpdate: (item: ClothingItem) => void;
