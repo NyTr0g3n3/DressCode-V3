@@ -588,24 +588,24 @@ const filteredItems = useMemo(() => {
 
               {isOpen && (
                 <div className="p-6 space-y-6">
-                  {/* TEST DROPDOWN - SEUL SUR UNE LIGNE */}
-                  <div style={{ backgroundColor: 'yellow', border: '5px solid red', padding: '20px', marginBottom: '20px' }}>
-                    <h2 style={{ fontSize: '24px', color: 'red', fontWeight: 'bold', marginBottom: '10px' }}>⚠️ TEST DROPDOWN TYPE ⚠️</h2>
-                    <select
-                      value={filters[name].subcategory || 'Toutes'}
-                      onChange={(e) => handleSubcategoryChange(e.target.value)}
-                      style={{ width: '100%', padding: '10px', fontSize: '18px', border: '2px solid black' }}
-                    >
-                      <option value="Toutes">Toutes</option>
-                      {availableSubcategories.filter(s => s !== 'Toutes').map(subcategory => (
-                        <option key={subcategory} value={subcategory}>{subcategory}</option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* Filtres */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Filtre Type */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Type</label>
+                      <select
+                        value={filters[name].subcategory}
+                        onChange={(e) => handleSubcategoryChange(e.target.value)}
+                        className="w-full px-4 py-2 border border-black/10 dark:border-white/10 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-gold focus:border-transparent"
+                      >
+                        {availableSubcategories.map(subcategory => (
+                          <option key={subcategory} value={subcategory}>{subcategory}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                  {/* Filtres couleur/matière */}
-                  <div className="flex flex-wrap gap-4">
-                    <div className="flex-1 min-w-[150px]">
+                    {/* Filtre Couleur */}
+                    <div>
                       <label className="block text-sm font-medium mb-2">Couleur</label>
                       <select
                         value={filters[name].color}
@@ -618,7 +618,8 @@ const filteredItems = useMemo(() => {
                       </select>
                     </div>
 
-                    <div className="flex-1 min-w-[150px]">
+                    {/* Filtre Matière */}
+                    <div>
                       <label className="block text-sm font-medium mb-2">Matière</label>
                       <select
                         value={filters[name].material}
