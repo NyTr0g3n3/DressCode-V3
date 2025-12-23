@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import OnboardingModal from './components/OnboardingModal.tsx';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
-import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, FavoriteOutfit, OutfitItem } from './types.ts';
+import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, FavoriteOutfit, OutfitItem, Category } from './types.ts';
 import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps, generateVisualOutfit, generateOutfitVariants, generateChatResponse } from './services/geminiService.ts';
+import { SUBCATEGORIES } from './utils/subcategoryClassifier';
 
 // FEATURE FLAG: Fonctionnalité de génération visuelle désactivée temporairement
 // TODO: Réactiver quand une solution viable sera trouvée
@@ -530,20 +531,18 @@ const AppContent: React.FC = () => {
     items = items.filter(item => item.material === mobileMaterialFilter);
   }
 
-  // Filtrer par sous-catégorie (accessoires uniquement)
-  if (activeTab === 'accessoires' && mobileSubcategoryFilter !== 'Toutes') {
+  // Filtrer par sous-catégorie (pour toutes les catégories)
+  if (mobileSubcategoryFilter !== 'Toutes') {
     items = items.filter(item => item.subcategory === mobileSubcategoryFilter);
   }
 
   // Trier
   return [...items].sort((a, b) => {
-    // Pour les accessoires, trier d'abord par sous-catégorie
-    if (activeTab === 'accessoires') {
-      const subcatA = a.subcategory || 'zzz';
-      const subcatB = b.subcategory || 'zzz';
-      const subcatCompare = subcatA.localeCompare(subcatB);
-      if (subcatCompare !== 0) return subcatCompare;
-    }
+    // Trier d'abord par sous-catégorie (pour toutes les catégories)
+    const subcatA = a.subcategory || 'zzz';
+    const subcatB = b.subcategory || 'zzz';
+    const subcatCompare = subcatA.localeCompare(subcatB);
+    if (subcatCompare !== 0) return subcatCompare;
 
     // Tri secondaire selon l'option sélectionnée
     switch (mobileSortBy) {
@@ -589,16 +588,21 @@ const AppContent: React.FC = () => {
   }, [activeTab, safeClothingItems]);
 
   const availableMobileSubcategories = useMemo(() => {
-    if (activeTab !== 'accessoires') return [];
-    return [
-      'Toutes',
-      'Ceintures',
-      'Chapeaux',
-      'Écharpes & Foulards',
-      'Lunettes',
-      'Montres & Bijoux',
-      'Sacs'
-    ];
+    // Convertir activeTab en Category
+    const categoryMap: Record<string, Category> = {
+      'hauts': 'Hauts',
+      'bas': 'Bas',
+      'chaussures': 'Chaussures',
+      'accessoires': 'Accessoires'
+    };
+
+    const category = categoryMap[activeTab];
+    if (!category) return ['Toutes'];
+
+    const subcategories = SUBCATEGORIES[category];
+    if (!subcategories || subcategories.length === 0) return ['Toutes'];
+
+    return ['Toutes', ...subcategories];
   }, [activeTab]);
 
   const isModalOpen =
@@ -797,9 +801,9 @@ useEffect(() => {
         <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
       </div>
 
-      {/* Filtres Couleur/Matière/Type */}
-      {activeTab === 'accessoires' ? (
-        // Pour les accessoires : uniquement le filtre Type
+      {/* Filtres Type/Couleur/Matière */}
+      <div className="space-y-3">
+        {/* Filtre Type (pour toutes les catégories) */}
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">Type</label>
           <select
@@ -812,8 +816,8 @@ useEffect(() => {
             ))}
           </select>
         </div>
-      ) : (
-        // Pour les autres catégories : filtres Couleur et Matière
+
+        {/* Filtres Couleur et Matière */}
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1.5">Couleur</label>
@@ -841,7 +845,7 @@ useEffect(() => {
             </select>
           </div>
         </div>
-      )}
+      </div>
     </div>
 
     {/* Résultats */}

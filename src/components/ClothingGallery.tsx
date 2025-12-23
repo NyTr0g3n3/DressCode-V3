@@ -261,31 +261,14 @@ const filteredItems = useMemo(() => {
   }, [searchFilteredItems, openCategory]);
 
   const availableSubcategories = useMemo(() => {
-    if (!openCategory) {
-      console.log('🔍 availableSubcategories: no openCategory');
-      return [];
-    }
+    if (!openCategory) return ['Toutes'];
 
     // Récupérer les sous-catégories disponibles pour la catégorie actuelle
     const subcategoriesForCategory = SUBCATEGORIES[openCategory];
-    const result = !subcategoriesForCategory || subcategoriesForCategory.length === 0
-      ? []
-      : ['Toutes', ...subcategoriesForCategory];
 
-    console.log('🔍 DEBUG availableSubcategories:', {
-      openCategory,
-      subcategoriesForCategory,
-      'SUBCATEGORIES type': typeof SUBCATEGORIES,
-      'SUBCATEGORIES keys': Object.keys(SUBCATEGORIES),
-      'SUBCATEGORIES[openCategory]': SUBCATEGORIES[openCategory],
-      hasSubcategories: !!subcategoriesForCategory,
-      subcategoriesLength: subcategoriesForCategory?.length || 0,
-      resultLength: result.length,
-      result: result,
-      'condition passes': result.length > 1
-    });
-
-    if (!subcategoriesForCategory || subcategoriesForCategory.length === 0) return [];
+    if (!subcategoriesForCategory || subcategoriesForCategory.length === 0) {
+      return ['Toutes'];
+    }
 
     return ['Toutes', ...subcategoriesForCategory];
   }, [openCategory]);
@@ -594,7 +577,7 @@ const filteredItems = useMemo(() => {
                     <div>
                       <label className="block text-sm font-medium mb-2">Type</label>
                       <select
-                        value={filters[name].subcategory}
+                        value={filters[name].subcategory || 'Toutes'}
                         onChange={(e) => handleSubcategoryChange(e.target.value)}
                         className="w-full px-4 py-2 border border-black/10 dark:border-white/10 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-gold focus:border-transparent"
                       >
