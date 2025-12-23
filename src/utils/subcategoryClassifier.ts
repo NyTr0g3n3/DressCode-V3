@@ -1,8 +1,5 @@
 import type { Category } from '../types';
 
-// VERSION: 2.0 - All categories support
-console.log('📦 subcategoryClassifier.ts loaded - VERSION 2.0');
-
 // Définition des sous-catégories par catégorie
 export const SUBCATEGORIES: Record<Category, string[]> = {
   Hauts: ['T-shirts', 'Chemises', 'Pulls', 'Vestes'],
@@ -17,15 +14,6 @@ export const SUBCATEGORIES: Record<Category, string[]> = {
     'Sacs'
   ]
 };
-
-// Log pour vérifier le chargement
-console.log('📦 SUBCATEGORIES loaded:', {
-  keys: Object.keys(SUBCATEGORIES),
-  Hauts: SUBCATEGORIES.Hauts,
-  Bas: SUBCATEGORIES.Bas,
-  Chaussures: SUBCATEGORIES.Chaussures,
-  Accessoires: SUBCATEGORIES.Accessoires
-});
 
 // Mots-clés pour détecter les sous-catégories
 const KEYWORDS = {
