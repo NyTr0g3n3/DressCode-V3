@@ -49,41 +49,41 @@ export async function generateOutfits(
     const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
-    // Extraire les pantalons portés récemment (règle souple uniquement pour les Bas)
+    // Extraire les hauts portés récemment (règle uniquement pour les Hauts)
     let recentlyWornInstruction = '';
     if (wornOutfits && wornOutfits.length > 0) {
         const now = Date.now();
-        const threeDaysAgo = now - (3 * 24 * 60 * 60 * 1000);
+        const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
 
-        // Extraire les IDs portés dans les 3 derniers jours
-        const itemsWornLast3Days = new Set<string>();
+        // Extraire les IDs portés dans les 7 derniers jours
+        const itemsWornLast7Days = new Set<string>();
         wornOutfits.forEach(outfit => {
-            if (outfit.wornAt >= threeDaysAgo) {
-                outfit.itemIds.forEach(id => itemsWornLast3Days.add(id));
+            if (outfit.wornAt >= sevenDaysAgo) {
+                outfit.itemIds.forEach(id => itemsWornLast7Days.add(id));
             }
         });
 
-        // Identifier UNIQUEMENT les pantalons (catégorie "Bas") portés récemment
-        const pantsToAvoid: string[] = [];
+        // Identifier UNIQUEMENT les hauts (catégorie "Hauts") portés récemment
+        const topsToAvoid: string[] = [];
         clothingList.forEach(item => {
-            if (item.category === 'Bas' && itemsWornLast3Days.has(item.id)) {
-                pantsToAvoid.push(`${item.analysis} (ID: ${item.id})`);
+            if (item.category === 'Hauts' && itemsWornLast7Days.has(item.id)) {
+                topsToAvoid.push(`${item.analysis} (ID: ${item.id})`);
             }
         });
 
-        if (pantsToAvoid.length > 0) {
+        if (topsToAvoid.length > 0) {
             recentlyWornInstruction = `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🟣 VARIÉTÉ DES PANTALONS
+🟣 VARIÉTÉ DES HAUTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📝 **Pantalons portés dans les 3 derniers jours** (si possible, privilégie d'autres options) :
-${pantsToAvoid.map(item => `- ${item}`).join('\n')}
+📝 **Hauts portés dans les 7 derniers jours** (si possible, privilégie d'autres options) :
+${topsToAvoid.map(item => `- ${item}`).join('\n')}
 
 ⚠️ **NOTE IMPORTANTE** :
-- Essaie de varier les pantalons pour éviter la monotonie
-- MAIS cette règle est flexible : si aucune autre option ne convient au style/météo/occasion, tu peux utiliser un de ces pantalons
-- **PRIORITÉ ABSOLUE** : Cohérence stylistique + Respect des règles thermiques > Variété des pantalons
+- Essaie de varier les hauts pour éviter la monotonie
+- MAIS cette règle est flexible : si aucune autre option ne convient au style/météo/occasion, tu peux utiliser un de ces hauts
+- **PRIORITÉ ABSOLUE** : Cohérence stylistique + Respect des règles thermiques > Variété des hauts
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `;
