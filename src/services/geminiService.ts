@@ -1,4 +1,4 @@
-import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, ChatMessage, ChatResponse, OutfitItem } from '../types';
+import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, ChatMessage, ChatResponse, OutfitItem, OutfitWearHistory } from '../types';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 
@@ -36,7 +36,8 @@ export async function generateOutfits(
     clothingList: ClothingItem[],
     sets: ClothingSet[],
     context: string,
-    anchorItemOrSet?: ClothingItem | ClothingSet
+    anchorItemOrSet?: ClothingItem | ClothingSet,
+    wornOutfits?: OutfitWearHistory[]
 ): Promise<OutfitSuggestion[]> {
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     // Filtrer les items exclus ET ceux qui sont dans des ensembles
@@ -47,6 +48,92 @@ export async function generateOutfits(
     ).join('\n');
     const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
+
+    // Extraire les vêtements portés récemment avec règle souple pour les pantalons et chaussures
+    let recentlyWornInstruction = '';
+    if (wornOutfits && wornOutfits.length > 0) {
+        const now = Date.now();
+        const twoDaysAgo = now - (2 * 24 * 60 * 60 * 1000);
+        const threeDaysAgo = now - (3 * 24 * 60 * 60 * 1000);
+        const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
+
+        // Extraire tous les IDs de vêtements portés
+        const allWornItemIds = new Set<string>();
+        wornOutfits.forEach(outfit => {
+            outfit.itemIds.forEach(id => allWornItemIds.add(id));
+        });
+
+        // Séparer les vêtements par période
+        const itemsWornLast2Days = new Set<string>();
+        const itemsWornLast3Days = new Set<string>();
+        const itemsWornLast7Days = new Set<string>();
+
+        wornOutfits.forEach(outfit => {
+            const isRecent2Days = outfit.wornAt >= twoDaysAgo;
+            const isRecent3Days = outfit.wornAt >= threeDaysAgo;
+            const isRecent7Days = outfit.wornAt >= sevenDaysAgo;
+
+            outfit.itemIds.forEach(id => {
+                if (isRecent2Days) itemsWornLast2Days.add(id);
+                if (isRecent3Days) itemsWornLast3Days.add(id);
+                if (isRecent7Days) itemsWornLast7Days.add(id);
+            });
+        });
+
+        // Identifier les vêtements par catégorie avec règles différentes
+        const topsAndAccessoriesToAvoid: string[] = [];
+        const pantsToAvoid: string[] = [];
+        const shoesToAvoid: string[] = [];
+
+        clothingList.forEach(item => {
+            if (item.category === 'Chaussures' && itemsWornLast2Days.has(item.id)) {
+                // Chaussures : règle très souple (2 jours seulement)
+                shoesToAvoid.push(`${item.analysis} (ID: ${item.id})`);
+            } else if (item.category === 'Bas' && itemsWornLast3Days.has(item.id)) {
+                // Pantalons : règle souple (3 jours)
+                pantsToAvoid.push(`${item.analysis} (ID: ${item.id})`);
+            } else if ((item.category === 'Hauts' || item.category === 'Accessoires') && itemsWornLast7Days.has(item.id)) {
+                // Hauts et accessoires : règle stricte (7 jours)
+                topsAndAccessoriesToAvoid.push(`${item.analysis} (ID: ${item.id})`);
+            }
+        });
+
+        // Ajouter les ensembles portés récemment
+        sets.forEach(set => {
+            if (itemsWornLast7Days.has(set.id)) {
+                topsAndAccessoriesToAvoid.push(`${set.name} (Ensemble, ID: ${set.id})`);
+            }
+        });
+
+        if (topsAndAccessoriesToAvoid.length > 0 || pantsToAvoid.length > 0 || shoesToAvoid.length > 0) {
+            recentlyWornInstruction = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🟣 PRIORITÉ HAUTE - VÊTEMENTS RÉCEMMENT PORTÉS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ **RÈGLE DE FRAÎCHEUR DES TENUES** :
+Pour éviter la monotonie et créer des looks variés, tu dois ÉVITER autant que possible les vêtements suivants :
+
+${topsAndAccessoriesToAvoid.length > 0 ? `**Hauts et Accessoires portés dans les 7 derniers jours** (à éviter sauf vraiment nécessaire) :
+${topsAndAccessoriesToAvoid.map(item => `- ${item}`).join('\n')}
+` : ''}
+${pantsToAvoid.length > 0 ? `**Pantalons portés dans les 3 derniers jours** (règle souple - ok si options limitées) :
+${pantsToAvoid.map(item => `- ${item}`).join('\n')}
+` : ''}
+${shoesToAvoid.length > 0 ? `**Chaussures portées dans les 2 derniers jours** (règle très souple - ok si nécessaire) :
+${shoesToAvoid.map(item => `- ${item}`).join('\n')}
+` : ''}
+📝 **NOTE IMPORTANTE sur les règles de fraîcheur** :
+- **HAUTS et ACCESSOIRES** : Évite-les s'ils ont été portés dans les 7 derniers jours
+- **PANTALONS** : Règle souple - évite seulement ceux portés dans les 3 derniers jours
+- **CHAUSSURES** : Règle très souple - évite seulement celles portées dans les 2 derniers jours (on n'a pas toujours beaucoup de paires adaptées)
+- **PRIORITÉ ABSOLUE** : Créer une tenue cohérente, harmonieuse et adaptée à la météo > Éviter ces vêtements à tout prix
+- Si aucune alternative valide n'existe pour respecter style/météo/occasion, utilise sans hésiter un vêtement de cette liste
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
+        }
+    }
 
     const anchorInstruction = anchorItemOrSet
         ? `
@@ -66,7 +153,7 @@ Si une tenue n'inclut pas cet article, elle est INVALIDE.
         : '';
 
     const prompt = `Tu es un styliste expert. Crée 3 tenues complètes et harmonieuses pour : "${context}".
-${anchorInstruction}
+${anchorInstruction}${recentlyWornInstruction}
 Vêtements disponibles :
 ${availableClothes}
 
