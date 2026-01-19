@@ -113,6 +113,24 @@ Vêtements disponibles :
 ${availableClothes}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 INSTRUCTION CRITIQUE : EXPLORATION DE LA GARDE-ROBE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ **RÈGLE FONDAMENTALE** :
+L'utilisateur possède une garde-robe COMPLÈTE avec de nombreuses pièces différentes.
+Tu DOIS explorer et utiliser la DIVERSITÉ de sa garde-robe, pas toujours les mêmes basiques !
+
+❌ **ERREUR À ÉVITER** :
+Ne te limite PAS aux pièces "safe" évidentes (t-shirt blanc, chemise blanche, jean bleu basique).
+L'utilisateur veut voir TOUTES ses pièces utilisées, pas seulement les plus neutres.
+
+✅ **APPROCHE CORRECTE** :
+- Lis attentivement TOUTE la liste des vêtements disponibles
+- Utilise des pièces VARIÉES : couleurs différentes, styles différents, matières différentes
+- Explore les hauts colorés, à motifs, originaux (pas uniquement les neutres)
+- Chaque tenue doit mettre en valeur une combinaison UNIQUE de la garde-robe
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔴 PRIORITÉ 1 - TEMPÉRATURE (RÈGLE ABSOLUE)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -228,9 +246,33 @@ Analyse la météo dans le contexte et applique :
 - Si bas à motifs → haut UNI obligatoire
 - Rayures fines discrètes = considéré comme uni
 
-**VARIÉTÉ** :
-- 3 looks visuellement différents
-- Évite de répéter le même pantalon 3 fois si possible
+**VARIÉTÉ & DIVERSIFICATION (RÈGLE CRITIQUE)** :
+
+🔴 **PRIORITÉ ABSOLUE : VARIER LES HAUTS**
+L'utilisateur possède de nombreux hauts différents. Tu DOIS explorer toute la garde-robe !
+
+⚠️ **INTERDICTIONS STRICTES** :
+- ❌ JAMAIS utiliser 2 fois le même haut dans les 3 tenues
+- ❌ JAMAIS se limiter aux basiques "safe" (t-shirt blanc, chemise blanche, etc.)
+- ❌ JAMAIS répéter la même couleur de haut 3 fois
+- ❌ JAMAIS répéter le même style de haut 3 fois (ex: 3 t-shirts unis)
+
+✅ **OBLIGATION DE DIVERSITÉ** :
+- Chaque tenue DOIT avoir un haut DIFFÉRENT (nom, couleur, style)
+- Varier les TYPES de hauts : Mix t-shirt + chemise + pull, ou t-shirt + sweat + polo, etc.
+- Varier les COULEURS de hauts : Si tenue 1 = haut blanc, alors tenue 2 et 3 = autres couleurs
+- Varier les STYLES : Alterner entre casual (t-shirt, sweat) et smart-casual (chemise, pull structuré)
+- Utiliser des pièces MOINS ÉVIDENTES : Explorer les hauts colorés, à motifs, originaux (pas toujours les neutres basiques)
+
+🎯 **STRATÉGIE DE SÉLECTION DES HAUTS** :
+1. **Tenue 1** : Choisir un haut (ex: chemise bleue)
+2. **Tenue 2** : Choisir un haut COMPLÈTEMENT différent en type ET couleur (ex: t-shirt noir)
+3. **Tenue 3** : Choisir encore un autre haut, différent des 2 premiers (ex: pull beige)
+
+📊 **PANTALONS** :
+- Si l'utilisateur a peu de pantalons (2-3), c'est NORMAL de les répéter
+- Focus la variété sur les HAUTS et CHAUSSURES
+- Si possible, ne pas utiliser 3 fois le même pantalon, mais c'est acceptable si contraintes de couleur/météo
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⭐ ACCESSOIRES
@@ -617,9 +659,28 @@ Analyse la météo dans le contexte et applique :
 - Si bas à motifs → haut UNI obligatoire
 - Rayures fines discrètes = considéré comme uni
 
-**VARIÉTÉ** :
-- 3 alternatives DIFFÉRENTES pour remplacer la pièce désignée
-- Garde l'harmonie avec les pièces conservées
+**VARIÉTÉ & DIVERSIFICATION DES ALTERNATIVES** :
+
+🔴 **OBLIGATION : 3 ALTERNATIVES VRAIMENT DIFFÉRENTES**
+
+⚠️ **SI REMPLACEMENT D'UN HAUT** :
+- ❌ JAMAIS proposer 3 hauts de la même couleur
+- ❌ JAMAIS proposer 3 hauts du même type (ex: 3 t-shirts, 3 chemises)
+- ✅ VARIER les couleurs : Alternative 1 = blanc, Alternative 2 = noir, Alternative 3 = couleur vive
+- ✅ VARIER les styles : Mix t-shirt + chemise + pull, ou casual + smart-casual + formel
+- ✅ Explorer des options MOINS ÉVIDENTES (pas toujours les basiques neutres)
+
+⚠️ **SI REMPLACEMENT D'UN BAS** :
+- Varier les couleurs/nuances si plusieurs options disponibles
+- Alterner entre casual et formel si la garde-robe le permet
+
+⚠️ **SI REMPLACEMENT DE CHAUSSURES** :
+- Proposer différents styles : sneakers, boots, mocassins, etc.
+- Varier les couleurs selon compatibilité avec le pantalon conservé
+
+✅ **HARMONIE** :
+- Chaque alternative DOIT respecter les règles de couleurs avec les pièces conservées
+- Maintenir la cohérence de style (ne pas passer de formel à streetwear)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⭐ ACCESSOIRES
