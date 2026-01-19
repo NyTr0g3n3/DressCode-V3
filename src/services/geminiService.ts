@@ -113,6 +113,24 @@ Vêtements disponibles :
 ${availableClothes}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 INSTRUCTION CRITIQUE : EXPLORATION DE LA GARDE-ROBE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ **RÈGLE FONDAMENTALE** :
+L'utilisateur possède une garde-robe COMPLÈTE avec de nombreuses pièces différentes.
+Tu DOIS explorer et utiliser la DIVERSITÉ de sa garde-robe, pas toujours les mêmes basiques !
+
+❌ **ERREUR À ÉVITER** :
+Ne te limite PAS aux pièces "safe" évidentes (t-shirt blanc, chemise blanche, jean bleu basique).
+L'utilisateur veut voir TOUTES ses pièces utilisées, pas seulement les plus neutres.
+
+✅ **APPROCHE CORRECTE** :
+- Lis attentivement TOUTE la liste des vêtements disponibles
+- Utilise des pièces VARIÉES : couleurs différentes, styles différents, matières différentes
+- Explore les hauts colorés, à motifs, originaux (pas uniquement les neutres)
+- Chaque tenue doit mettre en valeur une combinaison UNIQUE de la garde-robe
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔴 PRIORITÉ 1 - TEMPÉRATURE (RÈGLE ABSOLUE)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -166,26 +184,181 @@ Analyse la météo dans le contexte et applique :
 - ✅ Chemise = TOUJOURS avec pièces au moins smart-casual (chino, jean brut, blazer)
 - ✅ Pull sportif/sweat = TOUJOURS avec pièces casual (jean délavé, jogger, sneakers)
 
-**COULEURS** :
-- Maximum 3 couleurs par tenue
-- 1 seul motif maximum (si haut à motifs → bas uni)
-- Évite contrastes trop proches (bleu marine + noir)
+**COULEURS & HARMONIES (RÈGLES STRICTES)** :
 
-**VARIÉTÉ** :
-- 3 looks visuellement différents
-- Évite de répéter le même pantalon 3 fois si possible
+🎨 **RÈGLE FONDAMENTALE** : Une tenue = 1 couleur neutre dominante + 1-2 couleurs d'accent MAXIMUM
+
+✅ **COULEURS NEUTRES SAFE (Base de toute tenue)** :
+- Noir, Blanc, Gris (clair/moyen/foncé), Beige, Camel, Marine, Kaki
+- Ces couleurs vont entre elles ET avec toutes les autres
+
+🟢 **ASSOCIATIONS EXCELLENTES** (Utiliser prioritairement) :
+- Noir + Blanc (classique intemporel)
+- Marine + Blanc (élégant et frais)
+- Marine + Beige/Camel (chic et raffiné)
+- Gris + Blanc (sobre et moderne)
+- Gris + Marine (professionnel)
+- Noir/Gris/Blanc + n'importe quelle couleur vive (la couleur vive devient l'accent)
+- Beige + Marron (tons terreux naturels)
+- Kaki + Blanc/Beige (style casual naturel)
+- Denim bleu + Blanc/Beige/Marron (combinaison casual parfaite)
+
+🟡 **ASSOCIATIONS ACCEPTABLES** (OK mais prudence) :
+- Bleu clair + Marine (OK si tons suffisamment différents)
+- Marron + Marine (OK mais éviter si trop similaires en luminosité)
+- Vert olive + Marine/Noir (style militaire, fonctionne)
+- Bordeaux/Burgundy + Noir/Gris (élégant si bien dosé)
+
+🔴 **ASSOCIATIONS À ÉVITER** (Fautes de goût classiques) :
+- Noir + Marine (trop proches, confusion visuelle)
+- Noir + Marron (incompatibilité classique du stylisme)
+- Marine + Marron foncé (confusion des tons sombres)
+- Bleu royal vif + Noir (contraste trop brutal)
+- Plus de 1 couleur vive par tenue (surcharge visuelle)
+- Denim bleu moyen + Pull/Veste bleu similaire (effet total-look raté)
+
+📍 **RÈGLES CRITIQUES PAR PIÈCE** :
+
+**CHAUSSURES avec BAS** (CRUCIAL - source principale des fautes) :
+- ✅ Chaussures NOIRES : Excellent avec pantalon noir, gris foncé, jean noir/brut foncé, chino anthracite
+- ⚠️ Chaussures NOIRES : ACCEPTABLE avec jean bleu foncé/brut (si jean très foncé)
+- ❌ Chaussures NOIRES : ÉVITER avec jean bleu clair/moyen, chino beige clair (préférer marron/beige/blanc)
+- ✅ Chaussures MARRON/BEIGES : Parfait avec jean bleu (toutes nuances), chino beige/kaki/camel, pantalon marron/terre
+- ❌ Chaussures MARRON : JAMAIS avec pantalon noir (faute majeure de stylisme)
+- ✅ Chaussures BLANCHES/CLAIRES : Universal casual, vont avec tout sauf tenues très formelles
+- ✅ Chaussures MARINES : Excellent avec jean bleu, chino beige, pantalon gris
+
+**HAUTS avec BAS** :
+- Jean BLEU : Privilégier hauts blancs, gris, noirs, beiges, couleurs vives. Éviter autres bleus de nuance similaire
+- Pantalon NOIR : Toutes couleurs acceptées, c'est la base la plus versatile
+- Pantalon BEIGE/CHINO : Excellents avec marine, blanc, bleu ciel, vert olive, bordeaux
+- Pantalon GRIS : Très polyvalent, accepte presque toutes couleurs
+
+🎯 **STRATÉGIE GAGNANTE** :
+1. Choisir d'abord le BAS (pantalon) en couleur neutre
+2. Assortir les CHAUSSURES selon les règles strictes ci-dessus
+3. Choisir le HAUT dans une couleur compatible avec le bas
+4. Si ajout veste/accessoire : rester dans les neutres OU reprendre une couleur déjà présente
+
+**MOTIFS & PATTERNS** :
+- Maximum 1 motif visible par tenue
+- Si haut à motifs → bas UNI obligatoire
+- Si bas à motifs → haut UNI obligatoire
+- Rayures fines discrètes = considéré comme uni
+
+**VARIÉTÉ & DIVERSIFICATION (RÈGLE CRITIQUE)** :
+
+🔴 **PRIORITÉ ABSOLUE : VARIER LES HAUTS**
+L'utilisateur possède de nombreux hauts différents. Tu DOIS explorer toute la garde-robe !
+
+⚠️ **INTERDICTIONS STRICTES** :
+- ❌ JAMAIS utiliser 2 fois le même haut dans les 3 tenues
+- ❌ JAMAIS se limiter aux basiques "safe" (t-shirt blanc, chemise blanche, etc.)
+- ❌ JAMAIS répéter la même couleur de haut 3 fois
+- ❌ JAMAIS répéter le même style de haut 3 fois (ex: 3 t-shirts unis)
+
+✅ **OBLIGATION DE DIVERSITÉ** :
+- Chaque tenue DOIT avoir un haut DIFFÉRENT (nom, couleur, style)
+- Varier les TYPES de hauts : Mix t-shirt + chemise + pull, ou t-shirt + sweat + polo, etc.
+- Varier les COULEURS de hauts : Si tenue 1 = haut blanc, alors tenue 2 et 3 = autres couleurs
+- Varier les STYLES : Alterner entre casual (t-shirt, sweat) et smart-casual (chemise, pull structuré)
+- Utiliser des pièces MOINS ÉVIDENTES : Explorer les hauts colorés, à motifs, originaux (pas toujours les neutres basiques)
+
+🎯 **STRATÉGIE DE SÉLECTION DES HAUTS** :
+1. **Tenue 1** : Choisir un haut (ex: chemise bleue)
+2. **Tenue 2** : Choisir un haut COMPLÈTEMENT différent en type ET couleur (ex: t-shirt noir)
+3. **Tenue 3** : Choisir encore un autre haut, différent des 2 premiers (ex: pull beige)
+
+📊 **PANTALONS** :
+- Si l'utilisateur a peu de pantalons (2-3), c'est NORMAL de les répéter
+- Focus la variété sur les HAUTS et CHAUSSURES
+- Si possible, ne pas utiliser 3 fois le même pantalon, mais c'est acceptable si contraintes de couleur/météo
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⭐ ACCESSOIRES
+⭐ ACCESSOIRES & SÉLECTION INTELLIGENTE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**OBLIGATOIRES** :
-- Montre : TOUJOURS inclure si disponible dans les accessoires
+🔴 **RÈGLE ABSOLUE : UNE MONTRE PAR TENUE**
+Si l'utilisateur possède des montres dans sa garde-robe, tu DOIS en inclure UNE dans chaque tenue.
+La montre n'est PAS optionnelle si disponible !
 
-**OPTIONNELS** :
-- Bracelet : Peut être ajouté EN PLUS de la montre si disponible
-- Ceinture : Pour pantalon classique
-- Écharpe : Si < 10°C
+⌚ **SÉLECTION INTELLIGENTE DES MONTRES** (CRUCIAL - Ne pas choisir au hasard !)
+
+**RÈGLES PAR TYPE DE MONTRE** :
+
+📱 **Montres connectées/sportives** (Apple Watch, Samsung Galaxy Watch, montres sport) :
+- ✅ Parfaites avec : tenues casual, sportswear, streetwear, tenues décontractées weekend
+- ✅ Look moderne et tech-friendly
+- ⚠️ ÉVITER avec : tenues formelles (costume, chemise habillée), occasions élégantes
+- Exemples : t-shirt + jean + sneakers, sweat + jogger, polo + chino casual
+
+🎖️ **Montres classiques bracelet CUIR MARRON/CAMEL** :
+- ✅ Parfaites avec : tenues smart-casual, chinos beiges/kaki, chaussures marron/beige
+- ✅ Style élégant décontracté, chaleureux
+- ❌ JAMAIS avec : chaussures noires (clash de tons chauds/froids)
+- ⚠️ ÉVITER avec : tenues très sportives ou streetwear
+- Exemples : chemise + chino beige + mocassins marron, pull + jean + boots marron
+
+⚫ **Montres classiques bracelet CUIR NOIR** :
+- ✅ Parfaites avec : tenues formelles, business, smart-casual élégant, chaussures noires
+- ✅ Style sophistiqué et professionnel
+- ❌ JAMAIS avec : chaussures marron (incompatibilité marron/noir)
+- Exemples : chemise + pantalon noir + chaussures noires, look monochromatique noir/gris
+
+🔗 **Montres bracelet MÉTAL/ACIER** :
+- ✅ Très polyvalentes, fonctionnent avec presque tout
+- ✅ Style moderne, épuré, urbain
+- ✅ Compatibles avec : casual chic, smart-casual, même formel selon le modèle
+- ✅ Vont avec toutes couleurs de chaussures
+- Exemples : chemise + jean + baskets blanches, t-shirt + chino + sneakers
+
+✨ **Montres DORÉES/Or** :
+- ✅ Pour tenues élégantes, soirées, occasions spéciales
+- ⚠️ Style statement, à utiliser avec intention
+- ✅ Fonctionnent bien avec : tons chauds (beige, camel, marron), blanc, noir
+- ⚠️ ÉVITER avec : tenues très casual/sportives (effet too much)
+
+🎨 **Montres à bracelet COULEUR/TISSU** (NATO, toile, silicone coloré) :
+- ✅ Casual et fun, parfaites pour tenues décontractées
+- ✅ Adapter la couleur du bracelet aux couleurs de la tenue
+- ⚠️ ÉVITER avec : tenues formelles ou élégantes
+
+🎯 **STRATÉGIE DE SÉLECTION** :
+1. Identifier le niveau de formalité de la tenue (sportif → casual → smart-casual → formel)
+2. Regarder la couleur des chaussures (noir → montre cuir noir ou acier, marron → montre cuir marron ou acier)
+3. Choisir la montre qui correspond au style ET aux couleurs de la tenue
+4. En cas de doute : montre acier = safe choice polyvalente
+
+⚠️ **ERREURS À ÉVITER** :
+- ❌ Montre connectée sportive avec costume/tenue formelle
+- ❌ Montre cuir marron avec chaussures noires
+- ❌ Montre cuir noir avec chaussures marron
+- ❌ Montre dorée élégante avec sweat + jogger
+- ❌ Choisir toujours la même montre pour les 3 tenues (sauf si une seule disponible)
+
+🔄 **VARIÉTÉ DES MONTRES** :
+Si l'utilisateur possède plusieurs montres, VARIE les montres entre les 3 tenues selon les styles !
+
+📿 **AUTRES ACCESSOIRES** :
+
+**Bracelets** :
+- Peuvent être ajoutés EN PLUS de la montre (au poignet opposé)
+- Style casual/décontracté uniquement
+- Éviter avec tenues très formelles
+
+**Ceinture** :
+- OBLIGATOIRE avec pantalons classiques à passants (chino, pantalon habillé)
+- Coordonner avec les chaussures : chaussures marron → ceinture marron, chaussures noires → ceinture noire
+- PAS nécessaire avec jeans à taille élastique ou joggers
+
+**Écharpe** :
+- Si température < 10°C
+- Coordonner avec la palette de couleurs de la tenue
+
+**Casquette/Chapeau** :
+- Selon le style et l'occasion
+- Casual/streetwear : casquette snapback, dad cap
+- Élégant : chapeau feutre, panama (selon saison)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔴🔴 RÈGLE CRITIQUE - UTILISATION DES IDs (NON NÉGOCIABLE)
@@ -498,26 +671,176 @@ Analyse la météo dans le contexte et applique :
 - ✅ Chemise = TOUJOURS avec pièces au moins smart-casual (chino, jean brut, blazer)
 - ✅ Pull sportif/sweat = TOUJOURS avec pièces casual (jean délavé, jogger, sneakers)
 
-**COULEURS** :
-- Maximum 3 couleurs par tenue
-- 1 seul motif maximum (si haut à motifs → bas uni)
-- Évite contrastes trop proches (bleu marine + noir)
+**COULEURS & HARMONIES (RÈGLES STRICTES)** :
 
-**VARIÉTÉ** :
-- 3 alternatives DIFFÉRENTES pour remplacer la pièce désignée
-- Garde l'harmonie avec les pièces conservées
+🎨 **RÈGLE FONDAMENTALE** : Une tenue = 1 couleur neutre dominante + 1-2 couleurs d'accent MAXIMUM
+
+✅ **COULEURS NEUTRES SAFE (Base de toute tenue)** :
+- Noir, Blanc, Gris (clair/moyen/foncé), Beige, Camel, Marine, Kaki
+- Ces couleurs vont entre elles ET avec toutes les autres
+
+🟢 **ASSOCIATIONS EXCELLENTES** (Utiliser prioritairement) :
+- Noir + Blanc (classique intemporel)
+- Marine + Blanc (élégant et frais)
+- Marine + Beige/Camel (chic et raffiné)
+- Gris + Blanc (sobre et moderne)
+- Gris + Marine (professionnel)
+- Noir/Gris/Blanc + n'importe quelle couleur vive (la couleur vive devient l'accent)
+- Beige + Marron (tons terreux naturels)
+- Kaki + Blanc/Beige (style casual naturel)
+- Denim bleu + Blanc/Beige/Marron (combinaison casual parfaite)
+
+🟡 **ASSOCIATIONS ACCEPTABLES** (OK mais prudence) :
+- Bleu clair + Marine (OK si tons suffisamment différents)
+- Marron + Marine (OK mais éviter si trop similaires en luminosité)
+- Vert olive + Marine/Noir (style militaire, fonctionne)
+- Bordeaux/Burgundy + Noir/Gris (élégant si bien dosé)
+
+🔴 **ASSOCIATIONS À ÉVITER** (Fautes de goût classiques) :
+- Noir + Marine (trop proches, confusion visuelle)
+- Noir + Marron (incompatibilité classique du stylisme)
+- Marine + Marron foncé (confusion des tons sombres)
+- Bleu royal vif + Noir (contraste trop brutal)
+- Plus de 1 couleur vive par tenue (surcharge visuelle)
+- Denim bleu moyen + Pull/Veste bleu similaire (effet total-look raté)
+
+📍 **RÈGLES CRITIQUES PAR PIÈCE** :
+
+**CHAUSSURES avec BAS** (CRUCIAL - source principale des fautes) :
+- ✅ Chaussures NOIRES : Excellent avec pantalon noir, gris foncé, jean noir/brut foncé, chino anthracite
+- ⚠️ Chaussures NOIRES : ACCEPTABLE avec jean bleu foncé/brut (si jean très foncé)
+- ❌ Chaussures NOIRES : ÉVITER avec jean bleu clair/moyen, chino beige clair (préférer marron/beige/blanc)
+- ✅ Chaussures MARRON/BEIGES : Parfait avec jean bleu (toutes nuances), chino beige/kaki/camel, pantalon marron/terre
+- ❌ Chaussures MARRON : JAMAIS avec pantalon noir (faute majeure de stylisme)
+- ✅ Chaussures BLANCHES/CLAIRES : Universal casual, vont avec tout sauf tenues très formelles
+- ✅ Chaussures MARINES : Excellent avec jean bleu, chino beige, pantalon gris
+
+**HAUTS avec BAS** :
+- Jean BLEU : Privilégier hauts blancs, gris, noirs, beiges, couleurs vives. Éviter autres bleus de nuance similaire
+- Pantalon NOIR : Toutes couleurs acceptées, c'est la base la plus versatile
+- Pantalon BEIGE/CHINO : Excellents avec marine, blanc, bleu ciel, vert olive, bordeaux
+- Pantalon GRIS : Très polyvalent, accepte presque toutes couleurs
+
+🎯 **STRATÉGIE GAGNANTE** :
+1. Choisir d'abord le BAS (pantalon) en couleur neutre
+2. Assortir les CHAUSSURES selon les règles strictes ci-dessus
+3. Choisir le HAUT dans une couleur compatible avec le bas
+4. Si ajout veste/accessoire : rester dans les neutres OU reprendre une couleur déjà présente
+
+**MOTIFS & PATTERNS** :
+- Maximum 1 motif visible par tenue
+- Si haut à motifs → bas UNI obligatoire
+- Si bas à motifs → haut UNI obligatoire
+- Rayures fines discrètes = considéré comme uni
+
+**VARIÉTÉ & DIVERSIFICATION DES ALTERNATIVES** :
+
+🔴 **OBLIGATION : 3 ALTERNATIVES VRAIMENT DIFFÉRENTES**
+
+⚠️ **SI REMPLACEMENT D'UN HAUT** :
+- ❌ JAMAIS proposer 3 hauts de la même couleur
+- ❌ JAMAIS proposer 3 hauts du même type (ex: 3 t-shirts, 3 chemises)
+- ✅ VARIER les couleurs : Alternative 1 = blanc, Alternative 2 = noir, Alternative 3 = couleur vive
+- ✅ VARIER les styles : Mix t-shirt + chemise + pull, ou casual + smart-casual + formel
+- ✅ Explorer des options MOINS ÉVIDENTES (pas toujours les basiques neutres)
+
+⚠️ **SI REMPLACEMENT D'UN BAS** :
+- Varier les couleurs/nuances si plusieurs options disponibles
+- Alterner entre casual et formel si la garde-robe le permet
+
+⚠️ **SI REMPLACEMENT DE CHAUSSURES** :
+- Proposer différents styles : sneakers, boots, mocassins, etc.
+- Varier les couleurs selon compatibilité avec le pantalon conservé
+
+✅ **HARMONIE** :
+- Chaque alternative DOIT respecter les règles de couleurs avec les pièces conservées
+- Maintenir la cohérence de style (ne pas passer de formel à streetwear)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⭐ ACCESSOIRES
+⭐ ACCESSOIRES & SÉLECTION INTELLIGENTE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**OBLIGATOIRES** :
-- Montre : TOUJOURS inclure si disponible dans les accessoires
+🔴 **RÈGLE ABSOLUE : UNE MONTRE PAR TENUE**
+Si l'utilisateur possède des montres dans sa garde-robe, tu DOIS en inclure UNE dans chaque tenue.
+La montre n'est PAS optionnelle si disponible !
 
-**OPTIONNELS** :
-- Bracelet : Peut être ajouté EN PLUS de la montre si disponible
-- Ceinture : Pour pantalon classique
-- Écharpe : Si < 10°C
+⌚ **SÉLECTION INTELLIGENTE DES MONTRES** (CRUCIAL - Ne pas choisir au hasard !)
+
+**RÈGLES PAR TYPE DE MONTRE** :
+
+📱 **Montres connectées/sportives** (Apple Watch, Samsung Galaxy Watch, montres sport) :
+- ✅ Parfaites avec : tenues casual, sportswear, streetwear, tenues décontractées weekend
+- ✅ Look moderne et tech-friendly
+- ⚠️ ÉVITER avec : tenues formelles (costume, chemise habillée), occasions élégantes
+- Exemples : t-shirt + jean + sneakers, sweat + jogger, polo + chino casual
+
+🎖️ **Montres classiques bracelet CUIR MARRON/CAMEL** :
+- ✅ Parfaites avec : tenues smart-casual, chinos beiges/kaki, chaussures marron/beige
+- ✅ Style élégant décontracté, chaleureux
+- ❌ JAMAIS avec : chaussures noires (clash de tons chauds/froids)
+- ⚠️ ÉVITER avec : tenues très sportives ou streetwear
+- Exemples : chemise + chino beige + mocassins marron, pull + jean + boots marron
+
+⚫ **Montres classiques bracelet CUIR NOIR** :
+- ✅ Parfaites avec : tenues formelles, business, smart-casual élégant, chaussures noires
+- ✅ Style sophistiqué et professionnel
+- ❌ JAMAIS avec : chaussures marron (incompatibilité marron/noir)
+- Exemples : chemise + pantalon noir + chaussures noires, look monochromatique noir/gris
+
+🔗 **Montres bracelet MÉTAL/ACIER** :
+- ✅ Très polyvalentes, fonctionnent avec presque tout
+- ✅ Style moderne, épuré, urbain
+- ✅ Compatibles avec : casual chic, smart-casual, même formel selon le modèle
+- ✅ Vont avec toutes couleurs de chaussures
+- Exemples : chemise + jean + baskets blanches, t-shirt + chino + sneakers
+
+✨ **Montres DORÉES/Or** :
+- ✅ Pour tenues élégantes, soirées, occasions spéciales
+- ⚠️ Style statement, à utiliser avec intention
+- ✅ Fonctionnent bien avec : tons chauds (beige, camel, marron), blanc, noir
+- ⚠️ ÉVITER avec : tenues très casual/sportives (effet too much)
+
+🎨 **Montres à bracelet COULEUR/TISSU** (NATO, toile, silicone coloré) :
+- ✅ Casual et fun, parfaites pour tenues décontractées
+- ✅ Adapter la couleur du bracelet aux couleurs de la tenue
+- ⚠️ ÉVITER avec : tenues formelles ou élégantes
+
+🎯 **STRATÉGIE DE SÉLECTION** :
+1. Identifier le niveau de formalité de la tenue (sportif → casual → smart-casual → formel)
+2. Regarder la couleur des chaussures (noir → montre cuir noir ou acier, marron → montre cuir marron ou acier)
+3. Choisir la montre qui correspond au style ET aux couleurs de la tenue
+4. En cas de doute : montre acier = safe choice polyvalente
+
+⚠️ **ERREURS À ÉVITER** :
+- ❌ Montre connectée sportive avec costume/tenue formelle
+- ❌ Montre cuir marron avec chaussures noires
+- ❌ Montre cuir noir avec chaussures marron
+- ❌ Montre dorée élégante avec sweat + jogger
+- ❌ Choisir toujours la même montre pour les 3 tenues (sauf si une seule disponible)
+
+🔄 **VARIÉTÉ DES MONTRES** :
+Si l'utilisateur possède plusieurs montres, VARIE les montres entre les 3 tenues selon les styles !
+
+📿 **AUTRES ACCESSOIRES** :
+
+**Bracelets** :
+- Peuvent être ajoutés EN PLUS de la montre (au poignet opposé)
+- Style casual/décontracté uniquement
+- Éviter avec tenues très formelles
+
+**Ceinture** :
+- OBLIGATOIRE avec pantalons classiques à passants (chino, pantalon habillé)
+- Coordonner avec les chaussures : chaussures marron → ceinture marron, chaussures noires → ceinture noire
+- PAS nécessaire avec jeans à taille élastique ou joggers
+
+**Écharpe** :
+- Si température < 10°C
+- Coordonner avec la palette de couleurs de la tenue
+
+**Casquette/Chapeau** :
+- Selon le style et l'occasion
+- Casual/streetwear : casquette snapback, dad cap
+- Élégant : chapeau feutre, panama (selon saison)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔴🔴 RÈGLE CRITIQUE - UTILISATION DES IDs (NON NÉGOCIABLE)
