@@ -275,16 +275,90 @@ L'utilisateur possède de nombreux hauts différents. Tu DOIS explorer toute la 
 - Si possible, ne pas utiliser 3 fois le même pantalon, mais c'est acceptable si contraintes de couleur/météo
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⭐ ACCESSOIRES
+⭐ ACCESSOIRES & SÉLECTION INTELLIGENTE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**OBLIGATOIRES** :
-- Montre : TOUJOURS inclure si disponible dans les accessoires
+🔴 **RÈGLE ABSOLUE : UNE MONTRE PAR TENUE**
+Si l'utilisateur possède des montres dans sa garde-robe, tu DOIS en inclure UNE dans chaque tenue.
+La montre n'est PAS optionnelle si disponible !
 
-**OPTIONNELS** :
-- Bracelet : Peut être ajouté EN PLUS de la montre si disponible
-- Ceinture : Pour pantalon classique
-- Écharpe : Si < 10°C
+⌚ **SÉLECTION INTELLIGENTE DES MONTRES** (CRUCIAL - Ne pas choisir au hasard !)
+
+**RÈGLES PAR TYPE DE MONTRE** :
+
+📱 **Montres connectées/sportives** (Apple Watch, Samsung Galaxy Watch, montres sport) :
+- ✅ Parfaites avec : tenues casual, sportswear, streetwear, tenues décontractées weekend
+- ✅ Look moderne et tech-friendly
+- ⚠️ ÉVITER avec : tenues formelles (costume, chemise habillée), occasions élégantes
+- Exemples : t-shirt + jean + sneakers, sweat + jogger, polo + chino casual
+
+🎖️ **Montres classiques bracelet CUIR MARRON/CAMEL** :
+- ✅ Parfaites avec : tenues smart-casual, chinos beiges/kaki, chaussures marron/beige
+- ✅ Style élégant décontracté, chaleureux
+- ❌ JAMAIS avec : chaussures noires (clash de tons chauds/froids)
+- ⚠️ ÉVITER avec : tenues très sportives ou streetwear
+- Exemples : chemise + chino beige + mocassins marron, pull + jean + boots marron
+
+⚫ **Montres classiques bracelet CUIR NOIR** :
+- ✅ Parfaites avec : tenues formelles, business, smart-casual élégant, chaussures noires
+- ✅ Style sophistiqué et professionnel
+- ❌ JAMAIS avec : chaussures marron (incompatibilité marron/noir)
+- Exemples : chemise + pantalon noir + chaussures noires, look monochromatique noir/gris
+
+🔗 **Montres bracelet MÉTAL/ACIER** :
+- ✅ Très polyvalentes, fonctionnent avec presque tout
+- ✅ Style moderne, épuré, urbain
+- ✅ Compatibles avec : casual chic, smart-casual, même formel selon le modèle
+- ✅ Vont avec toutes couleurs de chaussures
+- Exemples : chemise + jean + baskets blanches, t-shirt + chino + sneakers
+
+✨ **Montres DORÉES/Or** :
+- ✅ Pour tenues élégantes, soirées, occasions spéciales
+- ⚠️ Style statement, à utiliser avec intention
+- ✅ Fonctionnent bien avec : tons chauds (beige, camel, marron), blanc, noir
+- ⚠️ ÉVITER avec : tenues très casual/sportives (effet too much)
+
+🎨 **Montres à bracelet COULEUR/TISSU** (NATO, toile, silicone coloré) :
+- ✅ Casual et fun, parfaites pour tenues décontractées
+- ✅ Adapter la couleur du bracelet aux couleurs de la tenue
+- ⚠️ ÉVITER avec : tenues formelles ou élégantes
+
+🎯 **STRATÉGIE DE SÉLECTION** :
+1. Identifier le niveau de formalité de la tenue (sportif → casual → smart-casual → formel)
+2. Regarder la couleur des chaussures (noir → montre cuir noir ou acier, marron → montre cuir marron ou acier)
+3. Choisir la montre qui correspond au style ET aux couleurs de la tenue
+4. En cas de doute : montre acier = safe choice polyvalente
+
+⚠️ **ERREURS À ÉVITER** :
+- ❌ Montre connectée sportive avec costume/tenue formelle
+- ❌ Montre cuir marron avec chaussures noires
+- ❌ Montre cuir noir avec chaussures marron
+- ❌ Montre dorée élégante avec sweat + jogger
+- ❌ Choisir toujours la même montre pour les 3 tenues (sauf si une seule disponible)
+
+🔄 **VARIÉTÉ DES MONTRES** :
+Si l'utilisateur possède plusieurs montres, VARIE les montres entre les 3 tenues selon les styles !
+
+📿 **AUTRES ACCESSOIRES** :
+
+**Bracelets** :
+- Peuvent être ajoutés EN PLUS de la montre (au poignet opposé)
+- Style casual/décontracté uniquement
+- Éviter avec tenues très formelles
+
+**Ceinture** :
+- OBLIGATOIRE avec pantalons classiques à passants (chino, pantalon habillé)
+- Coordonner avec les chaussures : chaussures marron → ceinture marron, chaussures noires → ceinture noire
+- PAS nécessaire avec jeans à taille élastique ou joggers
+
+**Écharpe** :
+- Si température < 10°C
+- Coordonner avec la palette de couleurs de la tenue
+
+**Casquette/Chapeau** :
+- Selon le style et l'occasion
+- Casual/streetwear : casquette snapback, dad cap
+- Élégant : chapeau feutre, panama (selon saison)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔴🔴 RÈGLE CRITIQUE - UTILISATION DES IDs (NON NÉGOCIABLE)
@@ -683,16 +757,90 @@ Analyse la météo dans le contexte et applique :
 - Maintenir la cohérence de style (ne pas passer de formel à streetwear)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⭐ ACCESSOIRES
+⭐ ACCESSOIRES & SÉLECTION INTELLIGENTE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**OBLIGATOIRES** :
-- Montre : TOUJOURS inclure si disponible dans les accessoires
+🔴 **RÈGLE ABSOLUE : UNE MONTRE PAR TENUE**
+Si l'utilisateur possède des montres dans sa garde-robe, tu DOIS en inclure UNE dans chaque tenue.
+La montre n'est PAS optionnelle si disponible !
 
-**OPTIONNELS** :
-- Bracelet : Peut être ajouté EN PLUS de la montre si disponible
-- Ceinture : Pour pantalon classique
-- Écharpe : Si < 10°C
+⌚ **SÉLECTION INTELLIGENTE DES MONTRES** (CRUCIAL - Ne pas choisir au hasard !)
+
+**RÈGLES PAR TYPE DE MONTRE** :
+
+📱 **Montres connectées/sportives** (Apple Watch, Samsung Galaxy Watch, montres sport) :
+- ✅ Parfaites avec : tenues casual, sportswear, streetwear, tenues décontractées weekend
+- ✅ Look moderne et tech-friendly
+- ⚠️ ÉVITER avec : tenues formelles (costume, chemise habillée), occasions élégantes
+- Exemples : t-shirt + jean + sneakers, sweat + jogger, polo + chino casual
+
+🎖️ **Montres classiques bracelet CUIR MARRON/CAMEL** :
+- ✅ Parfaites avec : tenues smart-casual, chinos beiges/kaki, chaussures marron/beige
+- ✅ Style élégant décontracté, chaleureux
+- ❌ JAMAIS avec : chaussures noires (clash de tons chauds/froids)
+- ⚠️ ÉVITER avec : tenues très sportives ou streetwear
+- Exemples : chemise + chino beige + mocassins marron, pull + jean + boots marron
+
+⚫ **Montres classiques bracelet CUIR NOIR** :
+- ✅ Parfaites avec : tenues formelles, business, smart-casual élégant, chaussures noires
+- ✅ Style sophistiqué et professionnel
+- ❌ JAMAIS avec : chaussures marron (incompatibilité marron/noir)
+- Exemples : chemise + pantalon noir + chaussures noires, look monochromatique noir/gris
+
+🔗 **Montres bracelet MÉTAL/ACIER** :
+- ✅ Très polyvalentes, fonctionnent avec presque tout
+- ✅ Style moderne, épuré, urbain
+- ✅ Compatibles avec : casual chic, smart-casual, même formel selon le modèle
+- ✅ Vont avec toutes couleurs de chaussures
+- Exemples : chemise + jean + baskets blanches, t-shirt + chino + sneakers
+
+✨ **Montres DORÉES/Or** :
+- ✅ Pour tenues élégantes, soirées, occasions spéciales
+- ⚠️ Style statement, à utiliser avec intention
+- ✅ Fonctionnent bien avec : tons chauds (beige, camel, marron), blanc, noir
+- ⚠️ ÉVITER avec : tenues très casual/sportives (effet too much)
+
+🎨 **Montres à bracelet COULEUR/TISSU** (NATO, toile, silicone coloré) :
+- ✅ Casual et fun, parfaites pour tenues décontractées
+- ✅ Adapter la couleur du bracelet aux couleurs de la tenue
+- ⚠️ ÉVITER avec : tenues formelles ou élégantes
+
+🎯 **STRATÉGIE DE SÉLECTION** :
+1. Identifier le niveau de formalité de la tenue (sportif → casual → smart-casual → formel)
+2. Regarder la couleur des chaussures (noir → montre cuir noir ou acier, marron → montre cuir marron ou acier)
+3. Choisir la montre qui correspond au style ET aux couleurs de la tenue
+4. En cas de doute : montre acier = safe choice polyvalente
+
+⚠️ **ERREURS À ÉVITER** :
+- ❌ Montre connectée sportive avec costume/tenue formelle
+- ❌ Montre cuir marron avec chaussures noires
+- ❌ Montre cuir noir avec chaussures marron
+- ❌ Montre dorée élégante avec sweat + jogger
+- ❌ Choisir toujours la même montre pour les 3 tenues (sauf si une seule disponible)
+
+🔄 **VARIÉTÉ DES MONTRES** :
+Si l'utilisateur possède plusieurs montres, VARIE les montres entre les 3 tenues selon les styles !
+
+📿 **AUTRES ACCESSOIRES** :
+
+**Bracelets** :
+- Peuvent être ajoutés EN PLUS de la montre (au poignet opposé)
+- Style casual/décontracté uniquement
+- Éviter avec tenues très formelles
+
+**Ceinture** :
+- OBLIGATOIRE avec pantalons classiques à passants (chino, pantalon habillé)
+- Coordonner avec les chaussures : chaussures marron → ceinture marron, chaussures noires → ceinture noire
+- PAS nécessaire avec jeans à taille élastique ou joggers
+
+**Écharpe** :
+- Si température < 10°C
+- Coordonner avec la palette de couleurs de la tenue
+
+**Casquette/Chapeau** :
+- Selon le style et l'occasion
+- Casual/streetwear : casquette snapback, dad cap
+- Élégant : chapeau feutre, panama (selon saison)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔴🔴 RÈGLE CRITIQUE - UTILISATION DES IDs (NON NÉGOCIABLE)
