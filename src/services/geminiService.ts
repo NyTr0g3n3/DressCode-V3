@@ -49,11 +49,12 @@ export async function generateOutfits(
     const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
-    // Extraire les hauts portés récemment (règle uniquement pour les Hauts)
+    // Extraire les tenues portées récemment pour éviter les répétitions
     let recentlyWornInstruction = '';
     if (wornOutfits && wornOutfits.length > 0) {
         const now = Date.now();
         const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
+        const twoDaysAgo = now - (2 * 24 * 60 * 60 * 1000);
 
         // Extraire les IDs portés dans les 7 derniers jours
         const itemsWornLast7Days = new Set<string>();
@@ -63,7 +64,7 @@ export async function generateOutfits(
             }
         });
 
-        // Identifier UNIQUEMENT les hauts (catégorie "Hauts") portés récemment
+        // Identifier les hauts portés récemment (RÈGLE STRICTE)
         const topsToAvoid: string[] = [];
         clothingList.forEach(item => {
             if (item.category === 'Hauts' && itemsWornLast7Days.has(item.id)) {
@@ -71,20 +72,59 @@ export async function generateOutfits(
             }
         });
 
-        if (topsToAvoid.length > 0) {
+        // Extraire les combinaisons COMPLÈTES portées dans les 2 derniers jours
+        const recentCompleteOutfits: string[] = [];
+        wornOutfits.forEach(outfit => {
+            if (outfit.wornAt >= twoDaysAgo) {
+                const outfitDescription = outfit.itemIds
+                    .map(id => {
+                        const item = clothingList.find(i => i.id === id);
+                        return item ? `${item.analysis} (ID: ${id})` : null;
+                    })
+                    .filter(Boolean)
+                    .join(' + ');
+
+                if (outfitDescription) {
+                    const dateStr = new Date(outfit.wornAt).toLocaleDateString('fr-FR');
+                    recentCompleteOutfits.push(`  • ${dateStr}: ${outfitDescription}`);
+                }
+            }
+        });
+
+        if (topsToAvoid.length > 0 || recentCompleteOutfits.length > 0) {
             recentlyWornInstruction = `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🟣 VARIÉTÉ DES HAUTS
+🔴 RÈGLE ABSOLUE : ÉVITER LES RÉPÉTITIONS RÉCENTES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
 
-📝 **Hauts portés dans les 7 derniers jours** (si possible, privilégie d'autres options) :
+            if (recentCompleteOutfits.length > 0) {
+                recentlyWornInstruction += `
+🚫 **TENUES COMPLÈTES PORTÉES DANS LES 2 DERNIERS JOURS** (INTERDICTION STRICTE) :
+${recentCompleteOutfits.join('\n')}
+
+⚠️ **RÈGLE NON NÉGOCIABLE** :
+- Tu NE DOIS PAS proposer ces combinaisons exactes
+- Tu NE DOIS PAS proposer des combinaisons très similaires (même pantalon + même chaussures + haut différent)
+- Change AU MINIMUM 2 pièces majeures (pantalon OU chaussures + haut différent)
+`;
+            }
+
+            if (topsToAvoid.length > 0) {
+                recentlyWornInstruction += `
+❌ **HAUTS PORTÉS DANS LES 7 DERNIERS JOURS** (ÉVITER SAUF EXCEPTION) :
 ${topsToAvoid.map(item => `- ${item}`).join('\n')}
 
-⚠️ **NOTE IMPORTANTE** :
-- Essaie de varier les hauts pour éviter la monotonie
-- MAIS cette règle est flexible : si aucune autre option ne convient au style/météo/occasion, tu peux utiliser un de ces hauts
-- **PRIORITÉ ABSOLUE** : Cohérence stylistique + Respect des règles thermiques > Variété des hauts
+⚠️ **RÈGLE STRICTE** :
+- ÉVITE ces hauts autant que possible
+- Utilise-les UNIQUEMENT si :
+  * Aucun autre haut ne convient au contexte météo/occasion
+  * ET tu changes complètement le reste de la tenue (pantalon + chaussures différents)
+- PRIORITÉ : Fraîcheur et variété > Tout le reste
+`;
+            }
 
+            recentlyWornInstruction += `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `;
         }
