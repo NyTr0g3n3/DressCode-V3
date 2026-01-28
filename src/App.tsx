@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import OnboardingModal from './components/OnboardingModal.tsx';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
@@ -106,6 +106,9 @@ const AppContent: React.FC = () => {
   const [isChatGenerating, setIsChatGenerating] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [previousModalBeforeChat, setPreviousModalBeforeChat] = useState<'outfit' | 'favorites' | 'worn' | null>(null);
+
+  // Ref pour l'AbortController de l'analyse de garde-robe
+  const wardrobeAnalysisAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (error) {
@@ -402,17 +405,36 @@ const AppContent: React.FC = () => {
       setError("Ajoutez au moins 3 vêtements pour une analyse.");
       return;
     }
+
+    // Créer un nouvel AbortController pour cette analyse
+    wardrobeAnalysisAbortRef.current = new AbortController();
+
     setIsAnalyzingWardrobe(true);
     setError(null);
     try {
-      const analysis = await analyzeWardrobeGaps(safeClothingItems, safeClothingSets);
+      const analysis = await analyzeWardrobeGaps(
+        safeClothingItems,
+        safeClothingSets,
+        wardrobeAnalysisAbortRef.current.signal
+      );
       setWardrobeAnalysis(analysis);
     } catch (err) {
+      // Ne pas afficher d'erreur si c'est une annulation volontaire
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
       setError(getUserFriendlyError(err));
     } finally {
       setIsAnalyzingWardrobe(false);
+      wardrobeAnalysisAbortRef.current = null;
     }
   }, [safeClothingItems, safeClothingSets]);
+
+  const handleCancelWardrobeAnalysis = useCallback(() => {
+    if (wardrobeAnalysisAbortRef.current) {
+      wardrobeAnalysisAbortRef.current.abort();
+    }
+  }, []);
 
 
   const handleGenerateVisual = useCallback(async (outfit: OutfitSuggestion) => {
@@ -698,13 +720,30 @@ useEffect(() => {
                   ⏱️ Analyse : ~30 secondes
                 </p>
               </div>
-              <button
-                onClick={handleAnalyzeWardrobe}
-                disabled={isAnalyzingWardrobe}
-                className="px-4 md:px-6 py-3 bg-gradient-to-r from-gold to-gold-dark text-onyx rounded-xl hover:shadow-lg hover:shadow-gold/30 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm md:text-base flex-shrink-0"
-              >
-                {isAnalyzingWardrobe ? 'Analyse...' : 'Analyser ma garde-robe'}
-              </button>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={handleAnalyzeWardrobe}
+                  disabled={isAnalyzingWardrobe}
+                  className="px-4 md:px-6 py-3 bg-gradient-to-r from-gold to-gold-dark text-onyx rounded-xl hover:shadow-lg hover:shadow-gold/30 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm md:text-base"
+                >
+                  {isAnalyzingWardrobe && (
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
+                  {isAnalyzingWardrobe ? 'Analyse...' : 'Analyser ma garde-robe'}
+                </button>
+                {isAnalyzingWardrobe && (
+                  <button
+                    onClick={handleCancelWardrobeAnalysis}
+                    className="px-3 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-all text-sm font-medium"
+                    title="Annuler l'analyse"
+                  >
+                    Annuler
+                  </button>
+                )}
+              </div>
             </div>
           )}
           
@@ -729,6 +768,7 @@ useEffect(() => {
             {activeTab === 'home' && (
               <MobileHome
                 onAnalyzeWardrobe={handleAnalyzeWardrobe}
+                onCancelWardrobeAnalysis={handleCancelWardrobeAnalysis}
                 onScrollToOutfits={handleScrollToOutfits}
                 onScrollToVacation={handleScrollToVacation}
                 onShowSets={() => setShowSetsModal(true)}
