@@ -1011,8 +1011,13 @@ const analyzeWardrobeGapsFunctionCall = httpsCallable(functions, 'analyzeWardrob
 // --- ANALYSE DE GARDE-ROBE & SUGGESTIONS D'ACHATS ---
 export async function analyzeWardrobeGaps(
   clothingItems: ClothingItem[],
-  clothingSets: ClothingSet[]
+  clothingSets: ClothingSet[],
+  signal?: AbortSignal
 ): Promise<WardrobeAnalysis> {
+  // Vérifier si l'analyse a été annulée avant de commencer
+  if (signal?.aborted) {
+    throw new DOMException('Analyse annulée', 'AbortError');
+  }
   // Structurer l'inventaire par catégorie avec détails
   const categoryBreakdown = {
     Hauts: clothingItems.filter(i => i.category === 'Hauts'),
@@ -1083,8 +1088,18 @@ Retourne ton analyse au format JSON.`;
 
   try {
     const result = await analyzeWardrobeGapsFunctionCall({ prompt });
+
+    // Vérifier si l'analyse a été annulée pendant l'appel API
+    if (signal?.aborted) {
+      throw new DOMException('Analyse annulée', 'AbortError');
+    }
+
     return result.data as WardrobeAnalysis;
   } catch (error) {
+    // Re-throw les erreurs d'annulation
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw error;
+    }
     console.error("Erreur analyse garde-robe:", error);
     throw new Error("Erreur lors de l'analyse de la garde-robe.");
   }
