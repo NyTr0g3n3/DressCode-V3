@@ -46,7 +46,13 @@ export async function generateOutfits(
     const individualItemsFormatted = individualItems.map(item =>
       `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Matière: ${item.material})`
     ).join('\n');
-    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
+    const setsFormatted = sets.map(set => {
+        const itemDetails = set.itemIds.map(id => {
+            const item = clothingList.find(ci => ci.id === id);
+            return item ? `${item.analysis} (Cat: ${item.category}, Matière: ${item.material})` : '';
+        }).filter(Boolean).join(' + ');
+        return `- ${set.name} [Contient: ${itemDetails}] (Ensemble, ID: ${set.id})`;
+    }).join('\n');
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
     // Extraire les hauts portés récemment (règle uniquement pour les Hauts)
@@ -111,6 +117,10 @@ Si une tenue n'inclut pas cet article, elle est INVALIDE.
 ${anchorInstruction}${recentlyWornInstruction}
 Vêtements disponibles :
 ${availableClothes}
+
+⚠️ **NOTE IMPORTANTE SUR LES ENSEMBLES** :
+Les articles marqués "(Ensemble)" avec "[Contient: ...]" sont des tenues pré-composées dont les pièces doivent être utilisées ENSEMBLE (jamais séparément).
+Avant de sélectionner un ensemble, vérifie que TOUTES ses pièces respectent les règles de température. Si un ensemble contient un short et qu'il fait < 22°C, cet ensemble est INTERDIT.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎯 INSTRUCTION CRITIQUE : EXPLORATION DE LA GARDE-ROBE
@@ -589,8 +599,8 @@ export async function generateOutfitVariants(
     const individualItemsFormatted = individualItems.map(item =>
       `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Matière: ${item.material})`
     ).join('\n');
-    const setsFormatted = sets.map(set => `- ${set.name} (Ensemble, ID: ${set.id})`).join('\n');
-    const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
+    // Pas de sets dans les variantes : on remplace 1 pièce par 1 pièce individuelle uniquement
+    const availableClothes = individualItemsFormatted;
 
     // Construire la liste des items à garder (tous sauf celui à remplacer)
     const itemsToKeep = outfitToModify.vetements.filter(item => item.id !== itemToReplace.id);
@@ -611,10 +621,11 @@ ${replaceInstruction}
 
 ⚠️ **RÈGLE ABSOLUE** : Tu DOIS inclure EXACTEMENT les mêmes articles marqués "✅ GARDER" avec leurs IDs exacts dans chacune des 3 tenues.
 Tu dois UNIQUEMENT remplacer l'article marqué "❌ REMPLACER" par une alternative différente parmi les vêtements disponibles.
+Tu ne peux remplacer qu'avec une PIÈCE INDIVIDUELLE (pas un ensemble/set). Choisis uniquement parmi les articles listés ci-dessous.
 
 **CONTEXTE** : ${context}
 
-Vêtements disponibles :
+Vêtements disponibles (pièces individuelles uniquement) :
 ${availableClothes}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -875,8 +886,8 @@ Génère 3 variantes qui respectent TOUTES les règles ci-dessus.`;
         const result = await generateOutfitVariantsFunctionCall({ prompt });
         const data = result.data as { tenues: OutfitSuggestion[] };
 
-        // Validation et correction des IDs
-        const validatedOutfits = validateAndFixOutfitIds(data.tenues, individualItems, sets);
+        // Validation et correction des IDs (pas de sets en mode variantes)
+        const validatedOutfits = validateAndFixOutfitIds(data.tenues, individualItems, []);
 
         return validatedOutfits;
     } catch (error) {
