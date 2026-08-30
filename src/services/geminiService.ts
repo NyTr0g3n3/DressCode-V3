@@ -1,7 +1,8 @@
-import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, ChatMessage, ChatResponse, OutfitItem, OutfitWearHistory } from '../types';
+import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, ChatMessage, ChatResponse, OutfitItem, OutfitWearHistory, FavoriteOutfit } from '../types';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { STYLE_RULES, ACCESSORY_RULES } from '../prompts/sharedStyleRules';
+import { buildFavoritesInstruction } from '../prompts/personalization';
 import { validateAndFixOutfitIds, validateAndFixVacationPlanIds } from '../utils/outfitValidation';
 
 // Les appels Gemini passent maintenant par des Cloud Functions sécurisées
@@ -39,7 +40,8 @@ export async function generateOutfits(
     sets: ClothingSet[],
     context: string,
     anchorItemOrSet?: ClothingItem | ClothingSet,
-    wornOutfits?: OutfitWearHistory[]
+    wornOutfits?: OutfitWearHistory[],
+    favoriteOutfits?: FavoriteOutfit[]
 ): Promise<OutfitSuggestion[]> {
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     // Filtrer les items exclus ET ceux qui sont dans des ensembles
@@ -115,8 +117,10 @@ Si une tenue n'inclut pas cet article, elle est INVALIDE.
 `
         : '';
 
+    const favoritesInstruction = buildFavoritesInstruction(favoriteOutfits);
+
     const prompt = `Tu es un styliste expert. Crée 3 tenues complètes et harmonieuses pour : "${context}".
-${anchorInstruction}${recentlyWornInstruction}
+${anchorInstruction}${favoritesInstruction}${recentlyWornInstruction}
 Vêtements disponibles :
 ${availableClothes}
 
