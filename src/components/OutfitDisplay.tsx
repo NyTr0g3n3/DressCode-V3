@@ -240,11 +240,11 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
                             setEditingOutfitIndex(null);
                           }}
                           disabled={isGenerating}
-                          className="absolute inset-0 flex items-center justify-center bg-onyx/80 backdrop-blur-sm rounded-md transition-all hover:bg-gold/90 disabled:opacity-50 disabled:cursor-not-allowed group"
+                          className="absolute inset-0 flex items-center justify-center bg-onyx/30 rounded-md transition-all hover:bg-gold/90 disabled:opacity-50 disabled:cursor-not-allowed group"
                           aria-label={`Remplacer ${item.description}`}
                           title={`Remplacer ${item.description}`}
                         >
-                          <svg className="w-8 h-8 text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <svg className="w-7 h-7 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                           </svg>
                         </button>
