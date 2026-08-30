@@ -18,7 +18,7 @@ export async function analyzeClothingImages(base64Images: string[]): Promise<Ana
     return data.items || [];
   } catch (error) {
     console.error("Erreur lors de l'analyse des vêtements:", error);
-    throw new Error("Erreur lors de l'analyse des vêtements.");
+    throw new Error("Erreur lors de l'analyse des vêtements.", { cause: error });
   }
 }
 
@@ -415,7 +415,7 @@ Et que tu utilises EXACTEMENT cet ID : ${anchorItemOrSet.id}
         return validatedOutfits;
     } catch (error) {
         console.error("Erreur génération tenues:", error);
-        throw new Error("Erreur lors de la génération des tenues.");
+        throw new Error("Erreur lors de la génération des tenues.", { cause: error });
     }
 }
 
@@ -892,7 +892,7 @@ Génère 3 variantes qui respectent TOUTES les règles ci-dessus.`;
         return validatedOutfits;
     } catch (error) {
         console.error("Erreur génération variantes:", error);
-        throw new Error("Erreur lors de la génération des variantes.");
+        throw new Error("Erreur lors de la génération des variantes.", { cause: error });
     }
 }
 
@@ -1012,7 +1012,7 @@ ${userMessage}
         };
     } catch (error) {
         console.error("Erreur génération chat:", error);
-        throw new Error("Erreur lors de la génération de la réponse.");
+        throw new Error("Erreur lors de la génération de la réponse.", { cause: error });
     }
 }
 
@@ -1112,7 +1112,7 @@ Retourne ton analyse au format JSON.`;
       throw error;
     }
     console.error("Erreur analyse garde-robe:", error);
-    throw new Error("Erreur lors de l'analyse de la garde-robe.");
+    throw new Error("Erreur lors de l'analyse de la garde-robe.", { cause: error });
   }
 }
 
@@ -1286,7 +1286,7 @@ Dans ta réponse JSON, tu DOIS mettre :
         return validatedPlan;
     } catch (error) {
         console.error("Erreur génération plan vacances:", error);
-        throw new Error("Erreur lors de la génération du plan vacances.");
+        throw new Error("Erreur lors de la génération du plan vacances.", { cause: error });
     }
 }
 

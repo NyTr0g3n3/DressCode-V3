@@ -134,7 +134,7 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
   const itemIdsInSets = useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
   const totalItemsCount = classifiedItems.length;
 
-  const categories: { name: Category; icon: JSX.Element }[] = [
+  const categories: { name: Category; icon: React.JSX.Element }[] = [
     { name: 'Hauts', icon: <TshirtIcon /> },
     { name: 'Bas', icon: <PantIcon /> },
     { name: 'Chaussures', icon: <ShoeIcon /> },
