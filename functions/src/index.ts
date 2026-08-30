@@ -185,7 +185,8 @@ export const analyzeClothingImages = onCall(
       return {items: result.items || []};
     } catch (error) {
       logger.error("Erreur analyse Gemini:", error);
-      throw new HttpsError("internal", "Erreur lors de l'analyse des vêtements.");
+      const message = error instanceof Error ? error.message : String(error);
+      throw new HttpsError("internal", `Erreur lors de l'analyse des vêtements : ${message}`);
     }
   }
 );
@@ -255,7 +256,8 @@ export const generateOutfitsFunction = onCall(
       return {tenues: jsonResponse.tenues};
     } catch (error) {
       logger.error("Erreur génération tenues:", error);
-      throw new HttpsError("internal", "Erreur lors de la génération des tenues.");
+      const message = error instanceof Error ? error.message : String(error);
+      throw new HttpsError("internal", `Erreur lors de la génération des tenues : ${message}`);
     }
   }
 );
@@ -351,7 +353,8 @@ export const analyzeWardrobeGapsFunction = onCall(
       return analysis;
     } catch (error) {
       logger.error("Erreur analyse garde-robe:", error);
-      throw new HttpsError("internal", "Erreur lors de l'analyse de la garde-robe.");
+      const message = error instanceof Error ? error.message : String(error);
+      throw new HttpsError("internal", `Erreur lors de l'analyse de la garde-robe : ${message}`);
     }
   }
 );
@@ -411,7 +414,8 @@ export const generateVacationPlanFunction = onCall(
       return plan;
     } catch (error) {
       logger.error("Erreur génération plan vacances:", error);
-      throw new HttpsError("internal", "Erreur lors de la génération du plan vacances.");
+      const message = error instanceof Error ? error.message : String(error);
+      throw new HttpsError("internal", `Erreur lors de la génération du plan vacances : ${message}`);
     }
   }
 );
@@ -466,7 +470,8 @@ export const generateChatResponseFunction = onCall(
       return chatResponse;
     } catch (error) {
       logger.error("Erreur génération réponse chatbot:", error);
-      throw new HttpsError("internal", "Erreur lors de la génération de la réponse chatbot.");
+      const message = error instanceof Error ? error.message : String(error);
+      throw new HttpsError("internal", `Erreur lors de la génération de la réponse chatbot : ${message}`);
     }
   }
 );
