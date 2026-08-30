@@ -843,6 +843,20 @@ useEffect(() => {
 
       {/* Filtres Type/Couleur/Matière */}
       <div className="space-y-3">
+        {(mobileColorFilter !== 'Toutes' || mobileMaterialFilter !== 'Toutes' || mobileSubcategoryFilter !== 'Toutes') && (
+          <div className="flex justify-end">
+            <button
+              onClick={() => {
+                setMobileColorFilter('Toutes');
+                setMobileMaterialFilter('Toutes');
+                setMobileSubcategoryFilter('Toutes');
+              }}
+              className="text-sm font-medium text-gold hover:text-gold-dark transition-colors"
+            >
+              Réinitialiser les filtres
+            </button>
+          </div>
+        )}
         {/* Filtre Type (pour toutes les catégories) */}
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">Type</label>
