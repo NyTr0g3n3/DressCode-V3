@@ -88,8 +88,6 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
     >
       <div className="p-6 space-y-6 bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
         <OutfitGenerator
-          clothingItems={clothingItems}
-          clothingSets={clothingSets}
           onGenerate={onGenerate}
           isGenerating={isGenerating}
           weatherInfo={weatherInfo}

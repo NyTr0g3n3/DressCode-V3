@@ -54,9 +54,7 @@ const VacationModal: React.FC<VacationModalProps> = ({
       ]}
     >
       <div className="p-6 space-y-6 bg-white dark:bg-raisin-black text-raisin-black dark:text-snow min-h-[45vh]">
-        <VacationPlanner 
-          clothingItems={clothingItems}
-          clothingSets={clothingSets}
+        <VacationPlanner
           onGeneratePlan={onGeneratePlan}
           isGenerating={isGenerating}
         />

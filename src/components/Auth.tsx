@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, type User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import { FirebaseError } from 'firebase/app';
 import { auth, googleProvider, db } from '../firebase';
 
 interface AuthProps {
-  user: any;
+  user: User | null;
 }
 
 const BETA_CODE = 'DRESSMEUP2025'; // Change ce code comme tu veux
@@ -68,9 +69,9 @@ const Auth: React.FC<AuthProps> = ({ user }) => {
         setError("Désolé, cette application est en beta fermée. Votre email n'est pas autorisé.");
         return;
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erreur de connexion Google:', err);
-      setError(err.message || 'Erreur de connexion');
+      setError(err instanceof Error ? err.message : 'Erreur de connexion');
     } finally {
       setIsLoading(false);
     }
@@ -110,18 +111,18 @@ const Auth: React.FC<AuthProps> = ({ user }) => {
 
         await signInWithEmailAndPassword(auth, email, password);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erreur d\'authentification:', err);
-      if (err.code === 'auth/user-not-found') {
+      if (err instanceof FirebaseError && err.code === 'auth/user-not-found') {
         setError("Aucun compte trouvé avec cet email.");
-      } else if (err.code === 'auth/wrong-password') {
+      } else if (err instanceof FirebaseError && err.code === 'auth/wrong-password') {
         setError("Mot de passe incorrect.");
-      } else if (err.code === 'auth/email-already-in-use') {
+      } else if (err instanceof FirebaseError && err.code === 'auth/email-already-in-use') {
         setError("Cet email est déjà utilisé.");
-      } else if (err.code === 'auth/weak-password') {
+      } else if (err instanceof FirebaseError && err.code === 'auth/weak-password') {
         setError("Le mot de passe doit contenir au moins 6 caractères.");
       } else {
-        setError(err.message || 'Erreur d\'authentification');
+        setError(err instanceof Error ? err.message : 'Erreur d\'authentification');
       }
     } finally {
       setIsLoading(false);

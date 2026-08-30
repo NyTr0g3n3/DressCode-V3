@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { CameraIcon, LoadingSpinner, CheckCircleIcon } from './icons';
+import { CameraIcon, LoadingSpinner } from './icons';
 import { useWardrobe } from '../contexts/WardrobeContext';
 
 interface ModelProfileModalProps {
@@ -23,7 +23,7 @@ const ModelProfileModal: React.FC<ModelProfileModalProps> = ({ onClose }) => {
     setIsUploading(true);
     try {
       await updateUserModelPhoto(file);
-    } catch (error) {
+    } catch {
       alert("Erreur lors de l'envoi de la photo.");
     } finally {
       setIsUploading(false);
