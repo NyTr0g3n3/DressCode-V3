@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { BottomSheet } from 'react-spring-bottom-sheet';
-import type { OutfitSuggestion, ClothingItem, ClothingSet, ChatMessage } from '../types';
+import type { OutfitSuggestion, ChatMessage } from '../types';
 
 interface OutfitChatModalProps {
   open: boolean;

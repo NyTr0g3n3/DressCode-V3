@@ -3,8 +3,6 @@ import { SparklesIcon } from './icons.tsx';
 import type { ClothingItem, ClothingSet } from '../types';
 
 interface OutfitGeneratorProps {
-  clothingItems: ClothingItem[];
-  clothingSets: ClothingSet[];
   onGenerate: (occasion: string) => void; // 'context' devient 'occasion'
   isGenerating: boolean;
   weatherInfo: string | null; // Nouvelle prop
@@ -14,8 +12,6 @@ interface OutfitGeneratorProps {
 }
 
 const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({
-  clothingItems,
-  clothingSets,
   onGenerate,
   isGenerating,
   weatherInfo,

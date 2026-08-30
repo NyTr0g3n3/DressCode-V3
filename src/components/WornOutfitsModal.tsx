@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import OutfitDisplay from './OutfitDisplay';
 import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit, OutfitWearHistory, OutfitItem } from '../types';
@@ -39,7 +39,7 @@ const WornOutfitsModal: React.FC<WornOutfitsModalProps> = ({
   const isDarkMode = document.documentElement.classList.contains('dark');
 
   // Fonction de recherche intelligente d'article (similaire à OutfitDisplay)
-  const findItemById = (id: string) => {
+  const findItemById = useCallback((id: string) => {
     const cleanId = id ? id.trim() : '';
 
     // 1. Recherche par ID exact dans les items individuels
@@ -67,7 +67,7 @@ const WornOutfitsModal: React.FC<WornOutfitsModalProps> = ({
     }
 
     return undefined;
-  };
+  }, [allClothingItems, allClothingSets]);
 
   // Convertir OutfitWearHistory en OutfitSuggestion pour OutfitDisplay
   const outfitsToDisplay = useMemo(() => {
@@ -96,7 +96,7 @@ const WornOutfitsModal: React.FC<WornOutfitsModalProps> = ({
         vetements
       } as OutfitSuggestion;
     });
-  }, [wornOutfits, allClothingItems, allClothingSets]);
+  }, [wornOutfits, findItemById]);
 
   return (
     <BottomSheet

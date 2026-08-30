@@ -1,5 +1,4 @@
 import React from 'react';
-import type { Category } from '../types';
 
 type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
 

@@ -2,13 +2,11 @@ import React, { useState } from 'react'; // <--- C'est cette ligne qui manquait 
 import { SuitcaseIcon } from './icons.tsx';
 
 interface VacationPlannerProps {
-  clothingItems: any[];
-  clothingSets: any[];
   onGeneratePlan: (days: number, context: string, maxWeight?: number) => void;
   isGenerating: boolean;
 }
 
-const VacationPlanner: React.FC<VacationPlannerProps> = ({ clothingItems, clothingSets, onGeneratePlan, isGenerating }) => {
+const VacationPlanner: React.FC<VacationPlannerProps> = ({ onGeneratePlan, isGenerating }) => {
   const [days, setDays] = useState<number>(3);
   const [context, setContext] = useState('');
   const [maxWeight, setMaxWeight] = useState<string>('');

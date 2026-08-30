@@ -9,7 +9,6 @@ import {
   onSnapshot,
   query,
   where,
-  Timestamp
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { ClothingItem, ClothingSet, FavoriteOutfit, OutfitSuggestion, OutfitWearHistory } from '../types';
@@ -19,7 +18,6 @@ import type { ClothingItem, ClothingSet, FavoriteOutfit, OutfitSuggestion, Outfi
 // (voir WardrobeContext.analyzeClothingItems).
 type NewClothingItem = Omit<ClothingItem, 'id' | 'imageSrc'> & { imageSrc?: string };
 type NewClothingSet = Omit<ClothingSet, 'id'>;
-type NewFavoriteOutfit = Omit<FavoriteOutfit, 'id'>;
 
 // --- CLOTHING ITEMS ---
 
@@ -194,7 +192,7 @@ export const deleteClothingSet = async (userId: string, setId: string) => {
 export const setClothingItemWithId = async (userId: string, item: ClothingItem) => {
   try {
     const itemDoc = doc(db, 'users', userId, 'items', item.id);
-    const { id, ...itemData } = item;
+    const { id: _id, ...itemData } = item;
     await setDoc(itemDoc, itemData);
   } catch (error) {
     console.error("Erreur lors de la migration de l'item:", item.id, error);

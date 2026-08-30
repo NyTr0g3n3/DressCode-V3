@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { ClothingItem as ClothingItemType, ClothingSet, Category } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SkeletonCard } from './SkeletonCard';
@@ -113,7 +113,12 @@ const initialFilters: Record<Category, { color: string; material: string; subcat
   Accessoires: { color: 'Toutes', material: 'Toutes', subcategory: 'Toutes' },
 };
 
-const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoading, clothingSets = [], onItemClick, onDeleteItem, onCreateSet }) => {
+// Note: `onDeleteItem` est fourni par App.tsx mais n'est actuellement pas
+// appelé ici — la suppression se fait via ClothingDetailModal (ouvert par
+// onItemClick), pas depuis la grille elle-même. Prop gardée telle quelle
+// (contrat public du composant) plutôt que retirée, pour ne pas trancher
+// cette question de produit dans un simple nettoyage de lint.
+const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoading, clothingSets = [], onItemClick, onDeleteItem: _onDeleteItem, onCreateSet }) => {
   const [openCategory, setOpenCategory] = useState<Category | null>('Hauts');
   const [filters, setFilters] = useState(initialFilters);
   const [searchQuery, setSearchQuery] = useState('');
@@ -134,12 +139,12 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
   const itemIdsInSets = useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
   const totalItemsCount = classifiedItems.length;
 
-  const categories: { name: Category; icon: React.JSX.Element }[] = [
+  const categories: { name: Category; icon: React.JSX.Element }[] = useMemo(() => [
     { name: 'Hauts', icon: <TshirtIcon /> },
     { name: 'Bas', icon: <PantIcon /> },
     { name: 'Chaussures', icon: <ShoeIcon /> },
     { name: 'Accessoires', icon: <AccessoryIcon /> },
-  ];
+  ], []);
 
   const sortOptions: { value: SortOption; label: string }[] = [
     { value: 'favorites', label: 'Favoris d\'abord' },
@@ -166,7 +171,7 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
   };
 
   // Fonction de tri
-  const sortItems = (items: ClothingItemType[]): ClothingItemType[] => {
+  const sortItems = useCallback((items: ClothingItemType[]): ClothingItemType[] => {
     return [...items].sort((a, b) => {
       // Tri primaire : par sous-catégorie (pour TOUTES les catégories)
       const subcatA = a.subcategory || 'zzz'; // Items sans subcategory à la fin
@@ -200,7 +205,7 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
           return 0;
       }
     });
-  };
+  }, [sortBy]);
 
   // Filtrage global par recherche
   const searchFilteredItems = useMemo(() => {
@@ -216,14 +221,15 @@ const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoad
     );
   }, [classifiedItems, searchQuery]);
 
+ // Filtres de la catégorie actuellement ouverte (référence stable tant que
+ // cette catégorie précise ne change pas, cf. setFilters dans handle*Change)
+ const categoryFilters = openCategory ? filters[openCategory] : undefined;
+
  // Filtrage par catégorie, couleur, matière et sous-catégorie
 const filteredItems = useMemo(() => {
-  if (!openCategory) return [];
+  if (!openCategory || !categoryFilters) return [];
 
   const itemsInCategory = searchFilteredItems.filter(item => item.category === openCategory);
-  const categoryFilters = filters[openCategory];
-
-  if (!categoryFilters) return itemsInCategory;
 
   return itemsInCategory.filter(item => {
     const colorMatch = categoryFilters.color === 'Toutes' || item.color === categoryFilters.color;
@@ -231,10 +237,10 @@ const filteredItems = useMemo(() => {
     const subcategoryMatch = !categoryFilters.subcategory || categoryFilters.subcategory === 'Toutes' || item.subcategory === categoryFilters.subcategory;
     return colorMatch && materialMatch && subcategoryMatch;
   });
-}, [searchFilteredItems, openCategory, filters[openCategory]?.color, filters[openCategory]?.material, filters[openCategory]?.subcategory]);
+}, [searchFilteredItems, openCategory, categoryFilters]);
 
   // Appliquer le tri
-  const sortedFilteredItems = useMemo(() => sortItems(filteredItems), [filteredItems, sortBy, openCategory]);
+  const sortedFilteredItems = useMemo(() => sortItems(filteredItems), [filteredItems, sortItems]);
 
   // Compter les items par catégorie (après recherche)
   const categoryCounts = useMemo(() => {
@@ -242,7 +248,7 @@ const filteredItems = useMemo(() => {
       acc[name] = searchFilteredItems.filter(item => item.category === name).length;
       return acc;
     }, {} as Record<Category, number>);
-  }, [searchFilteredItems]);
+  }, [searchFilteredItems, categories]);
 
   const availableColors = useMemo(() => {
     if (!openCategory) return [];

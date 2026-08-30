@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import type { ClothingItem, ClothingSet } from '../types';
 import { LinkIcon } from './icons';
@@ -21,7 +21,6 @@ const ClothingSetsModal: React.FC<ClothingSetsModalProps> = ({
   onDeleteSet
 }) => {
   const isDarkMode = document.documentElement.classList.contains('dark');
-  const [expandedSetId, setExpandedSetId] = useState<string | null>(null);
 
   // Fonction pour retrouver un article par son ID
   const findItemById = (id: string): ClothingItem | undefined => {
@@ -90,7 +89,6 @@ const ClothingSetsModal: React.FC<ClothingSetsModalProps> = ({
 
             {clothingSets.map(set => {
               const items = getSetItems(set);
-              const isExpanded = expandedSetId === set.id;
 
               return (
                 <div

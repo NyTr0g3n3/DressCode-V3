@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import type { ClothingItem, ClothingSet, FavoriteOutfit, OutfitSuggestion, OutfitWearHistory } from '../types';
 import {
@@ -182,8 +182,8 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
 
   const addFavoriteOutfitCallback = useCallback(async (outfit: OutfitSuggestion) => {
     if (!user) return;
-    const { id, ...outfitData } = outfit as any; 
-    await addFavoriteOutfit(user.uid, outfitData);
+    // OutfitSuggestion n'a pas de champ `id` (il est généré par Firestore côté service)
+    await addFavoriteOutfit(user.uid, outfit);
   }, [user]);
 
   const deleteFavoriteOutfitCallback = useCallback(async (outfitId: string) => {
