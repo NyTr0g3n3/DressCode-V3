@@ -196,7 +196,7 @@ const AppContent: React.FC = () => {
       : `Occasion : ${occasion}`;
 
     try {
-      const outfits = await generateOutfits(safeClothingItems, safeClothingSets, fullContext, effectiveAnchor || undefined, wornOutfitsLast7Days);
+      const outfits = await generateOutfits(safeClothingItems, safeClothingSets, fullContext, effectiveAnchor || undefined, wornOutfitsLast7Days, favoriteOutfits);
       setSuggestedOutfits(outfits);
       setAnchorItemForGeneration(null); // Réinitialiser l'ancre après génération
     } catch (err) {
@@ -204,7 +204,7 @@ const AppContent: React.FC = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [safeClothingItems, safeClothingSets, weatherInfo, anchorItemForGeneration, wornOutfitsLast7Days]);
+  }, [safeClothingItems, safeClothingSets, weatherInfo, anchorItemForGeneration, wornOutfitsLast7Days, favoriteOutfits]);
 
   const handleGenerateVariants = useCallback(async (outfit: OutfitSuggestion, itemToReplace: OutfitItem) => {
     if (safeClothingItems.length === 0) {
