@@ -4,7 +4,7 @@ import Replicate from "replicate";
 import {GoogleGenAI, Type} from "@google/genai";
 
 // Configuration du modèle Gemini
-const GEMINI_MODEL = "gemini-3-flash-preview"; // Gemini 3.0 Flash (Preview)
+const GEMINI_MODEL = "gemini-3.7-flash"; // Gemini 3.7 Flash (GA) — gemini-3-flash-preview est resté 8 mois en preview, non stable
 
 // Variables d'environnement (à configurer via Firebase Console ou CLI)
 // Plus besoin de Secret Manager - on utilise des variables d'environnement classiques
