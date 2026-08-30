@@ -288,6 +288,16 @@ const filteredItems = useMemo(() => {
     setFilters(prev => ({ ...prev, [openCategory]: { ...prev[openCategory], subcategory } }));
   };
 
+  const handleResetFilters = () => {
+    if (!openCategory) return;
+    setFilters(prev => ({ ...prev, [openCategory]: { color: 'Toutes', material: 'Toutes', subcategory: 'Toutes' } }));
+  };
+
+  const hasActiveFilters = (categoryName: Category) => {
+    const f = filters[categoryName];
+    return f.color !== 'Toutes' || f.material !== 'Toutes' || (f.subcategory && f.subcategory !== 'Toutes');
+  };
+
   const handleToggleCategory = (categoryName: Category) => {
     setOpenCategory(openCategory === categoryName ? null : categoryName);
   };
@@ -572,6 +582,17 @@ const filteredItems = useMemo(() => {
               {isOpen && (
                 <div className="p-6 space-y-6">
                   {/* Filtres */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Filtres</span>
+                    {hasActiveFilters(name) && (
+                      <button
+                        onClick={handleResetFilters}
+                        className="text-sm font-medium text-gold hover:text-gold-dark transition-colors"
+                      >
+                        Réinitialiser les filtres
+                      </button>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {/* Filtre Type */}
                     <div>
