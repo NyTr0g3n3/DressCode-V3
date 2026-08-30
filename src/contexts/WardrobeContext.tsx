@@ -165,6 +165,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
       }
     } catch (err) {
       console.error("Erreur lot:", err);
+      throw err; // Remonter l'erreur pour que l'UI puisse l'afficher (spinner qui disparaît sinon en silence)
     } finally {
       setIsAnalyzing(false);
     }
