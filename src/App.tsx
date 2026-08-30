@@ -386,10 +386,14 @@ const AppContent: React.FC = () => {
   };
 
   const handleUpdateItem = (updatedItem: ClothingItem) => {
-    updateClothingItem(updatedItem).catch(err => setError(getUserFriendlyError(err))); 
-    setSelectedItem(updatedItem); 
+    updateClothingItem(updatedItem).catch(err => setError(getUserFriendlyError(err)));
+    setSelectedItem(updatedItem);
   };
-  
+
+  const handleAnalyzeClothingItems = useCallback((files: File[]) => {
+    analyzeClothingItems(files).catch(err => setError(getUserFriendlyError(err)));
+  }, [analyzeClothingItems]);
+
   const handleGenerateFromModal = (item: ClothingItem) => {
     // Stocker l'item comme ancre et ouvrir le modal de génération
     setAnchorItemForGeneration(item);
@@ -551,7 +555,7 @@ useEffect(() => {
           
         
           <div className="hidden md:block">
-            <ClothingUpload onAnalyze={analyzeClothingItems} isAnalyzing={isAnalyzing} />
+            <ClothingUpload onAnalyze={handleAnalyzeClothingItems} isAnalyzing={isAnalyzing} />
           </div>
         
           <div className="hidden md:block">
@@ -764,7 +768,7 @@ useEffect(() => {
       )}
 
       <MobileFAB
-        onFilesSelected={analyzeClothingItems}
+        onFilesSelected={handleAnalyzeClothingItems}
         isAnalyzing={isAnalyzing}
         isOtherModalOpen={isModalOpen}
       />
