@@ -4,7 +4,7 @@ import Replicate from "replicate";
 import {GoogleGenAI, Type} from "@google/genai";
 
 // Configuration du modèle Gemini
-const GEMINI_MODEL = "gemini-3.7-flash"; // Gemini 3.7 Flash (GA) — gemini-3-flash-preview est resté 8 mois en preview, non stable
+const GEMINI_MODEL = "gemini-3.6-flash"; // Gemini 3.6 Flash (GA) — gemini-3.7-flash renvoie du 503 "high demand" (2 semaines après son GA, capacité pas encore montée)
 
 // Variables d'environnement (à configurer via Firebase Console ou CLI)
 // Plus besoin de Secret Manager - on utilise des variables d'environnement classiques
