@@ -1,6 +1,5 @@
 import React from 'react';
-
-type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
+import type { MobileTab } from '../types';
 
 interface MobileBottomNavProps {
   activeTab: MobileTab;

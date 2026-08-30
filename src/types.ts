@@ -1,6 +1,9 @@
 
 export type Category = 'Hauts' | 'Bas' | 'Chaussures' | 'Accessoires';
 
+// Onglets de la navigation mobile (garde-robe par catégorie + accueil)
+export type MobileTab = 'home' | 'hauts' | 'bas' | 'chaussures' | 'accessoires';
+
 export interface ClothingItem {
   id: string;
   imageSrc: string;

@@ -2,9 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import OnboardingModal from './components/OnboardingModal.tsx';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
-import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, OutfitItem, Category, ChatMessage } from './types.ts';
+import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, OutfitItem, ChatMessage } from './types.ts';
 import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps, generateVisualOutfit, generateOutfitVariants, generateChatResponse } from './services/geminiService.ts';
-import { SUBCATEGORIES } from './utils/subcategoryClassifier';
 
 // FEATURE FLAG: Fonctionnalité de génération visuelle désactivée temporairement
 // TODO: Réactiver quand une solution viable sera trouvée
@@ -30,8 +29,11 @@ import SetCreatorModal from './components/SetCreatorModal.tsx';
 import ClothingSetsModal from './components/ClothingSetsModal.tsx';
 import ModelProfileModal from './components/ModelProfileModal.tsx';
 import OutfitChatModal from './components/OutfitChatModal.tsx';
-import { LinkIcon, HeartIconSolid, ChevronDownIcon, SearchIcon, SortIcon } from './components/icons.tsx';
-import { config } from './config.ts';
+import { HeartIconSolid, ChevronDownIcon } from './components/icons.tsx';
+import { useWeather } from './hooks/useWeather.ts';
+import { useToast } from './hooks/useToast.ts';
+import { useMobileWardrobeFilters } from './hooks/useMobileWardrobeFilters.ts';
+import MobileWardrobeView from './components/MobileWardrobeView.tsx';
 
 
 import { WardrobeProvider, useWardrobe } from './contexts/WardrobeContext.tsx';
@@ -86,19 +88,13 @@ const AppContent: React.FC = () => {
   const [showFavoriteModal, setShowFavoriteModal] = useState(false);
   const [showWornOutfitsModal, setShowWornOutfitsModal] = useState(false);
   const [showModelProfileModal, setShowModelProfileModal] = useState(false); // État pour la modale profil
-  const [weatherInfo, setWeatherInfo] = useState<string | null>(null);
-  const [weatherError, setWeatherError] = useState<string | null>(null);
+  const { weatherInfo, weatherError } = useWeather();
   const prevItemCountRef = useRef(0);
 
   const [generatingVisualFor, setGeneratingVisualFor] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isWornOutfitsOpen, setIsWornOutfitsOpen] = useState(false);
-  const [mobileSearchQuery, setMobileSearchQuery] = useState('');
-  const [mobileSortBy, setMobileSortBy] = useState<'favorites' | 'newest' | 'oldest' | 'color'>('favorites');
-  const [mobileColorFilter, setMobileColorFilter] = useState('Toutes');
-  const [mobileMaterialFilter, setMobileMaterialFilter] = useState('Toutes');
-  const [mobileSubcategoryFilter, setMobileSubcategoryFilter] = useState('Toutes');
   const [anchorItemForGeneration, setAnchorItemForGeneration] = useState<ClothingItem | ClothingSet | null>(null);
   const [showChatModal, setShowChatModal] = useState(false);
   const [chatOutfit, setChatOutfit] = useState<OutfitSuggestion | null>(null);
@@ -116,14 +112,6 @@ const AppContent: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [error]);
-
-  // Réinitialiser les filtres mobiles quand on change d'onglet
-  useEffect(() => {
-    setMobileColorFilter('Toutes');
-    setMobileMaterialFilter('Toutes');
-    setMobileSubcategoryFilter('Toutes');
-    setMobileSearchQuery('');
-  }, [activeTab]);
 
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem('dressmup_onboarding_complete');
@@ -148,7 +136,7 @@ const AppContent: React.FC = () => {
     loading
   } = useWardrobe();
 
-  const [toast, setToast] = useState<string | null>(null);
+  const { toast, showToast } = useToast();
   const safeClothingItems = React.useMemo(() => {
   const items = clothingItems || [];
   return items.sort((a, b) => 
@@ -164,123 +152,34 @@ const AppContent: React.FC = () => {
 
   if (existingFavorite) {
     deleteFavoriteOutfit(existingFavorite.id);
-    setToast('Retiré des favoris');
+    showToast('Retiré des favoris');
   } else {
     addFavoriteOutfit(outfit);
-    setToast('Ajouté aux favoris ❤️');
+    showToast('Ajouté aux favoris ❤️');
   }
-
-  setTimeout(() => setToast(null), 2000);
-}, [favoriteOutfits, addFavoriteOutfit, deleteFavoriteOutfit]);
+}, [favoriteOutfits, addFavoriteOutfit, deleteFavoriteOutfit, showToast]);
 
   const handleSelectOutfit = useCallback((outfit: OutfitSuggestion) => {
     const isAlreadySelected = selectedOutfit?.titre === outfit.titre && selectedOutfit?.description === outfit.description;
 
     if (isAlreadySelected) {
       setSelectedOutfit(null);
-      setToast('Sélection annulée');
+      showToast('Sélection annulée');
     } else {
       setSelectedOutfit(outfit);
-      setToast('Tenue choisie ✨');
+      showToast('Tenue choisie ✨');
 
       // Enregistrer le port de la tenue dans l'historique
       const itemIds = outfit.vetements.map(item => item.id);
       recordOutfitWear(outfit.titre, outfit.description, itemIds);
     }
-
-    setTimeout(() => setToast(null), 2000);
-  }, [selectedOutfit, recordOutfitWear]);
+  }, [selectedOutfit, recordOutfitWear, showToast]);
   
   const safeClothingSets = React.useMemo(() => clothingSets || [], [clothingSets]);
   const itemIdsInSets = React.useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
 
   const wornOutfitsLast7Days = useMemo(() => getWornOutfitsLast7Days(), [getWornOutfitsLast7Days]);
 
-
-  useEffect(() => {
-    const fetchWeather = async (lat: number, lon: number) => {
-      const API_KEY = config.openWeatherApiKey;
-      if (!API_KEY) {
-        setWeatherError("Service météo non configuré.");
-        return;
-      }
-      const API_URL = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=fr`;
-
-      try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error("Impossible de récupérer la météo.");
-        const data = await response.json();
-        const weatherString = `${Math.round(data.main.temp)}°C, ${data.weather[0].description}, à ${data.name}`;
-        setWeatherInfo(weatherString);
-        setWeatherError(null);
-
-        // Mettre en cache la météo
-        localStorage.setItem('cachedWeather', JSON.stringify({
-          weather: weatherString,
-          timestamp: Date.now()
-        }));
-      } catch {
-        setWeatherError("Météo indisponible.");
-      }
-    };
-
-    // Vérifier d'abord si on a une météo en cache (< 30 minutes)
-    const cachedWeather = localStorage.getItem('cachedWeather');
-    if (cachedWeather) {
-      try {
-        const { weather, timestamp } = JSON.parse(cachedWeather);
-        const thirtyMinutes = 30 * 60 * 1000;
-        if (Date.now() - timestamp < thirtyMinutes) {
-          // Utiliser la météo en cache
-          setWeatherInfo(weather);
-          setWeatherError(null);
-          return;
-        }
-      } catch {
-        // Cache invalide, continuer avec la géolocalisation
-      }
-    }
-
-    // Vérifier si on a une position en cache (< 30 minutes)
-    const cachedPosition = localStorage.getItem('cachedPosition');
-    if (cachedPosition) {
-      try {
-        const { lat, lon, timestamp } = JSON.parse(cachedPosition);
-        const thirtyMinutes = 30 * 60 * 1000;
-        if (Date.now() - timestamp < thirtyMinutes) {
-          // Utiliser la position en cache
-          fetchWeather(lat, lon);
-          return;
-        }
-      } catch {
-        // Cache invalide, continuer avec la géolocalisation
-      }
-    }
-
-    // Pas de cache valide, demander la géolocalisation
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position: GeolocationPosition) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-
-          // Mettre en cache la position
-          localStorage.setItem('cachedPosition', JSON.stringify({
-            lat,
-            lon,
-            timestamp: Date.now()
-          }));
-
-          fetchWeather(lat, lon);
-        },
-        () => setWeatherError("Activez la géolocalisation pour la météo.")
-      );
-    } else {
-      setWeatherError("Géolocalisation non supportée.");
-    }
-  }, []);
-
- 
   const handleGenerateOutfits = useCallback(async (occasion: string, anchorItem?: ClothingItem | ClothingSet) => {
     if (safeClothingItems.length === 0) {
       setError("Veuillez d'abord ajouter des vêtements.");
@@ -449,7 +348,7 @@ const AppContent: React.FC = () => {
     if (!userModelImage) {
       setGeneratingVisualFor(null);
       setShowModelProfileModal(true);
-      setToast("Ajoutez une photo de vous pour l'essayage 📸");
+      showToast("Ajoutez une photo de vous pour l'essayage 📸");
       return;
     }
 
@@ -472,7 +371,7 @@ const AppContent: React.FC = () => {
     } finally {
       setGeneratingVisualFor(null);
     }
-  }, [safeClothingItems, userModelImage]); 
+  }, [safeClothingItems, userModelImage, showToast]);
 
  
   const handleScrollToOutfits = useCallback(() => setShowOutfitModal(true), []);
@@ -507,6 +406,20 @@ const AppContent: React.FC = () => {
     deleteClothingSet(setId).catch(err => setError(getUserFriendlyError(err))); 
   }, [deleteClothingSet]);
 
+  // Bundle de props répété sur tous les affichages de tenues (OutfitDisplay,
+  // OutfitModal, VacationModal, FavoriteOutfitsModal, WornOutfitsModal...)
+  const outfitInteractionProps = {
+    favoriteOutfits,
+    onToggleFavorite: handleToggleFavorite,
+    onGenerateVisual: handleGenerateVisual,
+    generatingVisualFor,
+    selectedOutfit,
+    onSelectOutfit: handleSelectOutfit,
+    onGenerateVariants: handleGenerateVariants,
+    isGenerating,
+    onOpenChat: handleOpenChat,
+  };
+
   const categoryCounts = {
     hauts: safeClothingItems.filter(item => item.category === 'Hauts').length,
     bas: safeClothingItems.filter(item => item.category === 'Bas').length,
@@ -514,111 +427,7 @@ const AppContent: React.FC = () => {
     accessoires: safeClothingItems.filter(item => item.category === 'Accessoires').length,
   };
 
-  const filteredItems = useMemo(() => {
-  if (activeTab === 'home') return [];
-
-  // Filtrer par catégorie
-  let items = safeClothingItems.filter(item => {
-    if (activeTab === 'hauts') return item.category === 'Hauts';
-    if (activeTab === 'bas') return item.category === 'Bas';
-    if (activeTab === 'chaussures') return item.category === 'Chaussures';
-    if (activeTab === 'accessoires') return item.category === 'Accessoires';
-    return false;
-  });
-
-  // Filtrer par recherche
-  if (mobileSearchQuery.trim()) {
-    const query = mobileSearchQuery.toLowerCase();
-    items = items.filter(item =>
-      item.analysis.toLowerCase().includes(query) ||
-      item.color.toLowerCase().includes(query) ||
-      item.material.toLowerCase().includes(query)
-    );
-  }
-
-  // Filtrer par couleur
-  if (mobileColorFilter !== 'Toutes') {
-    items = items.filter(item => item.color === mobileColorFilter);
-  }
-
-  // Filtrer par matière
-  if (mobileMaterialFilter !== 'Toutes') {
-    items = items.filter(item => item.material === mobileMaterialFilter);
-  }
-
-  // Filtrer par sous-catégorie (pour toutes les catégories)
-  if (mobileSubcategoryFilter !== 'Toutes') {
-    items = items.filter(item => item.subcategory === mobileSubcategoryFilter);
-  }
-
-  // Trier
-  return [...items].sort((a, b) => {
-    // Trier d'abord par sous-catégorie (pour toutes les catégories)
-    const subcatA = a.subcategory || 'zzz';
-    const subcatB = b.subcategory || 'zzz';
-    const subcatCompare = subcatA.localeCompare(subcatB);
-    if (subcatCompare !== 0) return subcatCompare;
-
-    // Tri secondaire selon l'option sélectionnée
-    switch (mobileSortBy) {
-      case 'favorites':
-        return (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0);
-      case 'newest':
-        return (b.createdAt || 0) - (a.createdAt || 0);
-      case 'oldest':
-        return (a.createdAt || 0) - (b.createdAt || 0);
-      case 'color':
-        return a.color.localeCompare(b.color);
-      default:
-        return 0;
-    }
-  });
-}, [activeTab, safeClothingItems, mobileSearchQuery, mobileSortBy, mobileColorFilter, mobileMaterialFilter, mobileSubcategoryFilter]);
-
-  // Valeurs disponibles pour les filtres mobiles
-  const availableMobileColors = useMemo(() => {
-    if (activeTab === 'home') return [];
-    const itemsInCategory = safeClothingItems.filter(item => {
-      if (activeTab === 'hauts') return item.category === 'Hauts';
-      if (activeTab === 'bas') return item.category === 'Bas';
-      if (activeTab === 'chaussures') return item.category === 'Chaussures';
-      if (activeTab === 'accessoires') return item.category === 'Accessoires';
-      return false;
-    });
-    const colors = itemsInCategory.map(item => item.color);
-    return ['Toutes', ...Array.from(new Set(colors))];
-  }, [activeTab, safeClothingItems]);
-
-  const availableMobileMaterials = useMemo(() => {
-    if (activeTab === 'home') return [];
-    const itemsInCategory = safeClothingItems.filter(item => {
-      if (activeTab === 'hauts') return item.category === 'Hauts';
-      if (activeTab === 'bas') return item.category === 'Bas';
-      if (activeTab === 'chaussures') return item.category === 'Chaussures';
-      if (activeTab === 'accessoires') return item.category === 'Accessoires';
-      return false;
-    });
-    const materials = itemsInCategory.map(item => item.material);
-    return ['Toutes', ...Array.from(new Set(materials))];
-  }, [activeTab, safeClothingItems]);
-
-  const availableMobileSubcategories = useMemo(() => {
-    // Convertir activeTab en Category
-    const categoryMap: Record<string, Category> = {
-      'hauts': 'Hauts',
-      'bas': 'Bas',
-      'chaussures': 'Chaussures',
-      'accessoires': 'Accessoires'
-    };
-
-    const category = categoryMap[activeTab];
-    if (!category) return ['Toutes'];
-
-    const subcategories = SUBCATEGORIES[category];
-    if (!subcategories || subcategories.length === 0) return ['Toutes'];
-
-    return ['Toutes', ...subcategories];
-  }, [activeTab]);
+  const mobileFilters = useMobileWardrobeFilters(safeClothingItems, activeTab);
 
   const isModalOpen =
     showOutfitModal ||
@@ -641,11 +450,10 @@ useEffect(() => {
   const prevItemCount = prevItemCountRef.current;
   if (!isAnalyzing && safeClothingItems.length > prevItemCount && prevItemCount > 0) {
     const addedCount = safeClothingItems.length - prevItemCount;
-    setToast(`${addedCount} vêtement${addedCount > 1 ? 's' : ''} ajouté${addedCount > 1 ? 's' : ''} ✨`);
-    setTimeout(() => setToast(null), 2000);
+    showToast(`${addedCount} vêtement${addedCount > 1 ? 's' : ''} ajouté${addedCount > 1 ? 's' : ''} ✨`);
   }
   prevItemCountRef.current = safeClothingItems.length;
-}, [isAnalyzing, safeClothingItems.length]);
+}, [isAnalyzing, safeClothingItems.length, showToast]);
   
   return (
     <main className="container mx-auto px-4 lg:px-8 py-10">
@@ -776,175 +584,13 @@ useEffect(() => {
               />
             )}
            {activeTab !== 'home' && (
-  <div className="pb-24">
-    {/* Header avec titre */}
-    <div className="text-center py-4 px-4">
-      <h2 className="text-2xl font-bold mb-1 capitalize">{activeTab}</h2>
-      <p className="text-sm text-gray-500">
-        {filteredItems.length} vêtement{filteredItems.length > 1 ? 's' : ''}
-      </p>
-    </div>
-
-    {/* Barre de recherche et tri */}
-    <div className="px-4 pb-4 space-y-3">
-      {/* Recherche */}
-      <div className="relative">
-        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-        <input
-          type="text"
-          value={mobileSearchQuery}
-          onChange={(e) => setMobileSearchQuery(e.target.value)}
-          placeholder="Rechercher..."
-          className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-raisin-black border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent transition-all"
-        />
-        {mobileSearchQuery && (
-          <button
-            onClick={() => setMobileSearchQuery('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
-            aria-label="Effacer"
-          >
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        )}
-      </div>
-
-      {/* Tri */}
-      <div className="relative">
-        <SortIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-        <select
-          value={mobileSortBy}
-          onChange={(e) => setMobileSortBy(e.target.value as typeof mobileSortBy)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-raisin-black border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent appearance-none cursor-pointer transition-all"
-        >
-          <option value="favorites">Favoris d'abord</option>
-          <option value="newest">Plus récents</option>
-          <option value="oldest">Plus anciens</option>
-          <option value="color">Couleur (A-Z)</option>
-        </select>
-        <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-      </div>
-
-      {/* Filtres Type/Couleur/Matière */}
-      <div className="space-y-3">
-        {(mobileColorFilter !== 'Toutes' || mobileMaterialFilter !== 'Toutes' || mobileSubcategoryFilter !== 'Toutes') && (
-          <div className="flex justify-end">
-            <button
-              onClick={() => {
-                setMobileColorFilter('Toutes');
-                setMobileMaterialFilter('Toutes');
-                setMobileSubcategoryFilter('Toutes');
-              }}
-              className="text-sm font-medium text-gold hover:text-gold-dark transition-colors"
-            >
-              Réinitialiser les filtres
-            </button>
-          </div>
-        )}
-        {/* Filtre Type (pour toutes les catégories) */}
-        <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1.5">Type</label>
-          <select
-            value={mobileSubcategoryFilter}
-            onChange={(e) => setMobileSubcategoryFilter(e.target.value)}
-            className="w-full px-3 py-2 bg-white dark:bg-raisin-black border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent appearance-none cursor-pointer transition-all text-sm"
-          >
-            {availableMobileSubcategories.map(subcategory => (
-              <option key={subcategory} value={subcategory}>{subcategory}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Filtres Couleur et Matière */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">Couleur</label>
-            <select
-              value={mobileColorFilter}
-              onChange={(e) => setMobileColorFilter(e.target.value)}
-              className="w-full px-3 py-2 bg-white dark:bg-raisin-black border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent appearance-none cursor-pointer transition-all text-sm"
-            >
-              {availableMobileColors.map(color => (
-                <option key={color} value={color}>{color}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">Matière</label>
-            <select
-              value={mobileMaterialFilter}
-              onChange={(e) => setMobileMaterialFilter(e.target.value)}
-              className="w-full px-3 py-2 bg-white dark:bg-raisin-black border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent appearance-none cursor-pointer transition-all text-sm"
-            >
-              {availableMobileMaterials.map(material => (
-                <option key={material} value={material}>{material}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Résultats */}
-    {filteredItems.length > 0 ? (
-      <div className="grid grid-cols-2 gap-3 px-4">
-        {filteredItems.map(item => (
-          <div
-            key={item.id}
-            onClick={() => handleItemClick(item)}
-            className="relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform"
-          >
-            {item.isFavorite ? (
-              <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-red-500 z-10">
-                <HeartIconSolid className="w-4 h-4" />
-              </span>
-            ) : itemIdsInSets.has(item.id) ? (
-              <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white z-10">
-                <LinkIcon />
-              </span>
-            ) : null}
-
-            <div className="aspect-square">
-              <img
-                src={item.imageSrc}
-                alt={item.analysis}
-                loading="lazy"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="p-3">
-              <p className="text-sm font-medium line-clamp-2">{item.analysis}</p>
-              <p className="text-xs text-gray-500 mt-1">{item.color}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    ) : (
-      <div className="text-center py-12 px-4">
-        {mobileSearchQuery ? (
-          <>
-            <div className="text-6xl mb-4">🔍</div>
-            <p className="text-gray-500 font-medium">Aucun résultat pour "{mobileSearchQuery}"</p>
-            <button 
-              onClick={() => setMobileSearchQuery('')}
-              className="mt-3 text-gold font-medium"
-            >
-              Effacer la recherche
-            </button>
-          </>
-        ) : (
-          <>
-            <div className="text-6xl mb-4">👕</div>
-            <p className="text-gray-500 font-medium">Aucun vêtement dans cette catégorie</p>
-            <p className="text-sm text-gray-400 mt-2">Appuyez sur + pour en ajouter</p>
-          </>
-        )}
-      </div>
-    )}
-  </div>
-)}
+             <MobileWardrobeView
+               activeTab={activeTab}
+               itemIdsInSets={itemIdsInSets}
+               onItemClick={handleItemClick}
+               filters={mobileFilters}
+             />
+           )}
           </div>
           
         </div>
@@ -965,15 +611,7 @@ useEffect(() => {
                     outfits={suggestedOutfits}
                     allClothingItems={safeClothingItems}
                     allClothingSets={safeClothingSets}
-                    favoriteOutfits={favoriteOutfits}
-                    onToggleFavorite={handleToggleFavorite}
-                    onGenerateVisual={handleGenerateVisual}
-                    generatingVisualFor={generatingVisualFor}
-                    selectedOutfit={selectedOutfit}
-                    onSelectOutfit={handleSelectOutfit}
-                    onGenerateVariants={handleGenerateVariants}
-                    isGenerating={isGenerating}
-                    onOpenChat={handleOpenChat}
+                    {...outfitInteractionProps}
                   />
               )}
 
@@ -1000,15 +638,7 @@ useEffect(() => {
           outfits={favoriteOutfits}
           allClothingItems={safeClothingItems}
           allClothingSets={safeClothingSets}
-          favoriteOutfits={favoriteOutfits}
-          onToggleFavorite={handleToggleFavorite}
-          onGenerateVisual={handleGenerateVisual}
-          generatingVisualFor={generatingVisualFor}
-          selectedOutfit={selectedOutfit}
-          onSelectOutfit={handleSelectOutfit}
-          onGenerateVariants={handleGenerateVariants}
-          isGenerating={isGenerating}
-          onOpenChat={handleOpenChat}
+          {...outfitInteractionProps}
         />
       </div>
     )}
@@ -1079,15 +709,7 @@ useEffect(() => {
           }))}
           allClothingItems={safeClothingItems}
           allClothingSets={safeClothingSets}
-          favoriteOutfits={favoriteOutfits}
-          onToggleFavorite={handleToggleFavorite}
-          onGenerateVisual={handleGenerateVisual}
-          generatingVisualFor={generatingVisualFor}
-          selectedOutfit={selectedOutfit}
-          onSelectOutfit={handleSelectOutfit}
-          onGenerateVariants={handleGenerateVariants}
-          isGenerating={isGenerating}
-          onOpenChat={handleOpenChat}
+          {...outfitInteractionProps}
         />
       </div>
     )}
@@ -1157,7 +779,6 @@ useEffect(() => {
         clothingItems={safeClothingItems}
         clothingSets={safeClothingSets}
         onGenerate={handleGenerateOutfits}
-        isGenerating={isGenerating}
         suggestedOutfits={suggestedOutfits}
         onClose={() => {
           setShowOutfitModal(false);
@@ -1165,16 +786,9 @@ useEffect(() => {
         }}
         weatherInfo={weatherInfo}
         weatherError={weatherError}
-        favoriteOutfits={favoriteOutfits}
-        onToggleFavorite={handleToggleFavorite}
-        onGenerateVisual={handleGenerateVisual}
-        generatingVisualFor={generatingVisualFor}
-        selectedOutfit={selectedOutfit}
-        onSelectOutfit={handleSelectOutfit}
         anchorItem={anchorItemForGeneration}
         onClearAnchor={() => setAnchorItemForGeneration(null)}
-        onGenerateVariants={handleGenerateVariants}
-        onOpenChat={handleOpenChat}
+        {...outfitInteractionProps}
       />
     
       <VacationModal
@@ -1238,15 +852,7 @@ useEffect(() => {
         onClose={() => setShowFavoriteModal(false)}
         allClothingItems={safeClothingItems}
         allClothingSets={safeClothingSets}
-        favoriteOutfits={favoriteOutfits}
-        onToggleFavorite={handleToggleFavorite}
-        onGenerateVisual={handleGenerateVisual}
-        generatingVisualFor={generatingVisualFor}
-        selectedOutfit={selectedOutfit}
-        onSelectOutfit={handleSelectOutfit}
-        onGenerateVariants={handleGenerateVariants}
-        isGenerating={isGenerating}
-        onOpenChat={handleOpenChat}
+        {...outfitInteractionProps}
       />
 
       <WornOutfitsModal
@@ -1255,15 +861,7 @@ useEffect(() => {
         allClothingItems={safeClothingItems}
         allClothingSets={safeClothingSets}
         wornOutfits={wornOutfitsLast7Days}
-        favoriteOutfits={favoriteOutfits}
-        onToggleFavorite={handleToggleFavorite}
-        onGenerateVisual={handleGenerateVisual}
-        generatingVisualFor={generatingVisualFor}
-        selectedOutfit={selectedOutfit}
-        onSelectOutfit={handleSelectOutfit}
-        onGenerateVariants={handleGenerateVariants}
-        isGenerating={isGenerating}
-        onOpenChat={handleOpenChat}
+        {...outfitInteractionProps}
       />
 
       {/* NOUVELLE MODALE PROFIL (s'affiche si activée par l'utilisateur ou automatiquement si pas de photo) */}
