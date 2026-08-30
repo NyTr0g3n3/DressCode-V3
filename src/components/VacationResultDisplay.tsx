@@ -19,7 +19,7 @@ const VacationResultDisplay: React.FC<VacationResultDisplayProps> = ({ plan, all
     let foundItem = allClothingItems.find(ci => ci.id === id);
     if (foundItem) return foundItem;
 
-    let foundSet = allClothingSets.find(cs => cs.id === id);
+    const foundSet = allClothingSets.find(cs => cs.id === id);
     if (foundSet) return foundSet;
 
     // 2. Fallback: Recherche par description (si l'IA a mis la description dans le champ 'id')

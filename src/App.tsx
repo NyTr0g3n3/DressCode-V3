@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import OnboardingModal from './components/OnboardingModal.tsx';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
-import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, FavoriteOutfit, OutfitItem, Category } from './types.ts';
+import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, FavoriteOutfit, OutfitItem, Category, ChatMessage } from './types.ts';
 import { generateOutfits, generateVacationPlan, analyzeWardrobeGaps, generateVisualOutfit, generateOutfitVariants, generateChatResponse } from './services/geminiService.ts';
 import { SUBCATEGORIES } from './utils/subcategoryClassifier';
 

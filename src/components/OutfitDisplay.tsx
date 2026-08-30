@@ -72,7 +72,7 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
     if (foundItem) return foundItem;
 
     // 2. Recherche dans les Sets par ID
-    let foundSet = allClothingSets.find(cs => cs.id === cleanId);
+    const foundSet = allClothingSets.find(cs => cs.id === cleanId);
     if (foundSet) return foundSet;
 
     // 3. Recherche inversée : L'IA a mis la description dans le champ ID

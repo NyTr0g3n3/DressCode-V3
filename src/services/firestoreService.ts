@@ -14,7 +14,10 @@ import {
 import { db } from '../firebase';
 import type { ClothingItem, ClothingSet, FavoriteOutfit, OutfitSuggestion, OutfitWearHistory } from '../types';
 
-type NewClothingItem = Omit<ClothingItem, 'id'>;
+// imageSrc est optionnel à la création : le doc est créé d'abord pour obtenir
+// un ID Firestore, puis l'image est uploadée sous cet ID et patchée ensuite
+// (voir WardrobeContext.analyzeClothingItems).
+type NewClothingItem = Omit<ClothingItem, 'id' | 'imageSrc'> & { imageSrc?: string };
 type NewClothingSet = Omit<ClothingSet, 'id'>;
 type NewFavoriteOutfit = Omit<FavoriteOutfit, 'id'>;
 

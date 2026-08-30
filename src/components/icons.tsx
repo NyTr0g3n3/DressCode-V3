@@ -38,8 +38,8 @@ export const RemoveIcon: React.FC = () => (
     </svg>
 );
 
-export const WardrobeIcon: React.FC = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+export const WardrobeIcon: React.FC<{ className?: string }> = ({ className = "h-16 w-16" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M12.5 6.6C12.5 5.54903 11.651 4.7 10.6 4.7C9.54903 4.7 8.7 5.54903 8.7 6.6V8.7C8.7 9.36274 9.23726 9.9 9.9 9.9H14.1C14.7627 9.9 15.3 9.36274 15.3 8.7V7.8" />
     <path strokeLinecap="round" strokeLinejoin="round" d="M4.10879 16.5C4.43285 14.805 5.86246 13.5 7.6 13.5H16.4C18.1375 13.5 19.5672 14.805 19.8912 16.5L20.5 19.5H3.5L4.10879 16.5Z" />
   </svg>
@@ -93,8 +93,8 @@ export const XIcon: React.FC = () => (
   </svg>
 );
 
-export const LinkIcon: React.FC = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+export const LinkIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-5" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.536a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
   </svg>
 );
