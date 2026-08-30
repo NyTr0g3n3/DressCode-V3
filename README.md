@@ -57,6 +57,14 @@ Storage + Functions activés).
    npm run dev
    ```
 
+### Vérifications
+
+```
+npm run lint       # ESLint
+npm run typecheck  # TypeScript (tsc --noEmit)
+npm run test       # Tests unitaires (Vitest) — validation d'IDs, classification
+```
+
 ### Cloud Functions
 
 La génération de tenues, l'analyse de vêtements et le chat styliste passent

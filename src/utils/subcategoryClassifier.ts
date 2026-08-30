@@ -63,21 +63,26 @@ export function detectSubcategory(analysis: string, category: Category): string 
 
   if (!subcategoriesForCategory) return undefined;
 
-  // Parcourir les sous-catégories de cette catégorie
+  // Retenir le mot-clé le PLUS LONG qui correspond, tous sous-catégories
+  // confondues, plutôt que la première sous-catégorie déclarée qui matche.
+  // Sinon un mot-clé générique (ex: "short") gagne toujours contre un
+  // mot-clé plus spécifique qui le contient (ex: "short sport"), rendant
+  // la sous-catégorie spécifique impossible à détecter.
+  let bestMatch: { subcategory: string; keywordLength: number } | undefined;
+
   for (const subcategory of subcategoriesForCategory) {
     const keywords = KEYWORDS[subcategory as keyof typeof KEYWORDS];
 
     if (!keywords) continue;
 
-    // Vérifier si un mot-clé correspond
     for (const keyword of keywords) {
-      if (lowerAnalysis.includes(keyword)) {
-        return subcategory;
+      if (lowerAnalysis.includes(keyword) && (!bestMatch || keyword.length > bestMatch.keywordLength)) {
+        bestMatch = { subcategory, keywordLength: keyword.length };
       }
     }
   }
 
-  return undefined;
+  return bestMatch?.subcategory;
 }
 
 /**
