@@ -196,7 +196,7 @@ const AppContent: React.FC = () => {
       : `Occasion : ${occasion}`;
 
     try {
-      const outfits = await generateOutfits(safeClothingItems, safeClothingSets, fullContext, effectiveAnchor || undefined, wornOutfitsLast7Days, favoriteOutfits);
+      const outfits = await generateOutfits(safeClothingItems, safeClothingSets, fullContext, effectiveAnchor || undefined, wornOutfitsLast7Days, favoriteOutfits, weatherInfo);
       setSuggestedOutfits(outfits);
       setAnchorItemForGeneration(null); // Réinitialiser l'ancre après génération
     } catch (err) {

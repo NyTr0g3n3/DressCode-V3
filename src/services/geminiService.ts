@@ -4,6 +4,7 @@ import { functions } from '../firebase';
 import { STYLE_RULES, ACCESSORY_RULES } from '../prompts/sharedStyleRules';
 import { buildFavoritesInstruction } from '../prompts/personalization';
 import { validateAndFixOutfitIds, validateAndFixVacationPlanIds } from '../utils/outfitValidation';
+import { parseTemperatureCelsius, filterOutfitsByHardConstraints } from '../utils/outfitConstraints';
 
 // Les appels Gemini passent maintenant par des Cloud Functions sécurisées
 // La clé API reste côté serveur et n'est jamais exposée au client
@@ -41,7 +42,8 @@ export async function generateOutfits(
     context: string,
     anchorItemOrSet?: ClothingItem | ClothingSet,
     wornOutfits?: OutfitWearHistory[],
-    favoriteOutfits?: FavoriteOutfit[]
+    favoriteOutfits?: FavoriteOutfit[],
+    weatherInfo?: string | null
 ): Promise<OutfitSuggestion[]> {
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     // Filtrer les items exclus ET ceux qui sont dans des ensembles
@@ -213,18 +215,36 @@ VÉRIFIE que CHACUNE des 3 tenues inclut bien :
 Et que tu utilises EXACTEMENT cet ID : ${anchorItemOrSet.id}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : ''}`;
 
+    let validatedOutfits: OutfitSuggestion[];
     try {
         const result = await generateOutfitsFunctionCall({ prompt });
         const data = result.data as { tenues: OutfitSuggestion[] };
 
         // Validation et correction des IDs
-        const validatedOutfits = validateAndFixOutfitIds(data.tenues, individualItems, sets);
-
-        return validatedOutfits;
+        validatedOutfits = validateAndFixOutfitIds(data.tenues, individualItems, sets);
     } catch (error) {
         console.error("Erreur génération tenues:", error);
         throw new Error("Erreur lors de la génération des tenues.", { cause: error });
     }
+
+    // Contraintes dures (structure, température, article ancré) :
+    // vérifiées en code plutôt qu'espérées via le prompt, cf.
+    // sharedStyleRules.ts pour la distinction dur/mou.
+    const temperatureCelsius = parseTemperatureCelsius(weatherInfo);
+    const filteredOutfits = filterOutfitsByHardConstraints(validatedOutfits, clothingList, sets, {
+        temperatureCelsius,
+        anchorId: anchorItemOrSet?.id,
+    });
+
+    // Si le filtre a tout écarté, ne pas renvoyer un tableau vide en
+    // silence (le spinner s'arrêterait sans rien afficher, comme le
+    // bug d'upload silencieux corrigé plus tôt) : on remonte une
+    // erreur explicite pour que l'utilisateur puisse réessayer.
+    if (filteredOutfits.length === 0 && validatedOutfits.length > 0) {
+        throw new Error("Aucune des tenues proposées ne respectait les contraintes (météo, structure). Réessaie.");
+    }
+
+    return filteredOutfits;
 }
 
 // --- GÉNÉRATION DE VARIANTES (REMPLACEMENT D'UNE PIÈCE) ---
