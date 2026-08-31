@@ -16,7 +16,7 @@ interface OutfitDisplayProps {
   generatingVisualFor: string | null;
   selectedOutfit: OutfitSuggestion | null;
   onSelectOutfit: (outfit: OutfitSuggestion) => void;
-  onGenerateVariants: (outfit: OutfitSuggestion, itemToReplace: OutfitItem) => void;
+  onGenerateVariants: (outfit: OutfitSuggestion, itemsToReplace: OutfitItem[]) => void;
   isGenerating: boolean;
   onOpenChat?: (outfit: OutfitSuggestion) => void;
 }
@@ -38,7 +38,25 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [editingOutfitIndex, setEditingOutfitIndex] = useState<number | null>(null);
+  // Indices (dans outfit.vetements) des pièces sélectionnées pour être
+  // remplacées ensemble — remise à zéro à chaque entrée/sortie du mode
+  // édition ou changement de tenue éditée.
+  const [selectedForReplacement, setSelectedForReplacement] = useState<Set<number>>(new Set());
   const spinnerRef = useRef<HTMLDivElement>(null);
+
+  const toggleEditMode = (index: number) => {
+    setEditingOutfitIndex(prev => (prev === index ? null : index));
+    setSelectedForReplacement(new Set());
+  };
+
+  const toggleItemSelection = (itemIndex: number) => {
+    setSelectedForReplacement(prev => {
+      const next = new Set(prev);
+      if (next.has(itemIndex)) next.delete(itemIndex);
+      else next.add(itemIndex);
+      return next;
+    });
+  };
 
   // Scroll automatique vers le spinner quand la génération démarre
   useEffect(() => {
@@ -158,7 +176,7 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
                       </button>
                     )}
                     <button
-                      onClick={() => setEditingOutfitIndex(editingOutfitIndex === index ? null : index)}
+                      onClick={() => toggleEditMode(index)}
                       disabled={isGenerating}
                       className={`p-1.5 transition-colors ${
                         editingOutfitIndex === index
@@ -204,16 +222,17 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Cliquez sur une pièce pour la remplacer
+                    Sélectionnez une ou plusieurs pièces à remplacer, puis validez
                   </p>
                 </div>
               )}
 
-              <div className="flex flex-wrap gap-3 mb-5">
+              <div className="flex flex-wrap gap-3 mb-3">
                 {outfit.vetements.map((item, itemIndex) => {
                   const itemData = findItemByIdOrDescription(item);
                   const imgSrc = itemData ? itemData.imageSrc : null;
                   const isEditMode = editingOutfitIndex === index;
+                  const isSelectedForReplacement = selectedForReplacement.has(itemIndex);
 
                   return (
                     <div key={itemIndex} className="relative">
@@ -235,24 +254,48 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
 
                       {isEditMode && imgSrc && (
                         <button
-                          onClick={() => {
-                            onGenerateVariants(outfit, item);
-                            setEditingOutfitIndex(null);
-                          }}
+                          onClick={() => toggleItemSelection(itemIndex)}
                           disabled={isGenerating}
-                          className="absolute inset-0 flex items-center justify-center bg-onyx/30 rounded-md transition-all hover:bg-gold/90 disabled:opacity-50 disabled:cursor-not-allowed group"
-                          aria-label={`Remplacer ${item.description}`}
-                          title={`Remplacer ${item.description}`}
+                          className={`absolute inset-0 flex items-center justify-center rounded-md transition-all group ${
+                            isSelectedForReplacement
+                              ? 'bg-gold/60 ring-2 ring-gold ring-offset-2 ring-offset-snow dark:ring-offset-onyx'
+                              : 'bg-onyx/30 hover:bg-onyx/50'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                          aria-label={isSelectedForReplacement ? `Ne plus remplacer ${item.description}` : `Sélectionner ${item.description} pour remplacement`}
+                          title={isSelectedForReplacement ? `Ne plus remplacer ${item.description}` : `Sélectionner pour remplacer ${item.description}`}
                         >
-                          <svg className="w-7 h-7 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                          </svg>
+                          {isSelectedForReplacement ? (
+                            <svg className="w-7 h-7 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-7 h-7 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                          )}
                         </button>
                       )}
                     </div>
                   );
                 })}
               </div>
+
+              {editingOutfitIndex === index && (
+                <div className="flex justify-end mb-5">
+                  <button
+                    onClick={() => {
+                      const itemsToReplace = outfit.vetements.filter((_, itemIndex) => selectedForReplacement.has(itemIndex));
+                      onGenerateVariants(outfit, itemsToReplace);
+                      setEditingOutfitIndex(null);
+                      setSelectedForReplacement(new Set());
+                    }}
+                    disabled={selectedForReplacement.size === 0 || isGenerating}
+                    className="px-4 py-2 bg-gold hover:bg-gold-dark text-onyx rounded-lg font-medium text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {selectedForReplacement.size > 0 ? `Remplacer (${selectedForReplacement.size})` : 'Remplacer'}
+                  </button>
+                </div>
+              )}
 
               <ul className="list-disc list-inside space-y-1.5 text-sm pt-4 border-t border-black/5 dark:border-white/10">
                 {outfit.vetements.map((item, itemIndex) => (

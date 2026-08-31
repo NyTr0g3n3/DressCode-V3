@@ -212,7 +212,7 @@ const AppContent: React.FC = () => {
     }
   }, [safeClothingItems, safeClothingSets, weatherInfo, weatherMaxToday, anchorItemForGeneration, wornOutfitsLast7Days, favoriteOutfits]);
 
-  const handleGenerateVariants = useCallback(async (outfit: OutfitSuggestion, itemToReplace: OutfitItem) => {
+  const handleGenerateVariants = useCallback(async (outfit: OutfitSuggestion, itemsToReplace: OutfitItem[]) => {
     if (safeClothingItems.length === 0) {
       setError("Veuillez d'abord ajouter des vêtements.");
       return;
@@ -226,7 +226,10 @@ const AppContent: React.FC = () => {
       : `Contexte original : ${outfit.description}`;
 
     try {
-      const variants = await generateOutfitVariants(safeClothingItems, safeClothingSets, fullContext, outfit, itemToReplace);
+      // Le dernier paramètre reste la météo actuelle "brute" (non enrichie
+      // du max du jour) — mêmes contraintes dures que la génération
+      // initiale, voir outfitConstraints.ts.
+      const variants = await generateOutfitVariants(safeClothingItems, safeClothingSets, fullContext, outfit, itemsToReplace, weatherInfo);
       setSuggestedOutfits(variants);
     } catch (err) {
       setError(getUserFriendlyError(err));

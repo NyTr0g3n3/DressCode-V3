@@ -23,7 +23,7 @@ interface OutfitModalProps {
   onSelectOutfit: (outfit: OutfitSuggestion) => void;
   anchorItem?: ClothingItem | ClothingSet | null;
   onClearAnchor?: () => void;
-  onGenerateVariants: (outfit: OutfitSuggestion, itemToReplace: OutfitItem) => void;
+  onGenerateVariants: (outfit: OutfitSuggestion, itemsToReplace: OutfitItem[]) => void;
   onOpenChat?: (outfit: OutfitSuggestion) => void;
 }
 
