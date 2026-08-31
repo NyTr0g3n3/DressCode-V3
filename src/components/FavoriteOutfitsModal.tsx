@@ -14,7 +14,7 @@ interface FavoriteOutfitsModalProps {
   generatingVisualFor: string | null;
   selectedOutfit: OutfitSuggestion | null;
   onSelectOutfit: (outfit: OutfitSuggestion) => void;
-  onGenerateVariants?: (outfit: OutfitSuggestion, itemToReplace: OutfitItem) => void;
+  onGenerateVariants?: (outfit: OutfitSuggestion, itemsToReplace: OutfitItem[]) => void;
   isGenerating?: boolean;
   onOpenChat?: (outfit: OutfitSuggestion) => void;
 }

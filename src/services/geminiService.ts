@@ -253,7 +253,8 @@ export async function generateOutfitVariants(
     sets: ClothingSet[],
     context: string,
     outfitToModify: OutfitSuggestion,
-    itemToReplace: OutfitItem
+    itemsToReplace: OutfitItem[],
+    weatherInfo?: string | null
 ): Promise<OutfitSuggestion[]> {
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     // Filtrer les items exclus ET ceux qui sont dans des ensembles
@@ -265,15 +266,19 @@ export async function generateOutfitVariants(
     // Pas de sets dans les variantes : on remplace 1 pièce par 1 pièce individuelle uniquement
     const availableClothes = individualItemsFormatted;
 
-    // Construire la liste des items à garder (tous sauf celui à remplacer)
-    const itemsToKeep = outfitToModify.vetements.filter(item => item.id !== itemToReplace.id);
+    // Construire la liste des items à garder (tous sauf ceux à remplacer)
+    const replaceIds = new Set(itemsToReplace.map(item => item.id));
+    const itemsToKeep = outfitToModify.vetements.filter(item => !replaceIds.has(item.id));
     const keepInstruction = itemsToKeep.map(item =>
         `  ✅ GARDER : "${item.description}" (ID: ${item.id})`
     ).join('\n');
 
-    const replaceInstruction = `  ❌ REMPLACER : "${itemToReplace.description}" (ID: ${itemToReplace.id})`;
+    const replaceInstruction = itemsToReplace.map(item =>
+        `  ❌ REMPLACER : "${item.description}" (ID: ${item.id})`
+    ).join('\n');
+    const multipleReplacements = itemsToReplace.length > 1;
 
-    const prompt = `Tu es un styliste expert. L'utilisateur aime cette tenue mais veut remplacer UNE SEULE pièce.
+    const prompt = `Tu es un styliste expert. L'utilisateur aime cette tenue mais veut remplacer ${multipleReplacements ? `${itemsToReplace.length} pièces` : 'UNE SEULE pièce'}.
 
 **TENUE ACTUELLE** : "${outfitToModify.titre}"
 ${outfitToModify.description}
@@ -283,8 +288,9 @@ ${keepInstruction}
 ${replaceInstruction}
 
 ⚠️ **RÈGLE ABSOLUE** : Tu DOIS inclure EXACTEMENT les mêmes articles marqués "✅ GARDER" avec leurs IDs exacts dans chacune des 3 tenues.
-Tu dois UNIQUEMENT remplacer l'article marqué "❌ REMPLACER" par une alternative différente parmi les vêtements disponibles.
-Tu ne peux remplacer qu'avec une PIÈCE INDIVIDUELLE (pas un ensemble/set). Choisis uniquement parmi les articles listés ci-dessous.
+Tu dois UNIQUEMENT remplacer ${multipleReplacements ? 'les articles marqués "❌ REMPLACER"' : 'l\'article marqué "❌ REMPLACER"'} par ${multipleReplacements ? 'des alternatives différentes' : 'une alternative différente'} parmi les vêtements disponibles.
+Tu ne peux remplacer qu'avec des PIÈCES INDIVIDUELLES (pas un ensemble/set). Choisis uniquement parmi les articles listés ci-dessous.
+${multipleReplacements ? '\n⚠️ Les nouvelles pièces doivent être cohérentes ENTRE ELLES, en plus d\'être cohérentes avec les pièces conservées (couleurs, style, occasion).' : ''}
 
 **CONTEXTE** : ${context}
 
@@ -297,6 +303,7 @@ ${STYLE_RULES}
 **VARIÉTÉ & DIVERSIFICATION DES ALTERNATIVES** :
 
 🔴 **OBLIGATION : 3 ALTERNATIVES VRAIMENT DIFFÉRENTES**
+${multipleReplacements ? 'Applique les règles ci-dessous à CHAQUE pièce remplacée, en fonction de sa catégorie.' : ''}
 
 ⚠️ **SI REMPLACEMENT D'UN HAUT** :
 - ❌ JAMAIS proposer 3 hauts de la même couleur
@@ -341,24 +348,37 @@ Si un article à garder a l'ID "a1b2c3d4-e5f6-7890", dans ta réponse JSON tu DO
 
 🚨 **VÉRIFICATION AVANT ENVOI** :
 1. Vérifie que les articles marqués "✅ GARDER" ont EXACTEMENT les mêmes IDs
-2. Vérifie que l'article de remplacement a un ID qui existe dans la liste disponible
+2. Vérifie que ${multipleReplacements ? 'chaque article de remplacement a' : "l'article de remplacement a"} un ID qui existe dans la liste disponible
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Génère 3 variantes qui respectent TOUTES les règles ci-dessus.`;
 
+    let validatedOutfits: OutfitSuggestion[];
     try {
         const result = await generateOutfitVariantsFunctionCall({ prompt });
         const data = result.data as { tenues: OutfitSuggestion[] };
 
         // Validation et correction des IDs (pas de sets en mode variantes)
-        const validatedOutfits = validateAndFixOutfitIds(data.tenues, individualItems, []);
-
-        return validatedOutfits;
+        validatedOutfits = validateAndFixOutfitIds(data.tenues, individualItems, []);
     } catch (error) {
         console.error("Erreur génération variantes:", error);
         throw new Error("Erreur lors de la génération des variantes.", { cause: error });
     }
+
+    // Mêmes contraintes dures que la génération initiale (structure,
+    // météo, layering du pull col V/zippé) : une variante ne doit pas
+    // pouvoir réintroduire une combinaison interdite, cf. outfitConstraints.ts.
+    const temperatureCelsius = parseTemperatureCelsius(weatherInfo);
+    const filteredOutfits = filterOutfitsByHardConstraints(validatedOutfits, clothingList, [], {
+        temperatureCelsius,
+    });
+
+    if (filteredOutfits.length === 0 && validatedOutfits.length > 0) {
+        throw new Error("Aucune des variantes proposées ne respectait les contraintes (météo, structure, layering). Réessaie.");
+    }
+
+    return filteredOutfits;
 }
 
 // --- CHATBOT STYLISTE (CONSEILS UNIQUEMENT) ---
