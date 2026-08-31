@@ -263,6 +263,22 @@ const AppContent: React.FC = () => {
     setShowChatModal(true);
   }, [showOutfitModal, showFavoriteModal, showWornOutfitsModal]);
 
+  // Ferme le chat et rouvre la modale qui était affichée avant — factorisé
+  // car utilisé à la fois par le bouton fermer et par "Appliquer" un
+  // remplacement suggéré par le chat (qui doit aussi ramener l'utilisateur
+  // vers la liste de tenues pour voir le résultat de la régénération).
+  const closeChatModal = useCallback(() => {
+    setShowChatModal(false);
+    if (previousModalBeforeChat === 'outfit') {
+      setShowOutfitModal(true);
+    } else if (previousModalBeforeChat === 'favorites') {
+      setShowFavoriteModal(true);
+    } else if (previousModalBeforeChat === 'worn') {
+      setShowWornOutfitsModal(true);
+    }
+    setPreviousModalBeforeChat(null);
+  }, [previousModalBeforeChat]);
+
   const handleChatMessage = useCallback(async (message: string, history: ChatMessage[]) => {
     if (!chatOutfit) return;
 
@@ -282,7 +298,8 @@ const AppContent: React.FC = () => {
       const assistantMessage: ChatMessage = {
         role: 'assistant',
         content: response.message,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        suggestedReplacement: response.suggestedReplacement
       };
 
       setChatMessages(prev => [...prev, assistantMessage]);
@@ -292,6 +309,18 @@ const AppContent: React.FC = () => {
       setIsChatGenerating(false);
     }
   }, [chatOutfit, safeClothingItems, safeClothingSets]);
+
+  // Déclenché par le bouton "Appliquer" sous un message du chat qui a
+  // identifié une pièce précise à remplacer (voir suggestedReplacement) —
+  // réutilise le même flux que le bouton "Remplacer" manuel de
+  // OutfitDisplay (mêmes contraintes dures, même appel Gemini) plutôt que
+  // de faire deviner un remplacement au chat lui-même : le chat ne fait
+  // qu'identifier QUELLE pièce changer, pas PAR QUOI.
+  const handleApplyChatReplacement = useCallback((itemId: string, itemDescription: string) => {
+    if (!chatOutfit) return;
+    closeChatModal();
+    handleGenerateVariants(chatOutfit, [{ id: itemId, description: itemDescription }]);
+  }, [chatOutfit, closeChatModal, handleGenerateVariants]);
 
   const handleGenerateVacationPlan = useCallback(async (days: number, context: string, maxWeight?: number) => {
     if (safeClothingItems.length === 0) {
@@ -839,21 +868,11 @@ useEffect(() => {
       <OutfitChatModal
         open={showChatModal}
         outfit={chatOutfit}
-        onClose={() => {
-          setShowChatModal(false);
-          // Réouvrir la modale qui était ouverte avant le chat
-          if (previousModalBeforeChat === 'outfit') {
-            setShowOutfitModal(true);
-          } else if (previousModalBeforeChat === 'favorites') {
-            setShowFavoriteModal(true);
-          } else if (previousModalBeforeChat === 'worn') {
-            setShowWornOutfitsModal(true);
-          }
-          setPreviousModalBeforeChat(null);
-        }}
+        onClose={closeChatModal}
         onSendMessage={async (message, history) => {
           await handleChatMessage(message, history);
         }}
+        onApplyReplacement={handleApplyChatReplacement}
         isGenerating={isChatGenerating}
         messages={chatMessages}
       />

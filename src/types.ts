@@ -72,14 +72,25 @@ export interface OutfitWearHistory {
   wornAt: number; // Timestamp du port (date de sélection)
 }
 
+// Remplacement suggéré par le chat pour une pièce précise de la tenue en
+// cours de discussion — porté par le message ET la réponse brute, pour
+// que le bouton "Appliquer" reste rattaché au bon message une fois
+// affiché dans l'historique (voir OutfitChatModal.tsx).
+export interface ChatSuggestedReplacement {
+  itemId: string;
+  itemDescription: string;
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: number;
+  suggestedReplacement?: ChatSuggestedReplacement | null;
 }
 
 export interface ChatResponse {
   message: string;
   isRejected: boolean; // true si la question est hors-sujet
+  suggestedReplacement?: ChatSuggestedReplacement | null;
 }
 

@@ -443,7 +443,34 @@ export async function generateChatResponse(
 - Suggérer d'acheter quoi que ce soit
 - Inventer des pièces qu'il ne possède pas
 - Donner des conseils génériques sans référencer ses items réels
-- Afficher les IDs techniques dans tes réponses (ils sont moches et inutiles pour l'utilisateur)
+- Afficher les IDs techniques dans le texte de ta réponse (ils sont moches et inutiles pour l'utilisateur) — l'ID a sa place UNIQUEMENT dans le champ structuré suggestedReplacement, jamais dans "message"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 **QUAND PROPOSER UN REMPLACEMENT ACTIONNABLE (suggestedReplacement)** :
+
+Si l'utilisateur demande EXPLICITEMENT de changer une pièce précise de la
+tenue actuelle (pas juste "qu'est-ce que tu en penses ?" ou une question
+générale), et que cette pièce fait partie de la liste "Pièces composant
+cette tenue" ci-dessous, remplis le champ suggestedReplacement avec :
+- itemId : l'ID EXACT de cette pièce (copié tel quel depuis la liste)
+- itemDescription : sa description, pour l'affichage
+
+✅ Exemples qui DOIVENT déclencher suggestedReplacement :
+- "remplace le haut par quelque chose de plus habillé"
+- "je n'aime pas ce pantalon, change-le"
+- "propose autre chose à la place des baskets"
+
+❌ Exemples qui NE DOIVENT PAS le déclencher (laisse null) :
+- "qu'est-ce que tu penses de cette tenue ?"
+- "comment je pourrais l'accessoiriser ?"
+- toute question qui ne désigne pas une pièce précise à changer
+
+Ne propose JAMAIS de nouvel article dans ce champ — c'est la régénération
+qui choisira le remplacement parmi la garde-robe, en respectant les
+mêmes règles de style et de température que la génération normale. Ton
+rôle ici est seulement d'identifier QUELLE pièce l'utilisateur veut
+changer, pas PAR QUOI.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -476,12 +503,13 @@ ${userMessage}
 - Si tu suggères une alternative, décris-la naturellement (sans ID) et explique pourquoi
 - Si l'utilisateur n'a pas d'alternative, sois honnête
 - Reste focus sur cette tenue spécifique
-- Pas d'actions (génération) pour le moment, uniquement des conseils
+- Si tu remplis suggestedReplacement, dis dans "message" que tu proposes de remplacer cette pièce (ex: "Je te propose de remplacer le pull par autre chose de plus habillé, clique sur le bouton ci-dessous pour voir les options")
 
 🔒 **FORMAT DE RÉPONSE JSON** :
 {
   "message": "Ta réponse textuelle ici",
-  "isRejected": true/false
+  "isRejected": true/false,
+  "suggestedReplacement": { "itemId": "...", "itemDescription": "..." } ou null
 }
 
 ⚠️ Mets "isRejected": true UNIQUEMENT si la question est TOTALEMENT hors-sujet mode/style (recette, code, math, histoire, etc.)
@@ -491,9 +519,17 @@ ${userMessage}
         const result = await generateChatResponseFunctionCall({ prompt });
         const data = result.data as ChatResponse;
 
+        // Défense contre un ID halluciné : suggestedReplacement ne doit
+        // désigner qu'une pièce qui fait RÉELLEMENT partie de la tenue en
+        // cours de discussion, sinon le bouton "Appliquer" pointerait vers
+        // un article inexistant dans cette tenue.
+        const isValidReplacement = data.suggestedReplacement
+            && outfit.vetements.some(item => item.id === data.suggestedReplacement!.itemId);
+
         return {
             message: data.message,
-            isRejected: data.isRejected
+            isRejected: data.isRejected,
+            suggestedReplacement: isValidReplacement ? data.suggestedReplacement : null
         };
     } catch (error) {
         console.error("Erreur génération chat:", error);
