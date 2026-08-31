@@ -66,8 +66,15 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onTabChang
     }
   ];
 
+  const activeIndex = tabs.findIndex(tab => tab.id === activeTab);
+
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-raisin-black border-t border-black/10 dark:border-white/10 z-30 pb-8">
+      {/* Indicateur qui glisse jusqu'à l'onglet actif au lieu d'un simple changement de couleur */}
+      <div
+        className="absolute top-0 h-0.5 bg-gold rounded-full transition-transform duration-300 ease-out"
+        style={{ width: `${100 / tabs.length}%`, transform: `translateX(${activeIndex * 100}%)` }}
+      />
       <div className="flex justify-around items-center h-16">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -75,16 +82,16 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onTabChang
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`flex flex-col items-center justify-center gap-1 px-3 py-2 transition-all flex-1 ${
+              className={`flex flex-col items-center justify-center gap-1 px-3 py-2 transition-all active:scale-90 flex-1 ${
                 isActive ? 'text-gold' : 'text-gray-500 dark:text-gray-400'
               }`}
             >
-              <div className="relative">
+              <div className={`relative transition-transform duration-200 ${isActive ? 'scale-110' : ''}`}>
                 {tab.icon}
                 {tab.count !== null && tab.count > 0 && (
                   <span className={`absolute -top-1 -right-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                    isActive 
-                      ? 'bg-gold text-onyx' 
+                    isActive
+                      ? 'bg-gold text-onyx'
                       : 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
                   }`}>
                     {tab.count}

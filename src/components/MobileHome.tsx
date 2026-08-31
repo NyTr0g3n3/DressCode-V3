@@ -51,7 +51,7 @@ const MobileHome: React.FC<MobileHomeProps> = ({
             <button
               onClick={onAnalyzeWardrobe}
               disabled={isAnalyzingWardrobe}
-              className="w-full text-left disabled:opacity-70"
+              className="w-full text-left transition-transform active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
             >
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-gold rounded-xl flex items-center justify-center flex-shrink-0">
@@ -95,7 +95,7 @@ const MobileHome: React.FC<MobileHomeProps> = ({
         {/* Créateur de Tenues */}
         <button
           onClick={onScrollToOutfits}
-          className="w-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-2 border-purple-500/30 rounded-2xl p-5 text-left transition-all active:scale-98"
+          className="w-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-2 border-purple-500/30 rounded-2xl p-5 text-left transition-all active:scale-[0.98]"
         >
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -118,7 +118,7 @@ const MobileHome: React.FC<MobileHomeProps> = ({
         {/* Planificateur de Valise */}
         <button
           onClick={onScrollToVacation}
-          className="w-full bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30 rounded-2xl p-5 text-left transition-all active:scale-98"
+          className="w-full bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-2 border-blue-500/30 rounded-2xl p-5 text-left transition-all active:scale-[0.98]"
         >
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0">
