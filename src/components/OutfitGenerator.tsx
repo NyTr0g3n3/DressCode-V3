@@ -1,7 +1,7 @@
 import React from 'react';
 import { SparklesIcon } from './icons.tsx';
 import type { ClothingItem, ClothingSet } from '../types';
-import { buildWeatherContext } from '../utils/weatherContext.ts';
+import { buildWeatherContext, getWeatherDayLabel, type WeatherDay, type TomorrowForecast } from '../utils/weatherContext.ts';
 
 interface OutfitGeneratorProps {
   onGenerate: (occasion: string) => void; // 'context' devient 'occasion'
@@ -9,6 +9,9 @@ interface OutfitGeneratorProps {
   weatherInfo: string | null; // Nouvelle prop
   weatherError: string | null; // Nouvelle prop
   weatherMaxToday?: number | null; // Température max prévue pour le reste de la journée
+  weatherDay: WeatherDay; // Aujourd'hui ou demain (préparer sa tenue le soir pour le lendemain)
+  onChangeWeatherDay: (day: WeatherDay) => void;
+  tomorrowForecast?: TomorrowForecast | null;
   anchorItem?: ClothingItem | ClothingSet | null; // Item ancré pour générer une tenue autour de lui
   onClearAnchor?: () => void; // Fonction pour effacer l'ancre
 }
@@ -19,10 +22,13 @@ const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({
   weatherInfo,
   weatherError,
   weatherMaxToday,
+  weatherDay,
+  onChangeWeatherDay,
+  tomorrowForecast,
   anchorItem,
   onClearAnchor
 }) => {
-  const displayedWeather = buildWeatherContext(weatherInfo, weatherMaxToday);
+  const displayedWeather = buildWeatherContext(weatherDay, weatherInfo, weatherMaxToday, tomorrowForecast);
   const [occasion, setOccasion] = React.useState(''); // 'context' renommé en 'occasion'
 
   // Obtenir le nom/description de l'item ancré
@@ -66,9 +72,38 @@ const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({
 
       {/* AFFICHAGE DE LA MÉTÉO */}
       <div className="text-center mb-6 p-3 rounded-lg bg-snow dark:bg-onyx border border-black/10 dark:border-white/10">
+        <div className="flex justify-center gap-1.5 mb-2">
+          <button
+            type="button"
+            onClick={() => onChangeWeatherDay('today')}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+              weatherDay === 'today'
+                ? 'bg-gold text-onyx'
+                : 'bg-white dark:bg-raisin-black border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400'
+            }`}
+          >
+            Aujourd'hui
+          </button>
+          <button
+            type="button"
+            onClick={() => onChangeWeatherDay('tomorrow')}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+              weatherDay === 'tomorrow'
+                ? 'bg-gold text-onyx'
+                : 'bg-white dark:bg-raisin-black border border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400'
+            }`}
+          >
+            Demain
+          </button>
+        </div>
         {displayedWeather && (
           <p className="text-sm font-medium text-blue-500 dark:text-blue-400">
-            Météo : {displayedWeather} 📍
+            {getWeatherDayLabel(weatherDay)} : {displayedWeather} 📍
+          </p>
+        )}
+        {!displayedWeather && weatherDay === 'tomorrow' && !weatherError && (
+          <p className="text-sm font-medium text-gray-400">
+            Prévisions pour demain indisponibles.
           </p>
         )}
         {weatherError && (

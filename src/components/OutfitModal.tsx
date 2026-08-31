@@ -3,6 +3,7 @@ import { BottomSheet } from 'react-spring-bottom-sheet';
 import OutfitGenerator from './OutfitGenerator';
 import OutfitDisplay from './OutfitDisplay';
 import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit, OutfitItem } from '../types';
+import type { WeatherDay, TomorrowForecast } from '../utils/weatherContext';
 
 interface OutfitModalProps {
   open: boolean;
@@ -15,6 +16,9 @@ interface OutfitModalProps {
   weatherInfo: string | null;
   weatherError: string | null;
   weatherMaxToday?: number | null;
+  weatherDay: WeatherDay;
+  onChangeWeatherDay: (day: WeatherDay) => void;
+  tomorrowForecast?: TomorrowForecast | null;
   favoriteOutfits: FavoriteOutfit[];
   onToggleFavorite: (outfit: OutfitSuggestion) => void;
   onGenerateVisual: (outfit: OutfitSuggestion) => void;
@@ -38,6 +42,9 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
   weatherInfo,
   weatherError,
   weatherMaxToday,
+  weatherDay,
+  onChangeWeatherDay,
+  tomorrowForecast,
   favoriteOutfits,
   onToggleFavorite,
   onGenerateVisual,
@@ -95,6 +102,9 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
           weatherInfo={weatherInfo}
           weatherError={weatherError}
           weatherMaxToday={weatherMaxToday}
+          weatherDay={weatherDay}
+          onChangeWeatherDay={onChangeWeatherDay}
+          tomorrowForecast={tomorrowForecast}
           anchorItem={anchorItem}
           onClearAnchor={onClearAnchor}
         />

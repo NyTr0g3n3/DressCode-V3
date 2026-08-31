@@ -34,7 +34,7 @@ import { HeartIconSolid, ChevronDownIcon } from './components/icons.tsx';
 import { useWeather } from './hooks/useWeather.ts';
 import { useToast } from './hooks/useToast.ts';
 import { useMobileWardrobeFilters } from './hooks/useMobileWardrobeFilters.ts';
-import { buildWeatherContext } from './utils/weatherContext.ts';
+import { buildWeatherContext, buildReferenceWeatherInfo, getDefaultWeatherDay, getWeatherDayLabel, type WeatherDay } from './utils/weatherContext.ts';
 import MobileWardrobeView from './components/MobileWardrobeView.tsx';
 
 
@@ -90,7 +90,8 @@ const AppContent: React.FC = () => {
   const [showFavoriteModal, setShowFavoriteModal] = useState(false);
   const [showWornOutfitsModal, setShowWornOutfitsModal] = useState(false);
   const [showModelProfileModal, setShowModelProfileModal] = useState(false); // État pour la modale profil
-  const { weatherInfo, weatherError, weatherMaxToday } = useWeather();
+  const { weatherInfo, weatherError, weatherMaxToday, tomorrowForecast } = useWeather();
+  const [weatherDay, setWeatherDay] = useState<WeatherDay>(() => getDefaultWeatherDay());
   const prevItemCountRef = useRef(0);
 
   const [generatingVisualFor, setGeneratingVisualFor] = useState<string | null>(null);
@@ -193,17 +194,18 @@ const AppContent: React.FC = () => {
     // Utiliser l'ancre depuis l'état si aucune n'est passée en paramètre
     const effectiveAnchor = anchorItem || anchorItemForGeneration;
 
-    const enrichedWeather = buildWeatherContext(weatherInfo, weatherMaxToday);
+    const enrichedWeather = buildWeatherContext(weatherDay, weatherInfo, weatherMaxToday, tomorrowForecast);
     const fullContext = enrichedWeather
-      ? `Météo actuelle : ${enrichedWeather}. Occasion : ${occasion}`
+      ? `${getWeatherDayLabel(weatherDay)} : ${enrichedWeather}. Occasion : ${occasion}`
       : `Occasion : ${occasion}`;
 
     try {
-      // Note : le dernier paramètre reste la météo actuelle "brute" (non
-      // enrichie du max du jour) — les contraintes dures (short si < 22°C)
-      // doivent rester basées sur la température actuelle, voir
-      // outfitConstraints.ts.
-      const outfits = await generateOutfits(safeClothingItems, safeClothingSets, fullContext, effectiveAnchor || undefined, wornOutfitsLast7Days, favoriteOutfits, weatherInfo);
+      // Note : le dernier paramètre est la météo de référence pour les
+      // contraintes dures (short si < 22°C, etc.) — la météo actuelle en
+      // mode "aujourd'hui", ou la prévision du matin en mode "demain" (voir
+      // outfitConstraints.ts et weatherContext.ts).
+      const referenceWeatherInfo = buildReferenceWeatherInfo(weatherDay, weatherInfo, tomorrowForecast);
+      const outfits = await generateOutfits(safeClothingItems, safeClothingSets, fullContext, effectiveAnchor || undefined, wornOutfitsLast7Days, favoriteOutfits, referenceWeatherInfo);
       setSuggestedOutfits(outfits);
       setAnchorItemForGeneration(null); // Réinitialiser l'ancre après génération
     } catch (err) {
@@ -211,7 +213,7 @@ const AppContent: React.FC = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [safeClothingItems, safeClothingSets, weatherInfo, weatherMaxToday, anchorItemForGeneration, wornOutfitsLast7Days, favoriteOutfits]);
+  }, [safeClothingItems, safeClothingSets, weatherInfo, weatherMaxToday, weatherDay, tomorrowForecast, anchorItemForGeneration, wornOutfitsLast7Days, favoriteOutfits]);
 
   const handleGenerateVariants = useCallback(async (outfit: OutfitSuggestion, itemsToReplace: OutfitItem[]) => {
     if (safeClothingItems.length === 0) {
@@ -221,23 +223,23 @@ const AppContent: React.FC = () => {
     setIsGenerating(true);
     setError(null);
 
-    const enrichedWeather = buildWeatherContext(weatherInfo, weatherMaxToday);
+    const enrichedWeather = buildWeatherContext(weatherDay, weatherInfo, weatherMaxToday, tomorrowForecast);
     const fullContext = enrichedWeather
-      ? `Météo actuelle : ${enrichedWeather}. Contexte original : ${outfit.description}`
+      ? `${getWeatherDayLabel(weatherDay)} : ${enrichedWeather}. Contexte original : ${outfit.description}`
       : `Contexte original : ${outfit.description}`;
 
     try {
-      // Le dernier paramètre reste la météo actuelle "brute" (non enrichie
-      // du max du jour) — mêmes contraintes dures que la génération
-      // initiale, voir outfitConstraints.ts.
-      const variants = await generateOutfitVariants(safeClothingItems, safeClothingSets, fullContext, outfit, itemsToReplace, weatherInfo);
+      // Mêmes contraintes dures que la génération initiale, voir
+      // outfitConstraints.ts et weatherContext.ts.
+      const referenceWeatherInfo = buildReferenceWeatherInfo(weatherDay, weatherInfo, tomorrowForecast);
+      const variants = await generateOutfitVariants(safeClothingItems, safeClothingSets, fullContext, outfit, itemsToReplace, referenceWeatherInfo);
       setSuggestedOutfits(variants);
     } catch (err) {
       setError(getUserFriendlyError(err));
     } finally {
       setIsGenerating(false);
     }
-  }, [safeClothingItems, safeClothingSets, weatherInfo, weatherMaxToday]);
+  }, [safeClothingItems, safeClothingSets, weatherInfo, weatherMaxToday, weatherDay, tomorrowForecast]);
 
   const handleOpenChat = useCallback((outfit: OutfitSuggestion) => {
     setChatOutfit(outfit);
@@ -627,6 +629,9 @@ useEffect(() => {
                 weatherInfo={weatherInfo}
                 weatherError={weatherError}
                 weatherMaxToday={weatherMaxToday}
+                weatherDay={weatherDay}
+                onChangeWeatherDay={setWeatherDay}
+                tomorrowForecast={tomorrowForecast}
                 anchorItem={anchorItemForGeneration}
                 onClearAnchor={() => setAnchorItemForGeneration(null)}
               />
@@ -812,6 +817,9 @@ useEffect(() => {
         weatherInfo={weatherInfo}
         weatherError={weatherError}
         weatherMaxToday={weatherMaxToday}
+        weatherDay={weatherDay}
+        onChangeWeatherDay={setWeatherDay}
+        tomorrowForecast={tomorrowForecast}
         anchorItem={anchorItemForGeneration}
         onClearAnchor={() => setAnchorItemForGeneration(null)}
         {...outfitInteractionProps}
