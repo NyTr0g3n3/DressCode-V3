@@ -53,31 +53,36 @@ export const QuestionMarkIcon: React.FC = () => (
 
 export const TshirtIcon: React.FC = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 4h6l2 5-2 1-3-4-3 4-2-1 2-5z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v10m-3-10v10h6V10" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 3L4 6.5L6 9.5L8.5 8V20.5H15.5V8L18 9.5L20 6.5L15.5 3C15.5 4.38 13.93 5.5 12 5.5C10.07 5.5 8.5 4.38 8.5 3Z" />
   </svg>
 );
 
 export const PantIcon: React.FC = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 4h12v10H6z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 14v6h-2L6 4" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 14v6h2l1-16" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 3H18V21H14L12 10L10 21H6V3Z" />
+    <line strokeLinecap="round" x1="6" y1="7" x2="18" y2="7" />
   </svg>
 );
 
 export const ShoeIcon: React.FC = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-     <path strokeLinecap="round" strokeLinejoin="round" d="M4 18h16l-3-6H7L4 18z" />
-     <path strokeLinecap="round" strokeLinejoin="round" d="M10 12V7a2 2 0 012-2h0a2 2 0 012 2v5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 18.5L3 13C3 11.9 3.9 11 5 11L9.5 11L11 8.5C11.3 8 12 7.9 12.4 8.3L14 10C14.3 10.3 14.7 10.5 15.1 10.5L17 10.5C19.2 10.5 21 12.3 21 14.5V17.5C21 18.1 20.6 18.5 20 18.5Z" />
+    <line strokeLinecap="round" x1="9" y1="14" x2="17" y2="14" />
+    <line strokeLinecap="round" x1="10" y1="12" x2="12.5" y2="13.7" />
+    <line strokeLinecap="round" x1="12" y1="11.3" x2="14" y2="13" />
   </svg>
 );
 
+// Montre : bracelet + cadran, plus reconnaissable comme "accessoire" qu'un
+// simple cercle avec des aiguilles (l'ancienne version). Les Accessoires
+// couvrent aussi ceintures/lunettes/sacs/bijoux — aucune icône unique ne
+// les représente toutes, la montre reste le choix le plus universel.
 export const AccessoryIcon: React.FC = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 000-18 9 9 0 000 18z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 11.5l-3.5 3.5" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.5 8.5l-3.5 3.5" />
+    <circle cx="12" cy="12" r="6" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9V12L14 13.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 3.5H14.5V6H9.5V3.5Z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 18H14.5V20.5H9.5V18Z" />
   </svg>
 );
 
