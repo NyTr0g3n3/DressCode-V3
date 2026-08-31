@@ -1,5 +1,6 @@
 import React from 'react';
 import type { MobileTab } from '../types';
+import { TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon } from './icons.tsx';
 
 interface MobileBottomNavProps {
   activeTab: MobileTab;
@@ -27,41 +28,25 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onTabChang
     {
       id: 'hauts' as MobileTab,
       label: 'Hauts',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-        </svg>
-      ),
+      icon: <TshirtIcon />,
       count: counts.hauts
     },
     {
       id: 'bas' as MobileTab,
       label: 'Bas',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-        </svg>
-      ),
+      icon: <PantIcon />,
       count: counts.bas
     },
     {
       id: 'chaussures' as MobileTab,
       label: 'Chaussures',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-        </svg>
-      ),
+      icon: <ShoeIcon />,
       count: counts.chaussures
     },
     {
       id: 'accessoires' as MobileTab,
       label: 'Accessoires',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-        </svg>
-      ),
+      icon: <AccessoryIcon />,
       count: counts.accessoires
     }
   ];
@@ -89,7 +74,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ activeTab, onTabChang
               <div className={`relative transition-transform duration-200 ${isActive ? 'scale-110' : ''}`}>
                 {tab.icon}
                 {tab.count !== null && tab.count > 0 && (
-                  <span className={`absolute -top-1 -right-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                  <span className={`absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 flex items-center justify-center text-[9px] font-bold rounded-full ring-2 ring-white dark:ring-raisin-black ${
                     isActive
                       ? 'bg-gold text-onyx'
                       : 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
