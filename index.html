@@ -2,7 +2,7 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>DressCode</title>
@@ -46,6 +46,11 @@
     padding-right: env(safe-area-inset-right);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
+    /* Empêche le double-tap zoom sur mobile (le zoom pincé est déjà
+       bloqué par maximum-scale=1/user-scalable=no dans le <meta
+       viewport>, mais certains navigateurs déclenchent aussi un zoom
+       au double-tap, un geste distinct que cette propriété désactive). */
+    touch-action: manipulation;
   }
   
   /* Fix z-index pour react-spring-bottom-sheet */
