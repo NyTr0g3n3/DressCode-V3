@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { motion } from 'framer-motion';
-import type { OutfitSuggestion, ClothingItem, ClothingSet, OutfitItem, FavoriteOutfit } from '../types.ts';
-import { QuestionMarkIcon, XIcon, HeartIcon, HeartIconSolid, MagicWandIcon, LoadingSpinner } from './icons.tsx';
+import type { OutfitSuggestion, ClothingItem, ClothingSet, OutfitItem, FavoriteOutfit, DislikedOutfit } from '../types.ts';
+import { QuestionMarkIcon, XIcon, HeartIcon, HeartIconSolid, ThumbsDownIcon, ThumbsDownIconSolid, MagicWandIcon, LoadingSpinner } from './icons.tsx';
 
 // FEATURE FLAG: Fonctionnalité de génération visuelle désactivée temporairement
 // TODO: Réactiver quand une solution viable sera trouvée
@@ -12,7 +12,9 @@ interface OutfitDisplayProps {
   allClothingItems: ClothingItem[];
   allClothingSets: ClothingSet[];
   favoriteOutfits: FavoriteOutfit[];
+  dislikedOutfits: DislikedOutfit[];
   onToggleFavorite: (outfit: OutfitSuggestion) => void;
+  onToggleDislike: (outfit: OutfitSuggestion) => void;
   onGenerateVisual: (outfit: OutfitSuggestion) => void;
   generatingVisualFor: string | null;
   selectedOutfit: OutfitSuggestion | null;
@@ -27,7 +29,9 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
   allClothingItems,
   allClothingSets,
   favoriteOutfits,
+  dislikedOutfits,
   onToggleFavorite,
+  onToggleDislike,
   onGenerateVisual,
   generatingVisualFor,
   selectedOutfit,
@@ -130,6 +134,9 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
           const isFavorite = favoriteOutfits.some(
             (fav) => fav.titre === outfit.titre && fav.description === outfit.description
           );
+          const isDisliked = dislikedOutfits.some(
+            (d) => d.titre === outfit.titre && d.description === outfit.description
+          );
           const isLoadingVisual = generatingVisualFor === outfit.titre;
           const isSelected = selectedOutfit?.titre === outfit.titre && selectedOutfit?.description === outfit.description;
 
@@ -216,6 +223,14 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
                       aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
                     >
                       {isFavorite ? <HeartIconSolid className="w-6 h-6 text-gold" /> : <HeartIcon className="w-6 h-6" />}
+                    </button>
+                    <button
+                      onClick={() => onToggleDislike(outfit)}
+                      className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                      aria-label={isDisliked ? "Retirer des tenues à éviter" : "Je n'aime pas cette tenue"}
+                      title={isDisliked ? "Retirer des tenues à éviter" : "Je n'aime pas cette tenue"}
+                    >
+                      {isDisliked ? <ThumbsDownIconSolid className="w-6 h-6 text-gray-600 dark:text-gray-300" /> : <ThumbsDownIcon className="w-6 h-6" />}
                     </button>
                   </div>
               </div>

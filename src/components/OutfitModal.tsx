@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react'; // 'useState' n'est pas néces
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import OutfitGenerator from './OutfitGenerator';
 import OutfitDisplay from './OutfitDisplay';
-import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit, OutfitItem } from '../types';
+import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit, DislikedOutfit, OutfitItem } from '../types';
 import type { WeatherDay, TomorrowForecast } from '../utils/weatherContext';
 
 interface OutfitModalProps {
@@ -20,7 +20,9 @@ interface OutfitModalProps {
   onChangeWeatherDay: (day: WeatherDay) => void;
   tomorrowForecast?: TomorrowForecast | null;
   favoriteOutfits: FavoriteOutfit[];
+  dislikedOutfits: DislikedOutfit[];
   onToggleFavorite: (outfit: OutfitSuggestion) => void;
+  onToggleDislike: (outfit: OutfitSuggestion) => void;
   onGenerateVisual: (outfit: OutfitSuggestion) => void;
   generatingVisualFor: string | null;
   selectedOutfit: OutfitSuggestion | null;
@@ -46,7 +48,9 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
   onChangeWeatherDay,
   tomorrowForecast,
   favoriteOutfits,
+  dislikedOutfits,
   onToggleFavorite,
+  onToggleDislike,
   onGenerateVisual,
   generatingVisualFor,
   selectedOutfit,
@@ -129,7 +133,9 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
               allClothingItems={clothingItems}
               allClothingSets={clothingSets}
               favoriteOutfits={favoriteOutfits}
+              dislikedOutfits={dislikedOutfits}
               onToggleFavorite={onToggleFavorite}
+              onToggleDislike={onToggleDislike}
               onGenerateVisual={onGenerateVisual}
               generatingVisualFor={generatingVisualFor}
               selectedOutfit={selectedOutfit}

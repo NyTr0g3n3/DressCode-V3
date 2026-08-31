@@ -1,7 +1,7 @@
 import React from 'react';
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import OutfitDisplay from './OutfitDisplay';
-import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit, OutfitItem } from '../types';
+import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit, DislikedOutfit, OutfitItem } from '../types';
 
 interface FavoriteOutfitsModalProps {
   open: boolean;
@@ -9,7 +9,9 @@ interface FavoriteOutfitsModalProps {
   allClothingItems: ClothingItem[];
   allClothingSets: ClothingSet[];
   favoriteOutfits: FavoriteOutfit[];
+  dislikedOutfits: DislikedOutfit[];
   onToggleFavorite: (outfit: OutfitSuggestion) => void;
+  onToggleDislike: (outfit: OutfitSuggestion) => void;
   onGenerateVisual: (outfit: OutfitSuggestion) => void;
   generatingVisualFor: string | null;
   selectedOutfit: OutfitSuggestion | null;
@@ -25,7 +27,9 @@ const FavoriteOutfitsModal: React.FC<FavoriteOutfitsModalProps> = ({
   allClothingItems,
   allClothingSets,
   favoriteOutfits,
+  dislikedOutfits,
   onToggleFavorite,
+  onToggleDislike,
   onGenerateVisual,
   generatingVisualFor,
   selectedOutfit,
@@ -69,7 +73,9 @@ snapPoints={({ maxHeight }) => [
             allClothingItems={allClothingItems}
             allClothingSets={allClothingSets}
             favoriteOutfits={favoriteOutfits}
+            dislikedOutfits={dislikedOutfits}
             onToggleFavorite={onToggleFavorite}
+            onToggleDislike={onToggleDislike}
             onGenerateVisual={onGenerateVisual}
             generatingVisualFor={generatingVisualFor}
             selectedOutfit={selectedOutfit}

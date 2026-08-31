@@ -1,8 +1,8 @@
-import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, ChatMessage, ChatResponse, OutfitItem, OutfitWearHistory, FavoriteOutfit } from '../types';
+import type { ClothingItem, OutfitSuggestion, ClothingSet, VacationPlan, WardrobeAnalysis, ChatMessage, ChatResponse, OutfitItem, OutfitWearHistory, FavoriteOutfit, DislikedOutfit } from '../types';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 import { STYLE_RULES, ACCESSORY_RULES } from '../prompts/sharedStyleRules';
-import { buildFavoritesInstruction } from '../prompts/personalization';
+import { buildFavoritesInstruction, buildDislikesInstruction } from '../prompts/personalization';
 import { validateAndFixOutfitIds, validateAndFixVacationPlanIds } from '../utils/outfitValidation';
 import { parseTemperatureCelsius, filterOutfitsByHardConstraints } from '../utils/outfitConstraints';
 
@@ -43,7 +43,8 @@ export async function generateOutfits(
     anchorItemOrSet?: ClothingItem | ClothingSet,
     wornOutfits?: OutfitWearHistory[],
     favoriteOutfits?: FavoriteOutfit[],
-    weatherInfo?: string | null
+    weatherInfo?: string | null,
+    dislikedOutfits?: DislikedOutfit[]
 ): Promise<OutfitSuggestion[]> {
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
     // Filtrer les items exclus ET ceux qui sont dans des ensembles
@@ -120,9 +121,10 @@ Si une tenue n'inclut pas cet article, elle est INVALIDE.
         : '';
 
     const favoritesInstruction = buildFavoritesInstruction(favoriteOutfits, clothingList, sets);
+    const dislikesInstruction = buildDislikesInstruction(dislikedOutfits, clothingList, sets);
 
     const prompt = `Tu es un styliste expert. Crée 3 tenues complètes et harmonieuses pour : "${context}".
-${anchorInstruction}${favoritesInstruction}${recentlyWornInstruction}
+${anchorInstruction}${favoritesInstruction}${dislikesInstruction}${recentlyWornInstruction}
 Vêtements disponibles :
 ${availableClothes}
 

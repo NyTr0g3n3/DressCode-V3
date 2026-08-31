@@ -31,6 +31,16 @@ export interface FavoriteOutfit {
   vetements: OutfitItem[];
 }
 
+// Symétrique de FavoriteOutfit : tenue explicitement écartée par
+// l'utilisateur, sert de signal négatif (voir styleProfile.ts) pour éviter
+// à l'avenir les couleurs/matières qui reviennent dans ces refus.
+export interface DislikedOutfit {
+  id: string; // ID du document Firestore
+  titre: string;
+  description: string;
+  vetements: OutfitItem[];
+}
+
 export interface OutfitItem {
   id: string; // L'ID de l'article (item) ou de l'ensemble (set)
   description: string; // La description (ex: "T-shirt bleu")

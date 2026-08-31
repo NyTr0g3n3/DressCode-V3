@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User } from 'firebase/auth';
-import type { ClothingItem, ClothingSet, FavoriteOutfit, OutfitSuggestion, OutfitWearHistory } from '../types';
+import type { ClothingItem, ClothingSet, FavoriteOutfit, DislikedOutfit, OutfitSuggestion, OutfitWearHistory } from '../types';
 import {
   listenToClothingItems,
   listenToClothingSets,
@@ -12,6 +12,9 @@ import {
   listenToFavoriteOutfits,
   addFavoriteOutfit,
   deleteFavoriteOutfit,
+  listenToDislikedOutfits,
+  addDislikedOutfit,
+  deleteDislikedOutfit,
   listenToWearHistory,
   addOutfitWearHistory
 } from '../services/firestoreService';
@@ -22,6 +25,7 @@ interface WardrobeContextType {
   clothingItems: ClothingItem[];
   clothingSets: ClothingSet[];
   favoriteOutfits: FavoriteOutfit[];
+  dislikedOutfits: DislikedOutfit[];
   wearHistory: OutfitWearHistory[];
   userModelImage: string | null;
   setUserModelImage: (url: string | null) => void;
@@ -34,6 +38,8 @@ interface WardrobeContextType {
   deleteClothingSet: (setId: string) => Promise<void>;
   addFavoriteOutfit: (outfit: OutfitSuggestion) => Promise<void>;
   deleteFavoriteOutfit: (outfitId: string) => Promise<void>;
+  addDislikedOutfit: (outfit: OutfitSuggestion) => Promise<void>;
+  deleteDislikedOutfit: (outfitId: string) => Promise<void>;
   recordOutfitWear: (outfitTitle: string, outfitDescription: string, itemIds: string[]) => Promise<void>;
   getItemWearCount: (itemId: string) => number;
   getWornOutfitsLast7Days: () => OutfitWearHistory[];
@@ -79,6 +85,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
   const [clothingItems, setClothingItems] = useState<ClothingItem[]>([]);
   const [clothingSets, setClothingSets] = useState<ClothingSet[]>([]);
   const [favoriteOutfits, setFavoriteOutfits] = useState<FavoriteOutfit[]>([]);
+  const [dislikedOutfits, setDislikedOutfits] = useState<DislikedOutfit[]>([]);
   const [wearHistory, setWearHistory] = useState<OutfitWearHistory[]>([]);
   const [userModelImage, setUserModelImage] = useState<string | null>(localStorage.getItem('dressmup_user_model_url'));
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -106,6 +113,10 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
         setFavoriteOutfits(favs);
       });
 
+      const unsubscribeDislikes = listenToDislikedOutfits(user.uid, (dislikes) => {
+        setDislikedOutfits(dislikes);
+      });
+
       const unsubscribeHistory = listenToWearHistory(user.uid, (history) => {
         setWearHistory(history);
       });
@@ -114,12 +125,14 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
         unsubscribeItems();
         unsubscribeSets();
         unsubscribeFavs();
+        unsubscribeDislikes();
         unsubscribeHistory();
       };
     } else {
       setClothingItems([]);
       setClothingSets([]);
       setFavoriteOutfits([]);
+      setDislikedOutfits([]);
       setWearHistory([]);
       setLoading(false);
     }
@@ -192,6 +205,16 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
     await deleteFavoriteOutfit(user.uid, outfitId);
   }, [user]);
 
+  const addDislikedOutfitCallback = useCallback(async (outfit: OutfitSuggestion) => {
+    if (!user) return;
+    await addDislikedOutfit(user.uid, outfit);
+  }, [user]);
+
+  const deleteDislikedOutfitCallback = useCallback(async (outfitId: string) => {
+    if (!user) return;
+    await deleteDislikedOutfit(user.uid, outfitId);
+  }, [user]);
+
   const createClothingSetCallback = useCallback(async (name: string, itemIds: string[]) => {
     if (!user) return;
     const firstItemImage = clothingItems.find(item => item.id === itemIds[0])?.imageSrc || '';
@@ -227,6 +250,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
     clothingItems,
     clothingSets,
     favoriteOutfits,
+    dislikedOutfits,
     wearHistory,
     userModelImage,
     setUserModelImage,
@@ -239,6 +263,8 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children, us
     deleteClothingSet: deleteClothingSetCallback,
     addFavoriteOutfit: addFavoriteOutfitCallback,
     deleteFavoriteOutfit: deleteFavoriteOutfitCallback,
+    addDislikedOutfit: addDislikedOutfitCallback,
+    deleteDislikedOutfit: deleteDislikedOutfitCallback,
     recordOutfitWear: recordOutfitWearCallback,
     getItemWearCount,
     getWornOutfitsLast7Days,

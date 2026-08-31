@@ -1,10 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { buildFavoritesInstruction } from './personalization';
-import type { ClothingItem, FavoriteOutfit } from '../types';
+import { buildFavoritesInstruction, buildDislikesInstruction } from './personalization';
+import type { ClothingItem, FavoriteOutfit, DislikedOutfit } from '../types';
 
 const makeFavorite = (i: number): FavoriteOutfit => ({
   id: `fav-${i}`,
   titre: `Look ${i}`,
+  description: `Description ${i}`,
+  vetements: [],
+});
+
+const makeDislike = (i: number): DislikedOutfit => ({
+  id: `dislike-${i}`,
+  titre: `Look évité ${i}`,
   description: `Description ${i}`,
   vetements: [],
 });
@@ -73,5 +80,36 @@ describe('buildFavoritesInstruction', () => {
     expect(result).toContain('Tendances calculées');
     expect(result).toContain('Bleu marine');
     expect(result).toContain('Noir');
+  });
+});
+
+describe('buildDislikesInstruction', () => {
+  it('retourne une chaîne vide sans tenue écartée', () => {
+    expect(buildDislikesInstruction(undefined)).toBe('');
+    expect(buildDislikesInstruction([])).toBe('');
+  });
+
+  it('inclut le titre et la description de chaque tenue écartée', () => {
+    const result = buildDislikesInstruction([makeDislike(1), makeDislike(2)]);
+    expect(result).toContain('Look évité 1');
+    expect(result).toContain('Look évité 2');
+  });
+
+  it('plafonne à 8 tenues écartées pour ne pas faire exploser le prompt', () => {
+    const dislikes = Array.from({ length: 12 }, (_, i) => makeDislike(i + 1));
+    const result = buildDislikesInstruction(dislikes);
+
+    expect(result).not.toContain('Look évité 1"');
+    expect(result).toContain('Look évité 12');
+  });
+
+  it("précise que ce n'est pas une interdiction absolue (pas de sur-contrainte)", () => {
+    const result = buildDislikesInstruction([makeDislike(1)]);
+    expect(result.toLowerCase()).toContain('pas une interdiction absolue');
+  });
+
+  it("précise que l'info ne doit jamais l'emporter sur les règles strictes", () => {
+    const result = buildDislikesInstruction([makeDislike(1)]);
+    expect(result.toLowerCase()).toContain('jamais');
   });
 });

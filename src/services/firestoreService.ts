@@ -11,7 +11,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import type { ClothingItem, ClothingSet, FavoriteOutfit, OutfitSuggestion, OutfitWearHistory } from '../types';
+import type { ClothingItem, ClothingSet, FavoriteOutfit, DislikedOutfit, OutfitSuggestion, OutfitWearHistory } from '../types';
 
 // imageSrc est optionnel à la création : le doc est créé d'abord pour obtenir
 // un ID Firestore, puis l'image est uploadée sous cet ID et patchée ensuite
@@ -139,6 +139,44 @@ export const deleteFavoriteOutfit = async (userId: string, outfitId: string) => 
     await deleteDoc(favDoc);
   } catch (error) {
     console.error("Erreur lors de la suppression d'une tenue favorite:", error);
+    throw error;
+  }
+};
+
+// --- DISLIKED OUTFITS (signal négatif, symétrique aux favoris) ---
+
+export const listenToDislikedOutfits = (userId: string, callback: (outfits: DislikedOutfit[]) => void) => {
+  const dislikesCol = collection(db, 'users', userId, 'dislikedOutfits');
+  const q = query(dislikesCol);
+  const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const outfits = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as DislikedOutfit));
+    callback(outfits);
+  }, (error) => {
+    console.error('Erreur (dislikedOutfits listener):', error);
+  });
+  return unsubscribe;
+};
+
+export const addDislikedOutfit = async (userId: string, outfit: Omit<OutfitSuggestion, 'id'>): Promise<string> => {
+  try {
+    const dislikesCol = collection(db, 'users', userId, 'dislikedOutfits');
+    const docRef = await addDoc(dislikesCol, outfit);
+    return docRef.id;
+  } catch (error) {
+    console.error("Erreur lors de l'ajout d'une tenue non aimée:", error);
+    throw error;
+  }
+};
+
+export const deleteDislikedOutfit = async (userId: string, outfitId: string) => {
+  try {
+    const dislikeDoc = doc(db, 'users', userId, 'dislikedOutfits', outfitId);
+    await deleteDoc(dislikeDoc);
+  } catch (error) {
+    console.error("Erreur lors de la suppression d'une tenue non aimée:", error);
     throw error;
   }
 };

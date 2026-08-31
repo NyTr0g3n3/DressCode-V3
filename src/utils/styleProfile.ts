@@ -1,10 +1,10 @@
-import type { ClothingItem, ClothingSet, FavoriteOutfit } from '../types';
+import type { ClothingItem, ClothingSet, OutfitItem } from '../types';
 import { resolveOutfitItems } from './outfitConstraints';
 
-// En dessous de ce nombre de favoris, une "tendance" calculée serait plus
+// En dessous de ce nombre de tenues, une "tendance" calculée serait plus
 // du bruit qu'un vrai signal (même philosophie que parseTemperatureCelsius :
 // mieux vaut ne rien dire que dire une donnée non fiable).
-const MIN_FAVORITES_FOR_PROFILE = 3;
+const MIN_OUTFITS_FOR_PROFILE = 3;
 const TOP_N = 3;
 
 export interface StyleProfileEntry {
@@ -13,7 +13,7 @@ export interface StyleProfileEntry {
 }
 
 export interface StyleProfile {
-  favoriteCount: number;
+  outfitCount: number;
   topColors: StyleProfileEntry[];
   topMaterials: StyleProfileEntry[];
 }
@@ -31,11 +31,12 @@ function topEntries(values: string[], limit: number): StyleProfileEntry[] {
 }
 
 /**
- * Calcule un résumé statistique du style de l'utilisateur à partir de
- * TOUTES ses tenues favorites (pas seulement les plus récentes, contrairement
- * au bloc "liste brute" de personalization.ts, plafonné à 8 pour ne pas faire
- * exploser le prompt) — couleurs et matières qui reviennent le plus souvent
- * parmi les articles réellement portés dans ces tenues.
+ * Calcule un résumé statistique du style à partir de TOUTES les tenues
+ * d'une liste (favorites OU disliked — n'importe quelle liste de tenues
+ * ayant un champ `vetements`, pas seulement les plus récentes, contrairement
+ * au bloc "liste brute" de personalization.ts, plafonné à 8 pour ne pas
+ * faire exploser le prompt) — couleurs et matières qui reviennent le plus
+ * souvent parmi les articles réellement portés dans ces tenues.
  *
  * Contrairement au bloc brut, qui laisse le LLM déduire ces tendances
  * lui-même en lisant des descriptions en texte libre, ces chiffres sont
@@ -44,21 +45,21 @@ function topEntries(values: string[], limit: number): StyleProfileEntry[] {
  * génération à l'autre, plutôt que ré-devinés (et potentiellement
  * différents) à chaque appel.
  *
- * Retourne null s'il n'y a pas assez de favoris, ou si aucun des articles
- * qu'ils contiennent n'a pu être résolu (ex: garde-robe/favoris désynchro).
+ * Retourne null s'il n'y a pas assez de tenues, ou si aucun des articles
+ * qu'elles contiennent n'a pu être résolu (ex: garde-robe/tenues désynchro).
  */
 export function computeStyleProfile(
-  favoriteOutfits: FavoriteOutfit[] | undefined,
+  outfits: { vetements: OutfitItem[] }[] | undefined,
   items: ClothingItem[],
   sets: ClothingSet[]
 ): StyleProfile | null {
-  if (!favoriteOutfits || favoriteOutfits.length < MIN_FAVORITES_FOR_PROFILE) return null;
+  if (!outfits || outfits.length < MIN_OUTFITS_FOR_PROFILE) return null;
 
-  const allResolvedItems = favoriteOutfits.flatMap(fav => resolveOutfitItems(fav, items, sets));
+  const allResolvedItems = outfits.flatMap(outfit => resolveOutfitItems(outfit, items, sets));
   if (allResolvedItems.length === 0) return null;
 
   return {
-    favoriteCount: favoriteOutfits.length,
+    outfitCount: outfits.length,
     topColors: topEntries(allResolvedItems.map(item => item.color), TOP_N),
     topMaterials: topEntries(allResolvedItems.map(item => item.material), TOP_N),
   };

@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import OutfitDisplay from './OutfitDisplay';
-import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit, OutfitWearHistory, OutfitItem } from '../types';
+import type { ClothingItem, ClothingSet, OutfitSuggestion, FavoriteOutfit, DislikedOutfit, OutfitWearHistory, OutfitItem } from '../types';
 
 interface WornOutfitsModalProps {
   open: boolean;
@@ -10,7 +10,9 @@ interface WornOutfitsModalProps {
   allClothingSets: ClothingSet[];
   wornOutfits: OutfitWearHistory[];
   favoriteOutfits: FavoriteOutfit[];
+  dislikedOutfits: DislikedOutfit[];
   onToggleFavorite: (outfit: OutfitSuggestion) => void;
+  onToggleDislike: (outfit: OutfitSuggestion) => void;
   onGenerateVisual: (outfit: OutfitSuggestion) => void;
   generatingVisualFor: string | null;
   selectedOutfit: OutfitSuggestion | null;
@@ -27,7 +29,9 @@ const WornOutfitsModal: React.FC<WornOutfitsModalProps> = ({
   allClothingSets,
   wornOutfits,
   favoriteOutfits,
+  dislikedOutfits,
   onToggleFavorite,
+  onToggleDislike,
   onGenerateVisual,
   generatingVisualFor,
   selectedOutfit,
@@ -133,7 +137,9 @@ const WornOutfitsModal: React.FC<WornOutfitsModalProps> = ({
               allClothingItems={allClothingItems}
               allClothingSets={allClothingSets}
               favoriteOutfits={favoriteOutfits}
+              dislikedOutfits={dislikedOutfits}
               onToggleFavorite={onToggleFavorite}
+              onToggleDislike={onToggleDislike}
               onGenerateVisual={onGenerateVisual}
               generatingVisualFor={generatingVisualFor}
               selectedOutfit={selectedOutfit}

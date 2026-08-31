@@ -132,6 +132,9 @@ const AppContent: React.FC = () => {
     favoriteOutfits,
     addFavoriteOutfit,
     deleteFavoriteOutfit,
+    dislikedOutfits,
+    addDislikedOutfit,
+    deleteDislikedOutfit,
     userModelImage,
     recordOutfitWear,
     getItemWearCount,
@@ -157,10 +160,38 @@ const AppContent: React.FC = () => {
     deleteFavoriteOutfit(existingFavorite.id);
     showToast('Retiré des favoris');
   } else {
+    // Mutuellement exclusif avec les tenues à éviter : la même tenue ne
+    // peut pas être à la fois un signal positif et négatif pour le style.
+    const existingDislike = dislikedOutfits.find(
+      (d) => d.titre === outfit.titre && d.description === outfit.description
+    );
+    if (existingDislike) {
+      deleteDislikedOutfit(existingDislike.id);
+    }
     addFavoriteOutfit(outfit);
     showToast('Ajouté aux favoris ❤️');
   }
-}, [favoriteOutfits, addFavoriteOutfit, deleteFavoriteOutfit, showToast]);
+}, [favoriteOutfits, dislikedOutfits, addFavoriteOutfit, deleteFavoriteOutfit, deleteDislikedOutfit, showToast]);
+
+  const handleToggleDislike = useCallback((outfit: OutfitSuggestion) => {
+  const existingDislike = dislikedOutfits.find(
+    (d) => d.titre === outfit.titre && d.description === outfit.description
+  );
+
+  if (existingDislike) {
+    deleteDislikedOutfit(existingDislike.id);
+    showToast('Retiré des tenues à éviter');
+  } else {
+    const existingFavorite = favoriteOutfits.find(
+      (fav) => fav.titre === outfit.titre && fav.description === outfit.description
+    );
+    if (existingFavorite) {
+      deleteFavoriteOutfit(existingFavorite.id);
+    }
+    addDislikedOutfit(outfit);
+    showToast('Noté, on évitera ce genre de tenue 👎');
+  }
+}, [dislikedOutfits, favoriteOutfits, addDislikedOutfit, deleteDislikedOutfit, deleteFavoriteOutfit, showToast]);
 
   const handleSelectOutfit = useCallback((outfit: OutfitSuggestion) => {
     const isAlreadySelected = selectedOutfit?.titre === outfit.titre && selectedOutfit?.description === outfit.description;
@@ -205,7 +236,7 @@ const AppContent: React.FC = () => {
       // mode "aujourd'hui", ou la prévision du matin en mode "demain" (voir
       // outfitConstraints.ts et weatherContext.ts).
       const referenceWeatherInfo = buildReferenceWeatherInfo(weatherDay, weatherInfo, tomorrowForecast);
-      const outfits = await generateOutfits(safeClothingItems, safeClothingSets, fullContext, effectiveAnchor || undefined, wornOutfitsLast7Days, favoriteOutfits, referenceWeatherInfo);
+      const outfits = await generateOutfits(safeClothingItems, safeClothingSets, fullContext, effectiveAnchor || undefined, wornOutfitsLast7Days, favoriteOutfits, referenceWeatherInfo, dislikedOutfits);
       setSuggestedOutfits(outfits);
       setAnchorItemForGeneration(null); // Réinitialiser l'ancre après génération
     } catch (err) {
@@ -213,7 +244,7 @@ const AppContent: React.FC = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [safeClothingItems, safeClothingSets, weatherInfo, weatherMaxToday, weatherDay, tomorrowForecast, anchorItemForGeneration, wornOutfitsLast7Days, favoriteOutfits]);
+  }, [safeClothingItems, safeClothingSets, weatherInfo, weatherMaxToday, weatherDay, tomorrowForecast, anchorItemForGeneration, wornOutfitsLast7Days, favoriteOutfits, dislikedOutfits]);
 
   const handleGenerateVariants = useCallback(async (outfit: OutfitSuggestion, itemsToReplace: OutfitItem[]) => {
     if (safeClothingItems.length === 0) {
@@ -427,7 +458,9 @@ const AppContent: React.FC = () => {
   // OutfitModal, VacationModal, FavoriteOutfitsModal, WornOutfitsModal...)
   const outfitInteractionProps = {
     favoriteOutfits,
+    dislikedOutfits,
     onToggleFavorite: handleToggleFavorite,
+    onToggleDislike: handleToggleDislike,
     onGenerateVisual: handleGenerateVisual,
     generatingVisualFor,
     selectedOutfit,

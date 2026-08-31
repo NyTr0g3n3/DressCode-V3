@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { computeStyleProfile } from './styleProfile';
-import type { ClothingItem, FavoriteOutfit } from '../types';
+import type { ClothingItem, FavoriteOutfit, DislikedOutfit } from '../types';
 
 const navyTshirt: ClothingItem = {
   id: 'top-1', imageSrc: '', analysis: 'T-shirt bleu marine', category: 'Hauts', color: 'Bleu marine', material: 'Coton',
@@ -46,7 +46,7 @@ describe('computeStyleProfile', () => {
     const profile = computeStyleProfile(favorites, allItems, []);
 
     expect(profile).not.toBeNull();
-    expect(profile!.favoriteCount).toBe(3);
+    expect(profile!.outfitCount).toBe(3);
     // Bleu marine apparaît 3x (navyTshirt x2 + navySweater x1), Noir 3x, Blanc 2x
     expect(profile!.topColors[0]).toMatchObject({ value: 'Bleu marine', count: 3 });
     expect(profile!.topMaterials.map(m => m.value)).toContain('Coton');
@@ -72,5 +72,24 @@ describe('computeStyleProfile', () => {
 
     expect(profile).not.toBeNull();
     expect(profile!.topColors.map(c => c.value)).toContain('Noir');
+  });
+
+  it('fonctionne aussi sur des tenues disliked (même forme, généricité voulue)', () => {
+    const makeDislike = (id: string, itemIds: string[]): DislikedOutfit => ({
+      id,
+      titre: `Look évité ${id}`,
+      description: '',
+      vetements: itemIds.map(itemId => ({ id: itemId, description: '' })),
+    });
+    const dislikes = [
+      makeDislike('1', [navyTshirt.id, blackJean.id]),
+      makeDislike('2', [navySweater.id, blackJean.id]),
+      makeDislike('3', [navyTshirt.id, blackJean.id]),
+    ];
+    const profile = computeStyleProfile(dislikes, allItems, []);
+
+    expect(profile).not.toBeNull();
+    expect(profile!.outfitCount).toBe(3);
+    expect(profile!.topColors[0]).toMatchObject({ value: 'Bleu marine', count: 3 });
   });
 });
