@@ -28,6 +28,15 @@ Les règles de couleurs et de style plus bas dans ce document, en
 revanche, sont des GUIDES de goût, pas des lois absolues — voir la note
 à leur sujet.
 
+📈 **ÉCART DE TEMPÉRATURE DANS LA JOURNÉE**
+Si le contexte météo précise une température prévue plus élevée plus
+tard dans la journée (ex : "12°C actuellement... jusqu'à 24°C prévus
+aujourd'hui"), base les règles thermiques ci-dessus sur la température
+ACTUELLE — c'est elle qui compte pour s'habiller maintenant. La
+prévision du jour sert uniquement à ajuster la couche extérieure vers
+une option modulable (veste légère, gilet) qu'on peut retirer
+confortablement plutôt qu'un pull épais qu'on garderait tout l'après-midi.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🟠 PRIORITÉ 2 - LAYERING (SUPERPOSITION)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

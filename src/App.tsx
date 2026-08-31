@@ -33,6 +33,7 @@ import { HeartIconSolid, ChevronDownIcon } from './components/icons.tsx';
 import { useWeather } from './hooks/useWeather.ts';
 import { useToast } from './hooks/useToast.ts';
 import { useMobileWardrobeFilters } from './hooks/useMobileWardrobeFilters.ts';
+import { buildWeatherContext } from './utils/weatherContext.ts';
 import MobileWardrobeView from './components/MobileWardrobeView.tsx';
 
 
@@ -88,7 +89,7 @@ const AppContent: React.FC = () => {
   const [showFavoriteModal, setShowFavoriteModal] = useState(false);
   const [showWornOutfitsModal, setShowWornOutfitsModal] = useState(false);
   const [showModelProfileModal, setShowModelProfileModal] = useState(false); // État pour la modale profil
-  const { weatherInfo, weatherError } = useWeather();
+  const { weatherInfo, weatherError, weatherMaxToday } = useWeather();
   const prevItemCountRef = useRef(0);
 
   const [generatingVisualFor, setGeneratingVisualFor] = useState<string | null>(null);
@@ -191,11 +192,16 @@ const AppContent: React.FC = () => {
     // Utiliser l'ancre depuis l'état si aucune n'est passée en paramètre
     const effectiveAnchor = anchorItem || anchorItemForGeneration;
 
-    const fullContext = weatherInfo
-      ? `Météo actuelle : ${weatherInfo}. Occasion : ${occasion}`
+    const enrichedWeather = buildWeatherContext(weatherInfo, weatherMaxToday);
+    const fullContext = enrichedWeather
+      ? `Météo actuelle : ${enrichedWeather}. Occasion : ${occasion}`
       : `Occasion : ${occasion}`;
 
     try {
+      // Note : le dernier paramètre reste la météo actuelle "brute" (non
+      // enrichie du max du jour) — les contraintes dures (short si < 22°C)
+      // doivent rester basées sur la température actuelle, voir
+      // outfitConstraints.ts.
       const outfits = await generateOutfits(safeClothingItems, safeClothingSets, fullContext, effectiveAnchor || undefined, wornOutfitsLast7Days, favoriteOutfits, weatherInfo);
       setSuggestedOutfits(outfits);
       setAnchorItemForGeneration(null); // Réinitialiser l'ancre après génération
@@ -204,7 +210,7 @@ const AppContent: React.FC = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [safeClothingItems, safeClothingSets, weatherInfo, anchorItemForGeneration, wornOutfitsLast7Days, favoriteOutfits]);
+  }, [safeClothingItems, safeClothingSets, weatherInfo, weatherMaxToday, anchorItemForGeneration, wornOutfitsLast7Days, favoriteOutfits]);
 
   const handleGenerateVariants = useCallback(async (outfit: OutfitSuggestion, itemToReplace: OutfitItem) => {
     if (safeClothingItems.length === 0) {
@@ -214,8 +220,9 @@ const AppContent: React.FC = () => {
     setIsGenerating(true);
     setError(null);
 
-    const fullContext = weatherInfo
-      ? `Météo actuelle : ${weatherInfo}. Contexte original : ${outfit.description}`
+    const enrichedWeather = buildWeatherContext(weatherInfo, weatherMaxToday);
+    const fullContext = enrichedWeather
+      ? `Météo actuelle : ${enrichedWeather}. Contexte original : ${outfit.description}`
       : `Contexte original : ${outfit.description}`;
 
     try {
@@ -226,7 +233,7 @@ const AppContent: React.FC = () => {
     } finally {
       setIsGenerating(false);
     }
-  }, [safeClothingItems, safeClothingSets, weatherInfo]);
+  }, [safeClothingItems, safeClothingSets, weatherInfo, weatherMaxToday]);
 
   const handleOpenChat = useCallback((outfit: OutfitSuggestion) => {
     setChatOutfit(outfit);
@@ -606,6 +613,7 @@ useEffect(() => {
                 isGenerating={isGenerating}
                 weatherInfo={weatherInfo}
                 weatherError={weatherError}
+                weatherMaxToday={weatherMaxToday}
                 anchorItem={anchorItemForGeneration}
                 onClearAnchor={() => setAnchorItemForGeneration(null)}
               />
@@ -790,6 +798,7 @@ useEffect(() => {
         }}
         weatherInfo={weatherInfo}
         weatherError={weatherError}
+        weatherMaxToday={weatherMaxToday}
         anchorItem={anchorItemForGeneration}
         onClearAnchor={() => setAnchorItemForGeneration(null)}
         {...outfitInteractionProps}
