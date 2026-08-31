@@ -119,7 +119,7 @@ Si une tenue n'inclut pas cet article, elle est INVALIDE.
 `
         : '';
 
-    const favoritesInstruction = buildFavoritesInstruction(favoriteOutfits);
+    const favoritesInstruction = buildFavoritesInstruction(favoriteOutfits, clothingList, sets);
 
     const prompt = `Tu es un styliste expert. Crée 3 tenues complètes et harmonieuses pour : "${context}".
 ${anchorInstruction}${favoritesInstruction}${recentlyWornInstruction}
