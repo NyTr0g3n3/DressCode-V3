@@ -1,12 +1,14 @@
 import React from 'react';
 import { SparklesIcon } from './icons.tsx';
 import type { ClothingItem, ClothingSet } from '../types';
+import { buildWeatherContext } from '../utils/weatherContext.ts';
 
 interface OutfitGeneratorProps {
   onGenerate: (occasion: string) => void; // 'context' devient 'occasion'
   isGenerating: boolean;
   weatherInfo: string | null; // Nouvelle prop
   weatherError: string | null; // Nouvelle prop
+  weatherMaxToday?: number | null; // Température max prévue pour le reste de la journée
   anchorItem?: ClothingItem | ClothingSet | null; // Item ancré pour générer une tenue autour de lui
   onClearAnchor?: () => void; // Fonction pour effacer l'ancre
 }
@@ -16,9 +18,11 @@ const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({
   isGenerating,
   weatherInfo,
   weatherError,
+  weatherMaxToday,
   anchorItem,
   onClearAnchor
 }) => {
+  const displayedWeather = buildWeatherContext(weatherInfo, weatherMaxToday);
   const [occasion, setOccasion] = React.useState(''); // 'context' renommé en 'occasion'
 
   // Obtenir le nom/description de l'item ancré
@@ -62,9 +66,9 @@ const OutfitGenerator: React.FC<OutfitGeneratorProps> = ({
 
       {/* AFFICHAGE DE LA MÉTÉO */}
       <div className="text-center mb-6 p-3 rounded-lg bg-snow dark:bg-onyx border border-black/10 dark:border-white/10">
-        {weatherInfo && (
+        {displayedWeather && (
           <p className="text-sm font-medium text-blue-500 dark:text-blue-400">
-            Météo : {weatherInfo} 📍
+            Météo : {displayedWeather} 📍
           </p>
         )}
         {weatherError && (

@@ -14,6 +14,7 @@ interface OutfitModalProps {
   onClose: () => void;
   weatherInfo: string | null;
   weatherError: string | null;
+  weatherMaxToday?: number | null;
   favoriteOutfits: FavoriteOutfit[];
   onToggleFavorite: (outfit: OutfitSuggestion) => void;
   onGenerateVisual: (outfit: OutfitSuggestion) => void;
@@ -36,6 +37,7 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
   onClose,
   weatherInfo,
   weatherError,
+  weatherMaxToday,
   favoriteOutfits,
   onToggleFavorite,
   onGenerateVisual,
@@ -92,6 +94,7 @@ const OutfitModal: React.FC<OutfitModalProps> = ({
           isGenerating={isGenerating}
           weatherInfo={weatherInfo}
           weatherError={weatherError}
+          weatherMaxToday={weatherMaxToday}
           anchorItem={anchorItem}
           onClearAnchor={onClearAnchor}
         />
