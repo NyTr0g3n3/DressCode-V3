@@ -1,49 +1,30 @@
 import { useEffect, useState } from 'react';
 import { config } from '../config';
+import { computeMaxTemperatureToday, computeTomorrowForecast, type TomorrowForecast } from '../utils/weatherContext';
 
 interface WeatherState {
   weatherInfo: string | null;
   weatherError: string | null;
   weatherMaxToday: number | null;
-}
-
-interface ForecastListItem {
-  dt: number;
-  main: { temp: number };
+  tomorrowForecast: TomorrowForecast | null;
 }
 
 const CACHE_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
 
 /**
- * Calcule la température max prévue restant à courir sur la journée en
- * cours à partir des prévisions 3h de l'endpoint /forecast (même clé,
- * même tier gratuit que /weather — aucun coût supplémentaire). Retourne
- * null si aucune donnée n'est dispo pour aujourd'hui (ex: en toute fin de
- * journée, quand toutes les prévisions 3h restantes sont pour demain).
- */
-function computeMaxTemperatureToday(list: ForecastListItem[]): number | null {
-  const now = new Date();
-  const todayItems = list.filter(item => {
-    const itemDate = new Date(item.dt * 1000);
-    return itemDate.getFullYear() === now.getFullYear()
-      && itemDate.getMonth() === now.getMonth()
-      && itemDate.getDate() === now.getDate();
-  });
-  if (todayItems.length === 0) return null;
-  return Math.round(Math.max(...todayItems.map(item => item.main.temp)));
-}
-
-/**
  * Récupère la météo locale (via géolocalisation + OpenWeather) au montage,
  * avec un cache localStorage (position et météo) pour éviter de redemander
  * la géolocalisation à chaque rechargement. Récupère aussi la température
- * max prévue pour le reste de la journée, pour que les tenues suggérées le
- * matin restent adaptées à l'après-midi (voir sharedStyleRules.ts).
+ * max prévue pour le reste de la journée, et un résumé de la météo de
+ * demain (voir weatherContext.ts) — pour que les tenues suggérées le soir
+ * en préparation du lendemain restent adaptées, pas calquées sur la météo
+ * du soir même.
  */
 export function useWeather(): WeatherState {
   const [weatherInfo, setWeatherInfo] = useState<string | null>(null);
   const [weatherError, setWeatherError] = useState<string | null>(null);
   const [weatherMaxToday, setWeatherMaxToday] = useState<number | null>(null);
+  const [tomorrowForecast, setTomorrowForecast] = useState<TomorrowForecast | null>(null);
 
   useEffect(() => {
     const fetchWeather = async (lat: number, lon: number) => {
@@ -67,22 +48,27 @@ export function useWeather(): WeatherState {
         // La prévision est purement indicative (voir docstring) : un échec
         // ici ne doit jamais faire échouer la météo actuelle, déjà utile.
         let maxToday: number | null = null;
+        let tomorrow: TomorrowForecast | null = null;
         try {
           const forecastResponse = await fetch(FORECAST_URL);
           if (forecastResponse.ok) {
             const forecastData = await forecastResponse.json();
-            const forecastMax = computeMaxTemperatureToday(forecastData.list || []);
+            const list = forecastData.list || [];
+            const forecastMax = computeMaxTemperatureToday(list);
             maxToday = forecastMax !== null ? Math.max(forecastMax, currentTemp) : null;
+            tomorrow = computeTomorrowForecast(list);
           }
         } catch {
           // Prévision indisponible, on garde la météo actuelle seule.
         }
         setWeatherMaxToday(maxToday);
+        setTomorrowForecast(tomorrow);
 
-        // Mettre en cache la météo (actuelle + max du jour)
+        // Mettre en cache la météo (actuelle + max du jour + demain)
         localStorage.setItem('cachedWeather', JSON.stringify({
           weather: weatherString,
           maxToday,
+          tomorrow,
           timestamp: Date.now()
         }));
       } catch {
@@ -94,11 +80,12 @@ export function useWeather(): WeatherState {
     const cachedWeather = localStorage.getItem('cachedWeather');
     if (cachedWeather) {
       try {
-        const { weather, maxToday, timestamp } = JSON.parse(cachedWeather);
+        const { weather, maxToday, tomorrow, timestamp } = JSON.parse(cachedWeather);
         if (Date.now() - timestamp < CACHE_WINDOW_MS) {
           // Utiliser la météo en cache
           setWeatherInfo(weather);
           setWeatherMaxToday(typeof maxToday === 'number' ? maxToday : null);
+          setTomorrowForecast(tomorrow ?? null);
           setWeatherError(null);
           return;
         }
@@ -145,5 +132,5 @@ export function useWeather(): WeatherState {
     }
   }, []);
 
-  return { weatherInfo, weatherError, weatherMaxToday };
+  return { weatherInfo, weatherError, weatherMaxToday, tomorrowForecast };
 }
