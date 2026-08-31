@@ -1,6 +1,13 @@
 import type { ClothingItem, ClothingSet, OutfitSuggestion } from '../types';
+import { detectSubcategory } from './subcategoryClassifier';
 
 const SHORTS_MIN_TEMPERATURE_C = 22;
+
+// Uniquement les deux cas explicitement demandés — les autres pulls (col
+// rond, sweat...) ont aussi des règles de layering dans sharedStyleRules.ts
+// mais ne sont volontairement PAS vérifiés en dur ici.
+const COL_V_PATTERN = /col[- ]v\b|col en v/;
+const ZIP_SWEATER_PATTERN = /zippé|zippe|\bzip\b|camionneur/;
 
 /**
  * Extrait la température en °C depuis la chaîne météo produite par
@@ -67,6 +74,44 @@ function hasInappropriateShorts(resolvedItems: ClothingItem[], temperatureCelsiu
   );
 }
 
+/**
+ * Sous-catégorie effective d'un item : celle déjà persistée, ou à défaut
+ * celle détectée depuis sa description (mêmes items non re-classifiés au
+ * fil du temps — on ne peut pas supposer que subcategory est toujours
+ * renseignée).
+ */
+function resolveSubcategory(item: ClothingItem): string | undefined {
+  return item.subcategory ?? detectSubcategory(item.analysis, item.category);
+}
+
+function hasHautsWithSubcategory(hautsItems: ClothingItem[], subcategories: string[]): boolean {
+  return hautsItems.some(item => {
+    const subcategory = resolveSubcategory(item);
+    return subcategory !== undefined && subcategories.includes(subcategory);
+  });
+}
+
+/**
+ * Deux règles de layering explicitement demandées par l'utilisateur, sur
+ * les deux seuls types de pull concernés :
+ * - Pull col V → toujours avec une CHEMISE dessous (le t-shirt ne compte
+ *   pas, voir sharedStyleRules.ts : "sinon négligé")
+ * - Pull col zippé/camionneur → toujours avec un t-shirt OU une chemise
+ * Les autres pulls (col rond, sweat...) ne sont volontairement pas
+ * vérifiés ici — seuls ces deux cas ont été demandés.
+ */
+function hasImproperlyLayeredPull(resolvedItems: ClothingItem[]): boolean {
+  const hautsItems = resolvedItems.filter(item => item.category === 'Hauts');
+
+  const hasColVWithoutChemise = hautsItems.some(item => COL_V_PATTERN.test(item.analysis.toLowerCase()))
+    && !hasHautsWithSubcategory(hautsItems, ['Chemises']);
+
+  const hasZipSweaterWithoutBaseLayer = hautsItems.some(item => ZIP_SWEATER_PATTERN.test(item.analysis.toLowerCase()))
+    && !hasHautsWithSubcategory(hautsItems, ['T-shirts', 'Chemises']);
+
+  return hasColVWithoutChemise || hasZipSweaterWithoutBaseLayer;
+}
+
 function includesAnchor(outfit: OutfitSuggestion, anchorId?: string): boolean {
   if (!anchorId) return true;
   return outfit.vetements.some(v => v.id === anchorId);
@@ -80,9 +125,10 @@ export interface HardConstraintsContext {
 /**
  * Filtre les tenues générées par Gemini pour ne garder que celles qui
  * respectent les contraintes "dures" (factuelles, non négociables) :
- * structure complète, cohérence thermique, présence de l'article ancré.
- * Les règles de goût (couleurs, harmonie...) restent du ressort de l'IA —
- * volontairement PAS vérifiées ici, voir sharedStyleRules.ts.
+ * structure complète, cohérence thermique, présence de l'article ancré,
+ * layering du pull col V / col zippé. Les règles de goût (couleurs,
+ * harmonie...) restent du ressort de l'IA — volontairement PAS vérifiées
+ * ici, voir sharedStyleRules.ts.
  *
  * Une tenue qui échoue est écartée plutôt que "réparée" : mieux vaut
  * montrer moins de tenues, toutes correctes, qu'inclure une tenue connue
@@ -109,6 +155,10 @@ export function filterOutfitsByHardConstraints(
     }
     if (hasInappropriateShorts(resolvedItems, temperatureCelsius)) {
       console.warn(`⚠️ Tenue "${outfit.titre}" écartée : short proposé alors qu'il fait ${temperatureCelsius}°C (< ${SHORTS_MIN_TEMPERATURE_C}°C).`);
+      return false;
+    }
+    if (hasImproperlyLayeredPull(resolvedItems)) {
+      console.warn(`⚠️ Tenue "${outfit.titre}" écartée : pull col V/zippé proposé sans t-shirt ou chemise dessous.`);
       return false;
     }
     return true;

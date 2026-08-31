@@ -30,7 +30,25 @@ const short: ClothingItem = {
 const sneakers: ClothingItem = {
   id: 'shoes-1', imageSrc: '', analysis: 'Sneakers blanches', category: 'Chaussures', color: 'Blanc', material: 'Cuir',
 };
-const allItems = [tshirt, jean, short, sneakers];
+const zipSweater: ClothingItem = {
+  id: 'top-2', imageSrc: '', analysis: 'Pull zippé bleu marine', category: 'Hauts', subcategory: 'Pulls', color: 'Bleu marine', material: 'Laine',
+};
+const zipSweaterUnclassified: ClothingItem = {
+  id: 'top-3', imageSrc: '', analysis: 'Pull camionneur gris', category: 'Hauts', color: 'Gris', material: 'Laine',
+};
+const turtleneck: ClothingItem = {
+  id: 'top-4', imageSrc: '', analysis: 'Pull col roulé noir', category: 'Hauts', subcategory: 'Pulls', color: 'Noir', material: 'Laine',
+};
+const shirt: ClothingItem = {
+  id: 'top-5', imageSrc: '', analysis: 'Chemise blanche', category: 'Hauts', subcategory: 'Chemises', color: 'Blanc', material: 'Coton',
+};
+const colVPull: ClothingItem = {
+  id: 'top-6', imageSrc: '', analysis: 'Pull col V beige', category: 'Hauts', subcategory: 'Pulls', color: 'Beige', material: 'Laine',
+};
+const crewNeckPull: ClothingItem = {
+  id: 'top-7', imageSrc: '', analysis: 'Pull col rond vert', category: 'Hauts', subcategory: 'Pulls', color: 'Vert', material: 'Laine',
+};
+const allItems = [tshirt, jean, short, sneakers, zipSweater, zipSweaterUnclassified, turtleneck, shirt, colVPull, crewNeckPull];
 
 const completeOutfit: OutfitSuggestion = {
   titre: 'Look complet', description: '',
@@ -106,5 +124,86 @@ describe('filterOutfitsByHardConstraints', () => {
     };
     const result = filterOutfitsByHardConstraints([completeOutfit, incomplete], allItems, [], { temperatureCelsius: 20 });
     expect(result).toEqual([completeOutfit]);
+  });
+
+  it('écarte une tenue avec un pull zippé sans rien dessous', () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Pull zippé seul', description: '',
+      vetements: [{ id: zipSweater.id, description: zipSweater.analysis }, { id: jean.id, description: jean.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 10 });
+    expect(result).toHaveLength(0);
+  });
+
+  it('garde une tenue avec un pull zippé porté sur un t-shirt', () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Pull zippé + t-shirt', description: '',
+      vetements: [{ id: zipSweater.id, description: zipSweater.analysis }, { id: tshirt.id, description: tshirt.analysis }, { id: jean.id, description: jean.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 10 });
+    expect(result).toHaveLength(1);
+  });
+
+  it('garde une tenue avec un pull zippé porté sur une chemise', () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Pull zippé + chemise', description: '',
+      vetements: [{ id: zipSweater.id, description: zipSweater.analysis }, { id: shirt.id, description: shirt.analysis }, { id: jean.id, description: jean.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 10 });
+    expect(result).toHaveLength(1);
+  });
+
+  it("écarte un pull sans sous-catégorie persistée mais détecté par sa description (fallback texte)", () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Pull camionneur seul', description: '',
+      vetements: [{ id: zipSweaterUnclassified.id, description: zipSweaterUnclassified.analysis }, { id: jean.id, description: jean.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 10 });
+    expect(result).toHaveLength(0);
+  });
+
+  it('garde un col roulé porté seul (règle non concernée)', () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Col roulé seul', description: '',
+      vetements: [{ id: turtleneck.id, description: turtleneck.analysis }, { id: jean.id, description: jean.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 10 });
+    expect(result).toHaveLength(1);
+  });
+
+  it('garde un pull col rond porté seul (règle explicitement non demandée)', () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Col rond seul', description: '',
+      vetements: [{ id: crewNeckPull.id, description: crewNeckPull.analysis }, { id: jean.id, description: jean.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 10 });
+    expect(result).toHaveLength(1);
+  });
+
+  it('écarte un pull col V sans rien dessous', () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Col V seul', description: '',
+      vetements: [{ id: colVPull.id, description: colVPull.analysis }, { id: jean.id, description: jean.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 10 });
+    expect(result).toHaveLength(0);
+  });
+
+  it('écarte un pull col V porté sur un t-shirt (le t-shirt ne compte pas, il faut une chemise)', () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Col V + t-shirt', description: '',
+      vetements: [{ id: colVPull.id, description: colVPull.analysis }, { id: tshirt.id, description: tshirt.analysis }, { id: jean.id, description: jean.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 10 });
+    expect(result).toHaveLength(0);
+  });
+
+  it('garde un pull col V porté sur une chemise', () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Col V + chemise', description: '',
+      vetements: [{ id: colVPull.id, description: colVPull.analysis }, { id: shirt.id, description: shirt.analysis }, { id: jean.id, description: jean.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 10 });
+    expect(result).toHaveLength(1);
   });
 });
