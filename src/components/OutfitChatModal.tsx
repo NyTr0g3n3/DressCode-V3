@@ -7,6 +7,7 @@ interface OutfitChatModalProps {
   outfit: OutfitSuggestion | null;
   onClose: () => void;
   onSendMessage: (message: string, history: ChatMessage[]) => Promise<void>;
+  onApplyReplacement: (itemId: string, itemDescription: string) => void;
   isGenerating: boolean;
   messages: ChatMessage[];
 }
@@ -16,6 +17,7 @@ const OutfitChatModal: React.FC<OutfitChatModalProps> = ({
   outfit,
   onClose,
   onSendMessage,
+  onApplyReplacement,
   isGenerating,
   messages
 }) => {
@@ -73,7 +75,7 @@ const OutfitChatModal: React.FC<OutfitChatModalProps> = ({
             </div>
             <h3 className="font-bold text-raisin-black dark:text-snow mb-2">Posez-moi une question</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
-              Je peux vous conseiller sur cette tenue, suggérer des alternatives de votre garde-robe, ou répondre à vos questions de style.
+              Je peux vous conseiller sur cette tenue, suggérer des alternatives de votre garde-robe, ou répondre à vos questions de style. Demandez-moi de remplacer une pièce précise et je vous proposerai de le faire directement.
             </p>
           </div>
         )}
@@ -81,7 +83,7 @@ const OutfitChatModal: React.FC<OutfitChatModalProps> = ({
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}
           >
             <div
               className={`max-w-[80%] rounded-2xl px-4 py-2 ${
@@ -92,6 +94,17 @@ const OutfitChatModal: React.FC<OutfitChatModalProps> = ({
             >
               <p className="text-sm whitespace-pre-wrap">{message.content}</p>
             </div>
+            {message.role === 'assistant' && message.suggestedReplacement && (
+              <button
+                onClick={() => onApplyReplacement(message.suggestedReplacement!.itemId, message.suggestedReplacement!.itemDescription)}
+                className="mt-1.5 flex items-center gap-1.5 px-3 py-1.5 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold-dark dark:text-gold rounded-full text-xs font-semibold transition-colors active:scale-95"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Remplacer « {message.suggestedReplacement.itemDescription} »
+              </button>
+            )}
           </div>
         ))}
 

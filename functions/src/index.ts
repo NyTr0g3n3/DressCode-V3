@@ -453,6 +453,22 @@ export const generateChatResponseFunction = onCall(
                 type: Type.BOOLEAN,
                 description: "true si la question est hors-sujet mode/style, false sinon",
               },
+              suggestedReplacement: {
+                type: Type.OBJECT,
+                nullable: true,
+                description: "Si l'utilisateur demande explicitement de remplacer une pièce précise de la tenue actuelle (pas juste un avis), l'article concerné. Sinon null.",
+                properties: {
+                  itemId: {
+                    type: Type.STRING,
+                    description: "ID exact (copié tel quel) de l'article de la tenue actuelle à remplacer",
+                  },
+                  itemDescription: {
+                    type: Type.STRING,
+                    description: "Description de cet article, pour l'affichage (sans l'ID)",
+                  },
+                },
+                required: ["itemId", "itemDescription"],
+              },
             },
             required: ["message", "isRejected"],
           },
