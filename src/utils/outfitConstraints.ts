@@ -1,4 +1,4 @@
-import type { ClothingItem, ClothingSet, OutfitSuggestion } from '../types';
+import type { ClothingItem, ClothingSet, OutfitItem, OutfitSuggestion } from '../types';
 import { detectSubcategory } from './subcategoryClassifier';
 
 const SHORTS_MIN_TEMPERATURE_C = 22;
@@ -26,10 +26,12 @@ export function parseTemperatureCelsius(weatherInfo: string | null | undefined):
 /**
  * Résout les IDs d'une tenue (items individuels ET ensembles) vers la
  * liste complète des ClothingItem réellement portés — un ensemble compte
- * pour tous les items qu'il contient.
+ * pour tous les items qu'il contient. Prend n'importe quel objet avec un
+ * champ `vetements` (OutfitSuggestion, FavoriteOutfit...) — exportée pour
+ * être réutilisée par styleProfile.ts sur les tenues favorites.
  */
-function resolveOutfitItems(
-  outfit: OutfitSuggestion,
+export function resolveOutfitItems(
+  outfit: { vetements: OutfitItem[] },
   items: ClothingItem[],
   sets: ClothingSet[]
 ): ClothingItem[] {
