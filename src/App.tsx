@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import OnboardingModal from './components/OnboardingModal.tsx';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './firebase';
@@ -137,7 +138,7 @@ const AppContent: React.FC = () => {
     loading
   } = useWardrobe();
 
-  const { toast, showToast } = useToast();
+  const { toast, visible: toastVisible, showToast } = useToast();
   const safeClothingItems = React.useMemo(() => {
   const items = clothingItems || [];
   return items.sort((a, b) => 
@@ -581,30 +582,39 @@ useEffect(() => {
 
           
           <div className="md:hidden">
-            {activeTab === 'home' && (
-              <MobileHome
-                onAnalyzeWardrobe={handleAnalyzeWardrobe}
-                onCancelWardrobeAnalysis={handleCancelWardrobeAnalysis}
-                onScrollToOutfits={handleScrollToOutfits}
-                onScrollToVacation={handleScrollToVacation}
-                onShowSets={() => setShowSetsModal(true)}
-                onShowFavorites={() => setShowFavoriteModal(true)}
-                onShowWornOutfits={() => setShowWornOutfitsModal(true)}
-                isAnalyzingWardrobe={isAnalyzingWardrobe}
-                clothingCount={safeClothingItems.length}
-                favoriteOutfitCount={favoriteOutfits.length}
-                wornOutfitCount={wornOutfitsLast7Days.length}
-                setsCount={safeClothingSets.length}
-              />
-            )}
-           {activeTab !== 'home' && (
-             <MobileWardrobeView
-               activeTab={activeTab}
-               itemIdsInSets={itemIdsInSets}
-               onItemClick={handleItemClick}
-               filters={mobileFilters}
-             />
-           )}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+              >
+                {activeTab === 'home' ? (
+                  <MobileHome
+                    onAnalyzeWardrobe={handleAnalyzeWardrobe}
+                    onCancelWardrobeAnalysis={handleCancelWardrobeAnalysis}
+                    onScrollToOutfits={handleScrollToOutfits}
+                    onScrollToVacation={handleScrollToVacation}
+                    onShowSets={() => setShowSetsModal(true)}
+                    onShowFavorites={() => setShowFavoriteModal(true)}
+                    onShowWornOutfits={() => setShowWornOutfitsModal(true)}
+                    isAnalyzingWardrobe={isAnalyzingWardrobe}
+                    clothingCount={safeClothingItems.length}
+                    favoriteOutfitCount={favoriteOutfits.length}
+                    wornOutfitCount={wornOutfitsLast7Days.length}
+                    setsCount={safeClothingSets.length}
+                  />
+                ) : (
+                  <MobileWardrobeView
+                    activeTab={activeTab}
+                    itemIdsInSets={itemIdsInSets}
+                    onItemClick={handleItemClick}
+                    filters={mobileFilters}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
           
         </div>
@@ -892,7 +902,7 @@ useEffect(() => {
       
 {/* Toast notification amélioré */}
 {toast && (
-  <div className="fixed bottom-32 md:bottom-8 left-1/2 -translate-x-1/2 z-[100]">
+  <div className={`fixed bottom-32 md:bottom-8 left-1/2 -translate-x-1/2 z-[100] transition-opacity duration-300 ${toastVisible ? 'opacity-100' : 'opacity-0'}`}>
     <div className="bg-raisin-black dark:bg-white text-white dark:text-raisin-black px-6 py-3 rounded-full shadow-2xl font-medium flex items-center gap-2 animate-slide-up">
       {toast.includes('❤️') && <span className="animate-pulse">❤️</span>}
       {toast.includes('Retiré') && <span>💔</span>}

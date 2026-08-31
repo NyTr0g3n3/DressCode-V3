@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
+import { motion } from 'framer-motion';
 import type { OutfitSuggestion, ClothingItem, ClothingSet, OutfitItem, FavoriteOutfit } from '../types.ts';
 import { QuestionMarkIcon, XIcon, HeartIcon, HeartIconSolid, MagicWandIcon, LoadingSpinner } from './icons.tsx';
 
@@ -133,7 +134,12 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
           const isSelected = selectedOutfit?.titre === outfit.titre && selectedOutfit?.description === outfit.description;
 
           return (
-            <div key={index} className={`bg-snow dark:bg-onyx border-2 rounded-lg p-5 transition-all duration-300 hover:shadow-lg relative ${
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: index * 0.1, type: 'spring', bounce: 0.25 }}
+              className={`bg-snow dark:bg-onyx border-2 rounded-lg p-5 transition-all duration-300 hover:shadow-lg relative ${
               isSelected
                 ? 'border-gold shadow-gold/30 shadow-lg'
                 : 'border-black/10 dark:border-white/10 hover:border-gold/50'
@@ -302,9 +308,9 @@ const OutfitDisplay: React.FC<OutfitDisplayProps> = ({
                   <li key={itemIndex} className="text-gray-700 dark:text-gray-300">{item.description}</li>
                 ))}
               </ul>
-            </div>
-          ); 
-        })}  
+            </motion.div>
+          );
+        })}
       </div>
 
       {selectedImage && (

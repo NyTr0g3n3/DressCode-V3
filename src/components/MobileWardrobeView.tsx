@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { ClothingItem, MobileTab } from '../types';
 import type { useMobileWardrobeFilters } from '../hooks/useMobileWardrobeFilters';
 import { LinkIcon, HeartIconSolid, ChevronDownIcon, SearchIcon, SortIcon } from './icons.tsx';
@@ -138,36 +139,49 @@ const MobileWardrobeView: React.FC<MobileWardrobeViewProps> = ({ activeTab, item
       {/* Résultats */}
       {filteredItems.length > 0 ? (
         <div className="grid grid-cols-2 gap-3 px-4">
-          {filteredItems.map(item => (
-            <div
-              key={item.id}
-              onClick={() => onItemClick(item)}
-              className="relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer active:scale-95 transition-transform"
-            >
-              {item.isFavorite ? (
-                <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-red-500 z-10">
-                  <HeartIconSolid className="w-4 h-4" />
-                </span>
-              ) : itemIdsInSets.has(item.id) ? (
-                <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white z-10">
-                  <LinkIcon />
-                </span>
-              ) : null}
+          <AnimatePresence mode="popLayout">
+            {filteredItems.map((item, index) => (
+              <motion.div
+                key={item.id}
+                layout
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+                whileTap={{ scale: 0.95 }}
+                transition={{
+                  duration: 0.4,
+                  delay: index * 0.04,
+                  type: 'spring',
+                  bounce: 0.3
+                }}
+                onClick={() => onItemClick(item)}
+                className="relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg cursor-pointer"
+              >
+                {item.isFavorite ? (
+                  <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-red-500 z-10">
+                    <HeartIconSolid className="w-4 h-4" />
+                  </span>
+                ) : itemIdsInSets.has(item.id) ? (
+                  <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white z-10">
+                    <LinkIcon />
+                  </span>
+                ) : null}
 
-              <div className="aspect-square">
-                <img
-                  src={item.imageSrc}
-                  alt={item.analysis}
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-3">
-                <p className="text-sm font-medium line-clamp-2">{item.analysis}</p>
-                <p className="text-xs text-gray-500 mt-1">{item.color}</p>
-              </div>
-            </div>
-          ))}
+                <div className="aspect-square">
+                  <img
+                    src={item.imageSrc}
+                    alt={item.analysis}
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-3">
+                  <p className="text-sm font-medium line-clamp-2">{item.analysis}</p>
+                  <p className="text-xs text-gray-500 mt-1">{item.color}</p>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       ) : (
         <div className="text-center py-12 px-4">
