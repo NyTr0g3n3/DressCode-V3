@@ -60,6 +60,19 @@
   [data-rsbs-backdrop] {
     z-index: 59 !important;
   }
+
+  /* Chat styliste (OutfitChatModal) : sur mobile, le clavier virtuel
+     couvre le champ de saisie car [data-rsbs-overlay] est en
+     "position: fixed; bottom: 0" par rapport au viewport de mise en page,
+     qui ne bouge pas quand le clavier s'ouvre (contrairement au viewport
+     visuel). --chat-keyboard-offset est calculée côté JS (OutfitChatModal)
+     à partir de window.visualViewport et pousse la feuille au-dessus du
+     clavier — scopé à cette seule feuille via .chat-bottom-sheet, sans
+     toucher --rsbs-overlay-translate-y (déjà piloté par l'animation). */
+  .chat-bottom-sheet[data-rsbs-root] [data-rsbs-overlay] {
+    bottom: var(--chat-keyboard-offset, 0px);
+    transition: bottom 0.2s ease-out;
+  }
   
   /* Dark mode pour react-spring-bottom-sheet */
   .dark [data-rsbs-overlay] {

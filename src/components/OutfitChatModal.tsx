@@ -32,6 +32,37 @@ const OutfitChatModal: React.FC<OutfitChatModalProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Hauteur du viewport VISUEL : rétrécit quand le clavier virtuel s'ouvre
+  // sur mobile, contrairement à window.innerHeight qui ne bouge pas sur
+  // iOS Safari. La BottomSheet (react-spring-bottom-sheet) est positionnée
+  // en "position: fixed; bottom: 0" par rapport au viewport de MISE EN
+  // PAGE, pas au viewport visuel — sans ajustement, son champ de saisie
+  // reste donc caché derrière le clavier. On réduit sa hauteur max
+  // (viewportHeight, prop officiellement supportée pour ce cas) et on
+  // décale sa base au-dessus du clavier (keyboardOffset, via une variable
+  // CSS ciblant uniquement [data-rsbs-overlay] — jamais --rsbs-overlay-
+  // translate-y, déjà piloté par le moteur d'animation du composant).
+  const [viewportHeight, setViewportHeight] = useState(() => window.innerHeight);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const updateForKeyboard = () => {
+      setViewportHeight(viewport.height);
+      setKeyboardOffset(Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop));
+    };
+
+    updateForKeyboard();
+    viewport.addEventListener('resize', updateForKeyboard);
+    viewport.addEventListener('scroll', updateForKeyboard);
+    return () => {
+      viewport.removeEventListener('resize', updateForKeyboard);
+      viewport.removeEventListener('scroll', updateForKeyboard);
+    };
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -155,7 +186,9 @@ const OutfitChatModal: React.FC<OutfitChatModalProps> = ({
       <BottomSheet
         open={open}
         onDismiss={onClose}
-        className={isDarkMode ? 'dark' : ''}
+        className={`chat-bottom-sheet ${isDarkMode ? 'dark' : ''}`}
+        style={{ '--chat-keyboard-offset': `${keyboardOffset}px` } as React.CSSProperties}
+        maxHeight={viewportHeight}
         header={
           <div className="flex items-center justify-between w-full">
             <div>
