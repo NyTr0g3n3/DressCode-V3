@@ -60,10 +60,18 @@ const OutfitChatModal: React.FC<OutfitChatModalProps> = ({
   if (!outfit) return null;
 
   // Contenu réutilisable
+  // flex-1 min-h-0 (au lieu de h-full) sur les deux niveaux : en flexbox,
+  // un enfant sans min-h-0 explicite refuse de rétrécir sous la taille de
+  // son contenu (min-height:auto par défaut), donc quand la conversation
+  // devient plus haute que l'espace disponible, la zone de messages —
+  // censée défiler en interne — poussait plutôt tout le panneau à grandir,
+  // faisant sortir la barre de saisie de l'écran. min-h-0 force le
+  // rétrécissement au conteneur disponible pour que overflow-y-auto
+  // fasse défiler les messages sans jamais déplacer la barre de saisie.
   const chatContent = (
-    <div className="flex flex-col h-full bg-white dark:bg-raisin-black">
+    <div className="flex-1 min-h-0 flex flex-col bg-white dark:bg-raisin-black">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="text-center py-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gold/10 mb-4">
