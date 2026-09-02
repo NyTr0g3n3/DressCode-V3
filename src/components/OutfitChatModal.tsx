@@ -30,6 +30,33 @@ const OutfitChatModal: React.FC<OutfitChatModalProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Filet de sécurité pour le panneau plein écran mobile : le meta
+  // viewport (index.html) demande interactive-widget=resizes-content pour
+  // que "100dvh" rétrécisse avec le clavier sur Chrome Android récent,
+  // mais cette propriété n'est pas encore supportée par iOS Safari (ni
+  // par les navigateurs plus anciens). window.visualViewport, lui, est
+  // disponible plus largement et reflète toujours la zone réellement
+  // visible. Contrairement à la première tentative (qui pilotait une
+  // BottomSheet animée avec deux mécanismes concurrents — maxHeight +
+  // offset CSS séparé), il n'y a ici qu'un seul état simple appliqué en
+  // style inline sur un div fixe classique : pas de machine à états
+  // tierce avec laquelle se désynchroniser.
+  const [viewportBox, setViewportBox] = useState<{ height: number; top: number } | null>(null);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const update = () => setViewportBox({ height: viewport.height, top: viewport.offsetTop });
+    update();
+    viewport.addEventListener('resize', update);
+    viewport.addEventListener('scroll', update);
+    return () => {
+      viewport.removeEventListener('resize', update);
+      viewport.removeEventListener('scroll', update);
+    };
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -155,25 +182,21 @@ const OutfitChatModal: React.FC<OutfitChatModalProps> = ({
     </div>
   );
 
-  // Version mobile : panneau plein écran (pas de BottomSheet).
-  // react-spring-bottom-sheet positionne sa feuille en "position: fixed;
-  // bottom: 0" par rapport au viewport de MISE EN PAGE. Sur iOS Safari,
-  // ouvrir le clavier virtuel ne change pas window.innerHeight (contrairement
-  // à Android Chrome) — seul le viewport VISUEL rétrécit — donc le champ de
-  // saisie se retrouvait caché derrière le clavier. Une première tentative
-  // a suivi window.visualViewport en JS pour recalculer une hauteur/offset à
-  // chaque frame, mais le timing des événements pendant l'ouverture du
-  // clavier désynchronisait la position de la feuille (elle disparaissait
-  // le temps que ça se stabilise). On utilise à la place l'unité CSS "dvh"
-  // (dynamic viewport height), nativement clavier-aware sur mobile moderne :
-  // aucun JS, donc aucun risque de timing.
+  // Version mobile : panneau plein écran (pas de BottomSheet), dimensionné
+  // en priorité par viewportBox (window.visualViewport, cf. plus haut) —
+  // toujours la zone réellement visible, clavier ouvert ou non — avec
+  // "h-[100dvh]" comme hauteur de secours pour le tout premier rendu,
+  // avant que l'effect ait mesuré le viewport visuel.
   if (isMobile) {
     return (
       <div
         className={`fixed inset-0 z-50 flex flex-col bg-white dark:bg-raisin-black h-[100dvh] transition-transform duration-200 ${
           open ? 'translate-y-0' : 'translate-y-full pointer-events-none'
         }`}
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          ...(viewportBox ? { top: viewportBox.top, height: viewportBox.height } : {})
+        }}
       >
         <div
           className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-4 pb-4"
