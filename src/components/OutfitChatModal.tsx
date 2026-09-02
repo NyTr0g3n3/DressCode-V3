@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { BottomSheet } from 'react-spring-bottom-sheet';
 import type { OutfitSuggestion, ChatMessage } from '../types';
 
 interface OutfitChatModalProps {
@@ -24,43 +23,11 @@ const OutfitChatModal: React.FC<OutfitChatModalProps> = ({
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const isDarkMode = document.documentElement.classList.contains('dark');
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Hauteur du viewport VISUEL : rétrécit quand le clavier virtuel s'ouvre
-  // sur mobile, contrairement à window.innerHeight qui ne bouge pas sur
-  // iOS Safari. La BottomSheet (react-spring-bottom-sheet) est positionnée
-  // en "position: fixed; bottom: 0" par rapport au viewport de MISE EN
-  // PAGE, pas au viewport visuel — sans ajustement, son champ de saisie
-  // reste donc caché derrière le clavier. On réduit sa hauteur max
-  // (viewportHeight, prop officiellement supportée pour ce cas) et on
-  // décale sa base au-dessus du clavier (keyboardOffset, via une variable
-  // CSS ciblant uniquement [data-rsbs-overlay] — jamais --rsbs-overlay-
-  // translate-y, déjà piloté par le moteur d'animation du composant).
-  const [viewportHeight, setViewportHeight] = useState(() => window.innerHeight);
-  const [keyboardOffset, setKeyboardOffset] = useState(0);
-
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-
-    const updateForKeyboard = () => {
-      setViewportHeight(viewport.height);
-      setKeyboardOffset(Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop));
-    };
-
-    updateForKeyboard();
-    viewport.addEventListener('resize', updateForKeyboard);
-    viewport.addEventListener('scroll', updateForKeyboard);
-    return () => {
-      viewport.removeEventListener('resize', updateForKeyboard);
-      viewport.removeEventListener('scroll', updateForKeyboard);
-    };
   }, []);
 
   const scrollToBottom = () => {
@@ -180,40 +147,46 @@ const OutfitChatModal: React.FC<OutfitChatModalProps> = ({
     </div>
   );
 
-  // Version mobile : BottomSheet
+  // Version mobile : panneau plein écran (pas de BottomSheet).
+  // react-spring-bottom-sheet positionne sa feuille en "position: fixed;
+  // bottom: 0" par rapport au viewport de MISE EN PAGE. Sur iOS Safari,
+  // ouvrir le clavier virtuel ne change pas window.innerHeight (contrairement
+  // à Android Chrome) — seul le viewport VISUEL rétrécit — donc le champ de
+  // saisie se retrouvait caché derrière le clavier. Une première tentative
+  // a suivi window.visualViewport en JS pour recalculer une hauteur/offset à
+  // chaque frame, mais le timing des événements pendant l'ouverture du
+  // clavier désynchronisait la position de la feuille (elle disparaissait
+  // le temps que ça se stabilise). On utilise à la place l'unité CSS "dvh"
+  // (dynamic viewport height), nativement clavier-aware sur mobile moderne :
+  // aucun JS, donc aucun risque de timing.
   if (isMobile) {
     return (
-      <BottomSheet
-        open={open}
-        onDismiss={onClose}
-        className={`chat-bottom-sheet ${isDarkMode ? 'dark' : ''}`}
-        style={{ '--chat-keyboard-offset': `${keyboardOffset}px` } as React.CSSProperties}
-        maxHeight={viewportHeight}
-        header={
-          <div className="flex items-center justify-between w-full">
-            <div>
-              <h2 className="text-xl font-bold text-raisin-black dark:text-snow">💬 Conseils Styliste</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{outfit.titre}</p>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        }
-        defaultSnap={({ maxHeight }) => maxHeight * 0.7}
-        snapPoints={({ minHeight, maxHeight }) => [
-          minHeight,
-          maxHeight * 0.7,
-          maxHeight * 0.95
-        ]}
+      <div
+        className={`fixed inset-0 z-50 flex flex-col bg-white dark:bg-raisin-black h-[100dvh] transition-transform duration-200 ${
+          open ? 'translate-y-0' : 'translate-y-full pointer-events-none'
+        }`}
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
+        <div
+          className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-4 pb-4"
+          style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
+        >
+          <div>
+            <h2 className="text-xl font-bold text-raisin-black dark:text-snow">💬 Conseils Styliste</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{outfit.titre}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+            aria-label="Fermer"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
         {chatContent}
-      </BottomSheet>
+      </div>
     );
   }
 
