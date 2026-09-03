@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   parseTemperatureCelsius, filterOutfitsByHardConstraints,
   parseTemperatureFromContext, filterVacationItemsByHardConstraints,
-  collectRecentlyWornItemIds, computeRecentlyWornExclusions
+  collectRecentlyWornItemIds, computeRecentlyWornExclusions,
+  collectDirtyItemIds, filterSetsWithoutDirtyItems
 } from './outfitConstraints';
 import type { ClothingItem, ClothingSet, OutfitSuggestion, OutfitWearHistory } from '../types';
 
@@ -354,5 +355,32 @@ describe('computeRecentlyWornExclusions', () => {
     const result = computeRecentlyWornExclusions([tshirt, jean], new Set());
     expect(result.excludedItemIds.size).toBe(0);
     expect(result.fallbackItems).toEqual([]);
+  });
+});
+
+describe('collectDirtyItemIds', () => {
+  it("retient uniquement les articles avec dirtySince renseigné", () => {
+    const dirtyShirt: ClothingItem = { ...shirt, id: 'dirty-1', dirtySince: 1_700_000_000_000 };
+    const result = collectDirtyItemIds([tshirt, dirtyShirt, jean]);
+    expect(result).toEqual(new Set(['dirty-1']));
+  });
+
+  it('retourne un Set vide si rien n\'est sale', () => {
+    expect(collectDirtyItemIds([tshirt, jean])).toEqual(new Set());
+  });
+});
+
+describe('filterSetsWithoutDirtyItems', () => {
+  const cleanSet: ClothingSet = { id: 'set-clean', name: 'Ensemble propre', itemIds: [tshirt.id, jean.id], imageSrc: '' };
+  const dirtySet: ClothingSet = { id: 'set-dirty', name: 'Ensemble sale', itemIds: [shirt.id, jean.id], imageSrc: '' };
+
+  it('écarte un ensemble entier si un seul de ses items est au bac à linge', () => {
+    const result = filterSetsWithoutDirtyItems([cleanSet, dirtySet], new Set([shirt.id]));
+    expect(result).toEqual([cleanSet]);
+  });
+
+  it('garde tous les ensembles si rien n\'est sale', () => {
+    const result = filterSetsWithoutDirtyItems([cleanSet, dirtySet], new Set());
+    expect(result).toEqual([cleanSet, dirtySet]);
   });
 });

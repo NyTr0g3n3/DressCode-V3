@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import type { ClothingItem as ClothingItemType, ClothingSet, Category } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SkeletonCard } from './SkeletonCard';
-import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, HeartIconSolid, SearchIcon, SortIcon, EyeSlashIcon } from './icons.tsx';
+import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, HeartIconSolid, SearchIcon, SortIcon, EyeSlashIcon, LaundryBasketIcon } from './icons.tsx';
 import { classifyItems, SUBCATEGORIES } from '../utils/subcategoryClassifier';
 
 interface CardProps {
@@ -15,9 +15,10 @@ interface CardProps {
   isSet?: boolean;
   isFavorite?: boolean;
   isExcluded?: boolean;
+  isDirty?: boolean;
 }
 
-const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onPreview, onCancelPreview, isSelected, isSet, isFavorite, isExcluded }) => {
+const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onPreview, onCancelPreview, isSelected, isSet, isFavorite, isExcluded, isDirty }) => {
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const [isLongPressing, setIsLongPressing] = useState(false);
 
@@ -65,17 +66,19 @@ const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onPreview, onC
         src={imageSrc}
         alt={analysis}
         loading="lazy"
-        className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 ${isExcluded ? 'opacity-40' : ''}`}
+        className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-110 ${isExcluded || isDirty ? 'opacity-40' : ''}`}
       />
 
     <div className={`absolute inset-0 transition-all duration-300 ${isSelected ? 'ring-4 ring-gold' : 'ring-2 ring-transparent'} rounded-lg`}></div>
     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
 
-    {/* Overlay pour items exclus */}
-    {isExcluded && (
+    {/* Overlay pour items au bac à linge OU exclus des suggestions — le
+        bac à linge prime si les deux s'appliquent (état plus temporaire,
+        plus probable d'être ce que l'utilisateur veut voir en premier). */}
+    {(isExcluded || isDirty) && (
       <div className="absolute inset-0 bg-gray-500/30 backdrop-blur-[1px] flex items-center justify-center z-5">
         <div className="bg-gray-800/80 backdrop-blur-sm rounded-full p-3">
-          <EyeSlashIcon className="w-8 h-8 text-gray-300" />
+          {isDirty ? <LaundryBasketIcon className="w-8 h-8 text-gray-300" /> : <EyeSlashIcon className="w-8 h-8 text-gray-300" />}
         </div>
       </div>
     )}
@@ -671,6 +674,7 @@ const filteredItems = useMemo(() => {
                               isSet={itemIdsInSets.has(item.id)}
                               isFavorite={item.isFavorite}
                               isExcluded={item.isExcluded}
+                              isDirty={!!item.dirtySince}
                             />
                           </motion.div>
                         ))}

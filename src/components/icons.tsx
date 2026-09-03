@@ -159,3 +159,14 @@ export const SortIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-
     <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
   </svg>
 );
+
+// Panier à linge (bac à linge) : anse arrondie + corps évasé + lignes de
+// tressage. Distinct de SuitcaseIcon (rectangle rigide à poignée droite).
+export const LaundryBasketIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-5" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5 9l1.2 10a2 2 0 002 1.8h7.6a2 2 0 002-1.8L19 9" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 9h17" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V6.5A3 3 0 0112 3.5a3 3 0 013 3V9" />
+    <path strokeLinecap="round" d="M9 12.5v6M12 12.5v7M15 12.5v6" />
+  </svg>
+);

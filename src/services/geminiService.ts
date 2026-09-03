@@ -7,7 +7,8 @@ import { validateAndFixOutfitIds, validateAndFixVacationPlanIds } from '../utils
 import {
     parseTemperatureCelsius, filterOutfitsByHardConstraints,
     parseTemperatureFromContext, filterVacationItemsByHardConstraints,
-    collectRecentlyWornItemIds, computeRecentlyWornExclusions, RECENTLY_WORN_WINDOW_DAYS
+    collectRecentlyWornItemIds, computeRecentlyWornExclusions, RECENTLY_WORN_WINDOW_DAYS,
+    collectDirtyItemIds, filterSetsWithoutDirtyItems
 } from '../utils/outfitConstraints';
 
 // Les appels Gemini passent maintenant par des Cloud Functions sécurisées
@@ -64,21 +65,43 @@ export async function generateOutfits(
     // si l'exclusion viderait une catégorie (garde-robe trop limitée, ex.
     // un seul pantalon), ses items reviennent dans fallbackItems et sont
     // signalés dans le prompt comme recours plutôt que bloquer la
-    // génération. Les ensembles ne sont volontairement pas concernés.
+    // génération.
     const recentlyWornItemIds = collectRecentlyWornItemIds(wornOutfits, RECENTLY_WORN_WINDOW_DAYS);
     const { excludedItemIds, fallbackItems } = computeRecentlyWornExclusions(individualItems, recentlyWornItemIds);
-    // L'article ancré (PRIORITÉ 0, doit apparaître dans les 3 tenues) ne
-    // doit jamais disparaître de la liste à cause de cette règle — sinon
-    // le prompt exigerait un article que l'IA ne voit même plus.
+
+    // Bac à linge : exclusion inconditionnelle (pas de filet de sécurité —
+    // contrairement au "porté récemment", c'est un choix explicite de
+    // l'utilisateur, pas une simple suggestion de variété). Ajoutés au même
+    // Set que l'exclusion "porté récemment" ci-dessus : un seul filtre final,
+    // et l'exemption de l'article ancré juste en dessous couvre les deux
+    // raisons d'exclusion à la fois.
+    const dirtyItemIds = collectDirtyItemIds(clothingList);
+    individualItems.forEach(item => {
+        if (dirtyItemIds.has(item.id)) excludedItemIds.add(item.id);
+    });
+
+    // L'article/ensemble ancré (PRIORITÉ 0, doit apparaître dans les 3
+    // tenues) ne doit jamais disparaître de la liste à cause de ces règles
+    // — sinon le prompt exigerait un article que l'IA ne voit même plus.
+    // Filet de sécurité seulement : en pratique, l'UI empêche déjà de
+    // générer une tenue ancrée sur un article au bac à linge.
     if (anchorItemOrSet && !('name' in anchorItemOrSet)) {
         excludedItemIds.delete(anchorItemOrSet.id);
     }
     const promptIndividualItems = individualItems.filter(item => !excludedItemIds.has(item.id));
 
+    // Ensembles indivisibles : un ensemble contenant un article au bac à
+    // linge est écarté en bloc (impossible de le proposer amputé), sauf
+    // s'il s'agit justement de l'ensemble ancré.
+    let availableSets = filterSetsWithoutDirtyItems(sets, dirtyItemIds);
+    if (anchorItemOrSet && 'name' in anchorItemOrSet && !availableSets.some(s => s.id === anchorItemOrSet.id)) {
+        availableSets = [...availableSets, anchorItemOrSet];
+    }
+
     const individualItemsFormatted = promptIndividualItems.map(item =>
       `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Matière: ${item.material})`
     ).join('\n');
-    const setsFormatted = sets.map(set => {
+    const setsFormatted = availableSets.map(set => {
         const itemDetails = set.itemIds.map(id => {
             const item = clothingList.find(ci => ci.id === id);
             return item ? `${item.analysis} (Cat: ${item.category}, Matière: ${item.material})` : '';
@@ -257,10 +280,17 @@ export async function generateOutfitVariants(
     weatherInfo?: string | null
 ): Promise<OutfitSuggestion[]> {
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
-    // Filtrer les items exclus ET ceux qui sont dans des ensembles
+    // Filtrer les items exclus ET ceux qui sont dans des ensembles. Liste
+    // COMPLÈTE — reste utilisée telle quelle plus bas pour valider/corriger
+    // les IDs renvoyés par l'IA (validateAndFixOutfitIds), y compris les
+    // pièces "GARDER" qui pourraient avoir été mises au bac à linge entre
+    // la génération initiale et cette demande de variante ; seul ce qu'on
+    // MONTRE comme remplacement possible (promptIndividualItems) exclut le
+    // linge sale.
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id) && !item.isExcluded);
+    const promptIndividualItems = individualItems.filter(item => !item.dirtySince);
 
-    const individualItemsFormatted = individualItems.map(item =>
+    const individualItemsFormatted = promptIndividualItems.map(item =>
       `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Matière: ${item.material})`
     ).join('\n');
     // Pas de sets dans les variantes : on remplace 1 pièce par 1 pièce individuelle uniquement
@@ -650,15 +680,19 @@ export async function generateVacationPlan(
     maxWeight?: number
 ): Promise<VacationPlan> {
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
-    // Filtrer les items exclus ET ceux qui sont dans des ensembles
-    const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id) && !item.isExcluded);
+    // Filtrer les items exclus, ceux dans des ensembles, et ceux au bac à
+    // linge (pas question de faire la valise avec du linge sale).
+    const dirtyItemIds = collectDirtyItemIds(clothingList);
+    const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id) && !item.isExcluded && !dirtyItemIds.has(item.id));
+    // Ensembles indivisibles : écarté en bloc si l'un de ses items est sale.
+    const availableSets = filterSetsWithoutDirtyItems(sets, dirtyItemIds);
 
     const individualItemsFormatted = individualItems.map(item =>
       `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Couleur: ${item.color}, Matière: ${item.material})`
     ).join('\n');
 
     // Formatter les sets avec TOUS leurs items détaillés
-    const setsFormatted = sets.map(set => {
+    const setsFormatted = availableSets.map(set => {
         const setItems = set.itemIds
             .map(itemId => clothingList.find(item => item.id === itemId))
             .filter((item): item is ClothingItem => item !== undefined);
