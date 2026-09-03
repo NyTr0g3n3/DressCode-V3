@@ -42,13 +42,19 @@ const turtleneck: ClothingItem = {
 const shirt: ClothingItem = {
   id: 'top-5', imageSrc: '', analysis: 'Chemise blanche', category: 'Hauts', subcategory: 'Chemises', color: 'Blanc', material: 'Coton',
 };
+const linenShirt: ClothingItem = {
+  id: 'top-8', imageSrc: '', analysis: 'Chemise beige', category: 'Hauts', subcategory: 'Chemises', color: 'Beige', material: 'Lin',
+};
+const linenBlendPants: ClothingItem = {
+  id: 'bottom-3', imageSrc: '', analysis: 'Pantalon écru', category: 'Bas', subcategory: 'Pantalons', color: 'Écru', material: 'Coton/Lin',
+};
 const colVPull: ClothingItem = {
   id: 'top-6', imageSrc: '', analysis: 'Pull col V beige', category: 'Hauts', subcategory: 'Pulls', color: 'Beige', material: 'Laine',
 };
 const crewNeckPull: ClothingItem = {
   id: 'top-7', imageSrc: '', analysis: 'Pull col rond vert', category: 'Hauts', subcategory: 'Pulls', color: 'Vert', material: 'Laine',
 };
-const allItems = [tshirt, jean, short, sneakers, zipSweater, zipSweaterUnclassified, turtleneck, shirt, colVPull, crewNeckPull];
+const allItems = [tshirt, jean, short, sneakers, zipSweater, zipSweaterUnclassified, turtleneck, shirt, colVPull, crewNeckPull, linenShirt, linenBlendPants];
 
 const completeOutfit: OutfitSuggestion = {
   titre: 'Look complet', description: '',
@@ -70,7 +76,7 @@ describe('filterOutfitsByHardConstraints', () => {
     expect(result).toHaveLength(0);
   });
 
-  it('écarte une tenue avec un short quand il fait moins de 22°C', () => {
+  it('écarte une tenue avec un short quand il fait moins de 24°C', () => {
     const shortsOutfit: OutfitSuggestion = {
       titre: 'Short par temps froid', description: '',
       vetements: [{ id: tshirt.id, description: tshirt.analysis }, { id: short.id, description: short.analysis }, { id: sneakers.id, description: sneakers.analysis }],
@@ -94,6 +100,42 @@ describe('filterOutfitsByHardConstraints', () => {
       vetements: [{ id: tshirt.id, description: tshirt.analysis }, { id: short.id, description: short.analysis }, { id: sneakers.id, description: sneakers.analysis }],
     };
     const result = filterOutfitsByHardConstraints([shortsOutfit], allItems, [], { temperatureCelsius: null });
+    expect(result).toHaveLength(1);
+  });
+
+  it('écarte une tenue avec une chemise en lin quand il fait 20°C', () => {
+    const linenOutfit: OutfitSuggestion = {
+      titre: 'Chemise en lin par temps frais', description: '',
+      vetements: [{ id: linenShirt.id, description: linenShirt.analysis }, { id: jean.id, description: jean.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([linenOutfit], allItems, [], { temperatureCelsius: 20 });
+    expect(result).toHaveLength(0);
+  });
+
+  it('écarte une tenue avec un pantalon en matière mélangée lin (Coton/Lin) par temps frais', () => {
+    const linenOutfit: OutfitSuggestion = {
+      titre: 'Pantalon Coton/Lin par temps frais', description: '',
+      vetements: [{ id: tshirt.id, description: tshirt.analysis }, { id: linenBlendPants.id, description: linenBlendPants.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([linenOutfit], allItems, [], { temperatureCelsius: 18 });
+    expect(result).toHaveLength(0);
+  });
+
+  it('garde une tenue avec une chemise en lin quand il fait assez chaud', () => {
+    const linenOutfit: OutfitSuggestion = {
+      titre: 'Chemise en lin par temps chaud', description: '',
+      vetements: [{ id: linenShirt.id, description: linenShirt.analysis }, { id: jean.id, description: jean.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([linenOutfit], allItems, [], { temperatureCelsius: 25 });
+    expect(result).toHaveLength(1);
+  });
+
+  it("n'applique pas la règle du lin si la température est inconnue", () => {
+    const linenOutfit: OutfitSuggestion = {
+      titre: 'Chemise en lin, météo inconnue', description: '',
+      vetements: [{ id: linenShirt.id, description: linenShirt.analysis }, { id: jean.id, description: jean.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([linenOutfit], allItems, [], { temperatureCelsius: null });
     expect(result).toHaveLength(1);
   });
 
