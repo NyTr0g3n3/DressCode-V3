@@ -28,6 +28,27 @@ export function parseTemperatureCelsius(weatherInfo: string | null | undefined):
 }
 
 /**
+ * Extrait une température en °C depuis le texte LIBRE que l'utilisateur
+ * tape dans le Planificateur de Valise (ex: "Espagne 35°C", "Ski dans les
+ * Alpes, -5 degrés"). Contrairement à parseTemperatureCelsius (format
+ * strict et garanti par useWeather), ce texte n'a aucun format imposé —
+ * la température peut être n'importe où dans la phrase, en "°C" ou en
+ * toutes lettres ("degrés"), ou tout simplement absente (l'utilisateur
+ * n'a décrit que la destination/l'occasion). Recherche donc n'importe où
+ * dans le texte plutôt qu'en préfixe strict ; retourne null si rien ne
+ * ressemble à une température — dans ce cas les contraintes thermiques
+ * sont simplement ignorées pour la valise, comme pour la météo absente.
+ */
+export function parseTemperatureFromContext(context: string | null | undefined): number | null {
+  if (!context) return null;
+  // Pas de \b après [ée]/s? : "é" n'est pas un caractère de mot pour \b en
+  // JS sans le flag unicode, donc "30 degré " ne matchait jamais un \b.
+  const match = context.match(/(-?\d{1,3})\s*°\s*c\b/i) ?? context.match(/(-?\d{1,3})\s*degr[ée]s?/i);
+  if (!match) return null;
+  return parseInt(match[1], 10);
+}
+
+/**
  * Résout les IDs d'une tenue (items individuels ET ensembles) vers la
  * liste complète des ClothingItem réellement portés — un ensemble compte
  * pour tous les items qu'il contient. Prend n'importe quel objet avec un
@@ -180,6 +201,54 @@ export function filterOutfitsByHardConstraints(
     }
     if (hasImproperlyLayeredPull(resolvedItems)) {
       console.warn(`⚠️ Tenue "${outfit.titre}" écartée : pull col V/zippé proposé sans t-shirt ou chemise dessous.`);
+      return false;
+    }
+    return true;
+  });
+}
+
+/**
+ * Équivalent de filterOutfitsByHardConstraints pour le Planificateur de
+ * Valise — mais qui RETIRE les articles fautifs plutôt que d'écarter tout
+ * le plan : une valise est une liste unique d'articles (pas 3 tenues
+ * alternatives comme le Créateur de Tenues), donc écarter le plan entier
+ * à cause d'un seul article thermiquement inadapté laisserait
+ * l'utilisateur sans rien après 30-60 secondes de génération.
+ *
+ * Un ensemble étant indivisible (voir le prompt de generateVacationPlan),
+ * si l'un de ses items est fautif c'est tout l'ensemble qui est retiré de
+ * la valise, jamais un seul de ses items.
+ *
+ * Seules les règles thermiques dépendant d'un seuil numérique (short,
+ * lin) sont vérifiées ici, comme pour filterOutfitsByHardConstraints —
+ * les règles de goût restent du ressort de l'IA.
+ */
+export function filterVacationItemsByHardConstraints(
+  valise: OutfitItem[],
+  items: ClothingItem[],
+  sets: ClothingSet[],
+  temperatureCelsius: number | null
+): OutfitItem[] {
+  const itemById = new Map(items.map(item => [item.id, item]));
+  const setById = new Map(sets.map(set => [set.id, set]));
+
+  return valise.filter(entry => {
+    const item = itemById.get(entry.id);
+    const set = !item ? setById.get(entry.id) : undefined;
+    // ID inconnu (ni item ni ensemble) : pas notre rôle de le filtrer ici,
+    // validateAndFixVacationPlanIds s'en charge déjà en amont.
+    if (!item && !set) return true;
+
+    const resolvedItems = item
+      ? [item]
+      : set!.itemIds.map(id => itemById.get(id)).filter((i): i is ClothingItem => i !== undefined);
+
+    if (hasInappropriateShorts(resolvedItems, temperatureCelsius)) {
+      console.warn(`⚠️ Valise : "${entry.description}" retiré (short) alors qu'il fait ${temperatureCelsius}°C (< ${SHORTS_MIN_TEMPERATURE_C}°C).`);
+      return false;
+    }
+    if (hasInappropriateLinen(resolvedItems, temperatureCelsius)) {
+      console.warn(`⚠️ Valise : "${entry.description}" retiré (lin) alors qu'il fait ${temperatureCelsius}°C (< ${LINEN_MIN_TEMPERATURE_C}°C).`);
       return false;
     }
     return true;
