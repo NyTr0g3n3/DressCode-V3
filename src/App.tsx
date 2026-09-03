@@ -30,7 +30,7 @@ import SetCreatorModal from './components/SetCreatorModal.tsx';
 import ClothingSetsModal from './components/ClothingSetsModal.tsx';
 import ModelProfileModal from './components/ModelProfileModal.tsx';
 import OutfitChatModal from './components/OutfitChatModal.tsx';
-import { HeartIconSolid, ChevronDownIcon } from './components/icons.tsx';
+import { HeartIconSolid, ChevronDownIcon, LaundryBasketIcon } from './components/icons.tsx';
 import { useWeather } from './hooks/useWeather.ts';
 import { useToast } from './hooks/useToast.ts';
 import { useMobileWardrobeFilters } from './hooks/useMobileWardrobeFilters.ts';
@@ -41,6 +41,8 @@ import MobileWardrobeView from './components/MobileWardrobeView.tsx';
 import { WardrobeProvider, useWardrobe } from './contexts/WardrobeContext.tsx';
 import FavoriteOutfitsModal from './components/FavoriteOutfitsModal.tsx';
 import WornOutfitsModal from './components/WornOutfitsModal.tsx';
+import LaundryBinModal from './components/LaundryBinModal.tsx';
+import LaundryBinList from './components/LaundryBinList.tsx';
 
 import VisualResultModal from './components/VisualResultModal.tsx';
 
@@ -89,6 +91,7 @@ const AppContent: React.FC = () => {
   const [showSetsModal, setShowSetsModal] = useState(false);
   const [showFavoriteModal, setShowFavoriteModal] = useState(false);
   const [showWornOutfitsModal, setShowWornOutfitsModal] = useState(false);
+  const [showLaundryBinModal, setShowLaundryBinModal] = useState(false);
   const [showModelProfileModal, setShowModelProfileModal] = useState(false); // État pour la modale profil
   const { weatherInfo, weatherError, weatherMaxToday, tomorrowForecast } = useWeather();
   const [weatherDay, setWeatherDay] = useState<WeatherDay>(() => getDefaultWeatherDay());
@@ -98,6 +101,7 @@ const AppContent: React.FC = () => {
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isWornOutfitsOpen, setIsWornOutfitsOpen] = useState(false);
+  const [isLaundryBinOpen, setIsLaundryBinOpen] = useState(false);
   const [anchorItemForGeneration, setAnchorItemForGeneration] = useState<ClothingItem | ClothingSet | null>(null);
   const [showChatModal, setShowChatModal] = useState(false);
   const [chatOutfit, setChatOutfit] = useState<OutfitSuggestion | null>(null);
@@ -182,6 +186,14 @@ const AppContent: React.FC = () => {
   const itemIdsInSets = React.useMemo(() => new Set(safeClothingSets.flatMap(s => s.itemIds || [])), [safeClothingSets]);
 
   const wornOutfitsLast7Days = useMemo(() => getWornOutfitsLast7Days(), [getWornOutfitsLast7Days]);
+
+  // Bac à linge : articles mis de côté par l'utilisateur, exclus de la
+  // génération de tenues (voir generateOutfits/geminiService.ts) jusqu'à
+  // ce qu'ils soient marqués propres.
+  const dirtyItems = useMemo(() => safeClothingItems.filter(item => item.dirtySince), [safeClothingItems]);
+  const handleMarkItemClean = useCallback((item: ClothingItem) => {
+    updateClothingItem({ ...item, dirtySince: undefined }).catch(err => setError(getUserFriendlyError(err)));
+  }, [updateClothingItem]);
 
   const handleGenerateOutfits = useCallback(async (occasion: string, anchorItem?: ClothingItem | ClothingSet) => {
     if (safeClothingItems.length === 0) {
@@ -630,11 +642,13 @@ useEffect(() => {
                     onShowSets={() => setShowSetsModal(true)}
                     onShowFavorites={() => setShowFavoriteModal(true)}
                     onShowWornOutfits={() => setShowWornOutfitsModal(true)}
+                    onShowLaundryBin={() => setShowLaundryBinModal(true)}
                     isAnalyzingWardrobe={isAnalyzingWardrobe}
                     clothingCount={safeClothingItems.length}
                     favoriteOutfitCount={favoriteOutfits.length}
                     wornOutfitCount={wornOutfitsLast7Days.length}
                     setsCount={safeClothingSets.length}
+                    dirtyCount={dirtyItems.length}
                   />
                 ) : (
                   <MobileWardrobeView
@@ -770,6 +784,31 @@ useEffect(() => {
           allClothingSets={safeClothingSets}
           {...outfitInteractionProps}
         />
+      </div>
+    )}
+  </div>
+)}
+
+          {dirtyItems.length > 0 && (
+  <div className="mt-10 border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-raisin-black shadow-sm">
+    <button
+      onClick={() => setIsLaundryBinOpen(!isLaundryBinOpen)}
+      className="w-full flex items-center justify-between p-5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+    >
+      <div className="flex items-center gap-2">
+        <LaundryBasketIcon className="text-amber-600 dark:text-amber-500 w-5 h-5" />
+        <h2 className="text-xl font-serif font-bold text-raisin-black dark:text-snow">
+          Bac à Linge <span className="text-sm font-sans font-normal text-gray-500">({dirtyItems.length})</span>
+        </h2>
+      </div>
+      <div className={`transition-transform duration-300 ${isLaundryBinOpen ? 'rotate-180' : ''} text-gray-400`}>
+        <ChevronDownIcon />
+      </div>
+    </button>
+
+    {isLaundryBinOpen && (
+      <div className="p-4 border-t border-black/10 dark:border-white/10 bg-snow dark:bg-onyx/50 max-h-[600px] overflow-y-auto custom-scrollbar">
+        <LaundryBinList dirtyItems={dirtyItems} onMarkClean={handleMarkItemClean} />
       </div>
     )}
   </div>
@@ -915,6 +954,13 @@ useEffect(() => {
         allClothingSets={safeClothingSets}
         wornOutfits={wornOutfitsLast7Days}
         {...outfitInteractionProps}
+      />
+
+      <LaundryBinModal
+        open={showLaundryBinModal}
+        onClose={() => setShowLaundryBinModal(false)}
+        dirtyItems={dirtyItems}
+        onMarkClean={handleMarkItemClean}
       />
 
       {/* NOUVELLE MODALE PROFIL (s'affiche si activée par l'utilisateur ou automatiquement si pas de photo) */}

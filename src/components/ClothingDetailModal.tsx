@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { BottomSheet } from 'react-spring-bottom-sheet';
 import type { ClothingItem, ClothingSet, Category } from '../types.ts';
-import { SparklesIcon, UnlinkIcon, CheckCircleIcon, RemoveIcon, HeartIcon, HeartIconSolid, EyeSlashIcon } from './icons.tsx';
+import { SparklesIcon, UnlinkIcon, CheckCircleIcon, RemoveIcon, HeartIcon, HeartIconSolid, EyeSlashIcon, LaundryBasketIcon } from './icons.tsx';
 
 interface ClothingDetailModalProps {
   item: ClothingItem; 
@@ -112,12 +112,41 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
         onUpdate({ ...item, isExcluded: !item.isExcluded });
     };
 
+    const handleToggleDirty = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        // undefined (pas 0/false) : dirtySince absent = article propre,
+        // cf. types.ts. Un nouveau timestamp à chaque mise au bac plutôt
+        // que de réutiliser l'ancien, pour que "au bac depuis Xj" reste
+        // exact si l'article y retourne après un aller-retour.
+        onUpdate({ ...item, dirtySince: item.dirtySince ? undefined : Date.now() });
+    };
+
+    const dirtyDaysAgo = item.dirtySince ? Math.floor((Date.now() - item.dirtySince) / (24 * 60 * 60 * 1000)) : null;
+
     // Contenu réutilisable du formulaire
     const modalContent = (
         <div className="bg-white dark:bg-raisin-black text-raisin-black dark:text-snow">
             <div className="relative px-4 pt-2 pb-4">
-                <img src={item.imageSrc} alt={item.analysis} className="w-full h-auto max-h-[40vh] object-contain rounded-lg" />
+                <img src={item.imageSrc} alt={item.analysis} className={`w-full h-auto max-h-[40vh] object-contain rounded-lg ${item.dirtySince ? 'opacity-60' : ''}`} />
             </div>
+
+            {item.dirtySince && (
+                <div className="mx-4 mb-4 flex items-center justify-between gap-3 bg-gray-100 dark:bg-gray-800 rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                        <LaundryBasketIcon className="w-5 h-5 flex-shrink-0" />
+                        <span>
+                            Au bac à linge {dirtyDaysAgo === 0 ? "depuis aujourd'hui" : dirtyDaysAgo === 1 ? 'depuis hier' : `depuis ${dirtyDaysAgo} jours`}
+                        </span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={handleToggleDirty}
+                        className="flex-shrink-0 px-3 py-1.5 text-sm font-semibold bg-white dark:bg-onyx text-gold-dark dark:text-gold border border-gold/50 rounded-md hover:bg-gold hover:text-onyx dark:hover:bg-gold dark:hover:text-onyx transition-colors"
+                    >
+                        Nettoyé ✓
+                    </button>
+                </div>
+            )}
 
             <form onSubmit={handleSubmit} className="p-6">
                     <div className="space-y-4">
@@ -267,7 +296,9 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                             <button
                                 type="button"
                                 onClick={() => onGenerateFrom(item)}
-                                className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-onyx dark:bg-snow border-2 border-gold text-gold dark:text-onyx font-bold rounded-lg hover:bg-gold/10 dark:hover:bg-onyx/10 transition-all duration-300"
+                                disabled={!!item.dirtySince}
+                                title={item.dirtySince ? "Cet article est au bac à linge — sortez-le d'abord pour l'utiliser dans une tenue" : undefined}
+                                className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-onyx dark:bg-snow border-2 border-gold text-gold dark:text-onyx font-bold rounded-lg hover:bg-gold/10 dark:hover:bg-onyx/10 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-onyx dark:disabled:hover:bg-snow"
                             >
                                 <SparklesIcon />
                                 Créer une tenue
@@ -380,6 +411,18 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                         <h2 className="text-lg font-bold text-raisin-black dark:text-snow">Détails de l'article</h2>
                         <div className="flex items-center gap-1">
                             <button
+                                onClick={handleToggleDirty}
+                                className={`p-1.5 rounded-full transition-colors ${
+                                    item.dirtySince
+                                        ? 'bg-gold/20 text-gold-dark dark:text-gold'
+                                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                                }`}
+                                aria-label={item.dirtySince ? "Marquer comme propre" : "Mettre au bac à linge"}
+                                title={item.dirtySince ? "Marquer comme propre" : "Mettre au bac à linge"}
+                            >
+                                <LaundryBasketIcon className="w-6 h-6" />
+                            </button>
+                            <button
                                 onClick={handleToggleExclude}
                                 className={`p-1.5 rounded-full transition-colors ${
                                     item.isExcluded
@@ -440,6 +483,18 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                 <div className="sticky top-0 bg-white dark:bg-raisin-black border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
                     <h2 className="text-xl font-bold text-raisin-black dark:text-snow">Détails de l'article</h2>
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleToggleDirty}
+                            className={`p-2 rounded-full transition-colors ${
+                                item.dirtySince
+                                    ? 'bg-gold/20 text-gold-dark dark:text-gold'
+                                    : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                            }`}
+                            aria-label={item.dirtySince ? "Marquer comme propre" : "Mettre au bac à linge"}
+                            title={item.dirtySince ? "Marquer comme propre" : "Mettre au bac à linge"}
+                        >
+                            <LaundryBasketIcon className="w-6 h-6" />
+                        </button>
                         <button
                             onClick={handleToggleExclude}
                             className={`p-2 rounded-full transition-colors ${

@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ClothingItem, MobileTab } from '../types';
 import type { useMobileWardrobeFilters } from '../hooks/useMobileWardrobeFilters';
-import { LinkIcon, HeartIconSolid, ChevronDownIcon, SearchIcon, SortIcon } from './icons.tsx';
+import { LinkIcon, HeartIconSolid, ChevronDownIcon, SearchIcon, SortIcon, LaundryBasketIcon } from './icons.tsx';
 
 interface MobileWardrobeViewProps {
   activeTab: Exclude<MobileTab, 'home'>;
@@ -167,12 +167,18 @@ const MobileWardrobeView: React.FC<MobileWardrobeViewProps> = ({ activeTab, item
                   </span>
                 ) : null}
 
+                {item.dirtySince && (
+                  <span className="absolute top-2 right-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-gray-200 z-10">
+                    <LaundryBasketIcon className="w-4 h-4" />
+                  </span>
+                )}
+
                 <div className="aspect-square">
                   <img
                     src={item.imageSrc}
                     alt={item.analysis}
                     loading="lazy"
-                    className="w-full h-full object-cover"
+                    className={`w-full h-full object-cover ${item.dirtySince ? 'opacity-50' : ''}`}
                   />
                 </div>
                 <div className="p-3">

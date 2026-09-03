@@ -325,3 +325,25 @@ export function computeRecentlyWornExclusions(
 
   return { excludedItemIds, fallbackItems };
 }
+
+/**
+ * IDs des articles actuellement au bac à linge (dirtySince renseigné).
+ * Contrairement à la règle "porté récemment" (2 jours, avec filet de
+ * sécurité par catégorie), c'est une action explicite de l'utilisateur —
+ * pas de filet de sécurité ici : s'il met tout au bac, la génération doit
+ * échouer clairement plutôt que réintégrer discrètement du linge sale.
+ */
+export function collectDirtyItemIds(items: ClothingItem[]): Set<string> {
+  return new Set(items.filter(item => item.dirtySince != null).map(item => item.id));
+}
+
+/**
+ * Ensembles à écarter parce qu'ils contiennent au moins un article au bac
+ * à linge — indivisibles (même principe que pour les contraintes
+ * thermiques de la valise, cf. filterVacationItemsByHardConstraints) :
+ * impossible de proposer un ensemble amputé de sa pièce sale.
+ */
+export function filterSetsWithoutDirtyItems(sets: ClothingSet[], dirtyItemIds: Set<string>): ClothingSet[] {
+  if (dirtyItemIds.size === 0) return sets;
+  return sets.filter(set => !set.itemIds.some(id => dirtyItemIds.has(id)));
+}

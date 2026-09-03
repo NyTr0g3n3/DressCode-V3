@@ -1,5 +1,5 @@
 import React from 'react';
-import { LinkIcon, HeartIcon, MagicWandIcon, SuitcaseIcon } from './icons.tsx';
+import { LinkIcon, HeartIcon, MagicWandIcon, SuitcaseIcon, LaundryBasketIcon } from './icons.tsx';
 
 interface MobileHomeProps {
   onAnalyzeWardrobe: () => void;
@@ -9,11 +9,13 @@ interface MobileHomeProps {
   onShowSets: () => void;
   onShowFavorites: () => void;
   onShowWornOutfits: () => void;
+  onShowLaundryBin: () => void;
   isAnalyzingWardrobe: boolean;
   clothingCount: number;
   favoriteOutfitCount: number;
   wornOutfitCount: number;
   setsCount: number;
+  dirtyCount: number;
 }
 
 const MobileHome: React.FC<MobileHomeProps> = ({
@@ -24,11 +26,13 @@ const MobileHome: React.FC<MobileHomeProps> = ({
   onShowSets,
   onShowFavorites,
   onShowWornOutfits,
+  onShowLaundryBin,
   isAnalyzingWardrobe,
   clothingCount,
   favoriteOutfitCount,
   wornOutfitCount,
-  setsCount
+  setsCount,
+  dirtyCount
 }) => {
   
   return (
@@ -142,7 +146,7 @@ const MobileHome: React.FC<MobileHomeProps> = ({
           <h4 className="font-semibold mb-3 text-sm text-gray-600 dark:text-gray-400">
             Aperçu rapide
           </h4>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             {/* Carte Tenues portées (7 derniers jours) */}
             <button
               onClick={onShowWornOutfits}
@@ -179,6 +183,18 @@ const MobileHome: React.FC<MobileHomeProps> = ({
               </div>
               <p className="text-2xl font-bold">{favoriteOutfitCount}</p>
               <p className="text-xs text-gray-500 mt-0.5 font-medium">Favorites</p>
+            </button>
+
+            {/* Carte "Bac à linge" */}
+            <button
+              onClick={onShowLaundryBin}
+              className="bg-white dark:bg-raisin-black rounded-xl p-3 text-center flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-raisin-black/50 transition-colors active:scale-95"
+            >
+              <div className="text-amber-600 dark:text-amber-500">
+                <LaundryBasketIcon className="w-6 h-6" />
+              </div>
+              <p className="text-2xl font-bold">{dirtyCount}</p>
+              <p className="text-xs text-gray-500 mt-0.5 font-medium">Bac à linge</p>
             </button>
 
           </div>

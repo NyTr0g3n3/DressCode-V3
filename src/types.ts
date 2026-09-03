@@ -14,6 +14,12 @@ export interface ClothingItem {
   material: string;
   isFavorite?: boolean;
   isExcluded?: boolean; // Exclure cet article des suggestions de tenues/valises
+  // Bac à linge : timestamp de mise au sale, ou absent si l'article est
+  // propre. Un timestamp plutôt qu'un simple booléen pour pouvoir afficher
+  // "au bac depuis X jours" sans champ supplémentaire. Volontairement
+  // distinct de isExcluded (exclusion permanente et délibérée) : celui-ci
+  // est temporaire et se lève d'un geste une fois l'article lavé.
+  dirtySince?: number;
   createdAt?: number; // Timestamp de création
 }
 
