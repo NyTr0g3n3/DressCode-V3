@@ -1,5 +1,5 @@
 import React from 'react';
-import { LinkIcon, HeartIcon } from './icons.tsx'; 
+import { LinkIcon, HeartIcon, MagicWandIcon, SuitcaseIcon } from './icons.tsx';
 
 interface MobileHomeProps {
   onAnalyzeWardrobe: () => void;
@@ -99,9 +99,7 @@ const MobileHome: React.FC<MobileHomeProps> = ({
         >
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-              </svg>
+              <MagicWandIcon className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-bold mb-1">✨ Créateur de Tenues</h3>
@@ -122,9 +120,7 @@ const MobileHome: React.FC<MobileHomeProps> = ({
         >
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
+              <SuitcaseIcon className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-bold mb-1">🧳 Planificateur de Valise</h3>
