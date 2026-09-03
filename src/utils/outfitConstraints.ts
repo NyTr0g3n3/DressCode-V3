@@ -1,4 +1,4 @@
-import type { ClothingItem, ClothingSet, OutfitItem, OutfitSuggestion } from '../types';
+import type { Category, ClothingItem, ClothingSet, OutfitItem, OutfitSuggestion, OutfitWearHistory } from '../types';
 import { detectSubcategory } from './subcategoryClassifier';
 
 const SHORTS_MIN_TEMPERATURE_C = 24;
@@ -253,4 +253,75 @@ export function filterVacationItemsByHardConstraints(
     }
     return true;
   });
+}
+
+export const RECENTLY_WORN_WINDOW_DAYS = 2;
+// Hauts + Bas uniquement : ce sont les pièces qu'on remarque le plus si
+// elles reviennent à l'identique d'un jour sur l'autre. Chaussures et
+// accessoires sont volontairement exclus de cette règle — on les porte
+// couramment plusieurs jours d'affilée sans que ça se voie/pose problème.
+const RECENTLY_WORN_CATEGORIES: Category[] = ['Hauts', 'Bas'];
+
+/**
+ * Rassemble les IDs de tous les articles portés au cours des `windowDays`
+ * derniers jours, tous types de tenues confondues (`wornOutfits` couvre
+ * ici une fenêtre plus large, typiquement 7 jours pour l'affichage "Tenues
+ * portées" — cette fonction se contente de resserrer à la fenêtre voulue).
+ * `now` est injectable pour les tests ; par défaut l'heure réelle.
+ */
+export function collectRecentlyWornItemIds(
+  wornOutfits: OutfitWearHistory[] | undefined,
+  windowDays: number,
+  now: number = Date.now()
+): Set<string> {
+  const result = new Set<string>();
+  if (!wornOutfits || wornOutfits.length === 0) return result;
+
+  const windowStart = now - windowDays * 24 * 60 * 60 * 1000;
+  wornOutfits.forEach(outfit => {
+    if (outfit.wornAt >= windowStart) {
+      outfit.itemIds.forEach(id => result.add(id));
+    }
+  });
+  return result;
+}
+
+export interface RecentlyWornExclusions {
+  /** IDs à retirer de la liste envoyée à l'IA : assez d'alternatives restent disponibles dans leur catégorie. */
+  excludedItemIds: Set<string>;
+  /** Portés récemment mais gardés dans la liste faute d'alternative (catégorie qui serait sinon vidée) — à signaler à l'IA comme recours plutôt qu'à taire. */
+  fallbackItems: ClothingItem[];
+}
+
+/**
+ * Détermine, parmi les articles disponibles (Hauts/Bas), lesquels exclure
+ * de la liste envoyée à l'IA parce que portés dans les 2 derniers jours —
+ * une exclusion plutôt qu'une simple suggestion dans le prompt, pour que
+ * l'IA ne puisse tout simplement pas les reproposer, plutôt que de compter
+ * sur elle pour suivre une consigne. Filet de sécurité PAR CATÉGORIE : si
+ * exclure viderait entièrement une catégorie (garde-robe trop limitée,
+ * ex. un seul pantalon), on la réintègre plutôt que de bloquer la
+ * génération — ces items reviennent alors dans fallbackItems.
+ */
+export function computeRecentlyWornExclusions(
+  items: ClothingItem[],
+  wornItemIds: Set<string>
+): RecentlyWornExclusions {
+  const excludedItemIds = new Set<string>();
+  const fallbackItems: ClothingItem[] = [];
+
+  RECENTLY_WORN_CATEGORIES.forEach(category => {
+    const categoryItems = items.filter(item => item.category === category);
+    const wornInCategory = categoryItems.filter(item => wornItemIds.has(item.id));
+    if (wornInCategory.length === 0) return;
+
+    const wouldRemainAvailable = categoryItems.length - wornInCategory.length;
+    if (wouldRemainAvailable > 0) {
+      wornInCategory.forEach(item => excludedItemIds.add(item.id));
+    } else {
+      fallbackItems.push(...wornInCategory);
+    }
+  });
+
+  return { excludedItemIds, fallbackItems };
 }

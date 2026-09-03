@@ -4,7 +4,11 @@ import { functions } from '../firebase';
 import { STYLE_RULES, ACCESSORY_RULES } from '../prompts/sharedStyleRules';
 import { buildFavoritesInstruction } from '../prompts/personalization';
 import { validateAndFixOutfitIds, validateAndFixVacationPlanIds } from '../utils/outfitValidation';
-import { parseTemperatureCelsius, filterOutfitsByHardConstraints, parseTemperatureFromContext, filterVacationItemsByHardConstraints } from '../utils/outfitConstraints';
+import {
+    parseTemperatureCelsius, filterOutfitsByHardConstraints,
+    parseTemperatureFromContext, filterVacationItemsByHardConstraints,
+    collectRecentlyWornItemIds, computeRecentlyWornExclusions, RECENTLY_WORN_WINDOW_DAYS
+} from '../utils/outfitConstraints';
 
 // Les appels Gemini passent maintenant par des Cloud Functions sécurisées
 // La clé API reste côté serveur et n'est jamais exposée au client
@@ -46,10 +50,32 @@ export async function generateOutfits(
     weatherInfo?: string | null
 ): Promise<OutfitSuggestion[]> {
     const itemIdsInSets = new Set((sets || []).flatMap(s => s.itemIds));
-    // Filtrer les items exclus ET ceux qui sont dans des ensembles
+    // Filtrer les items exclus ET ceux qui sont dans des ensembles.
+    // Liste COMPLÈTE — reste utilisée telle quelle plus bas pour
+    // valider/corriger les IDs renvoyés par l'IA (validateAndFixOutfitIds) ;
+    // seul ce qu'on lui MONTRE (promptIndividualItems, ci-dessous) est
+    // restreint par la règle de variété.
     const individualItems = clothingList.filter(item => !itemIdsInSets.has(item.id) && !item.isExcluded);
 
-    const individualItemsFormatted = individualItems.map(item =>
+    // Hauts/Bas portés dans les 2 derniers jours : retirés de la liste
+    // envoyée à l'IA plutôt que simplement déconseillés dans le prompt —
+    // elle ne peut alors tout simplement pas les reproposer à l'identique.
+    // Filet de sécurité PAR CATÉGORIE (voir computeRecentlyWornExclusions) :
+    // si l'exclusion viderait une catégorie (garde-robe trop limitée, ex.
+    // un seul pantalon), ses items reviennent dans fallbackItems et sont
+    // signalés dans le prompt comme recours plutôt que bloquer la
+    // génération. Les ensembles ne sont volontairement pas concernés.
+    const recentlyWornItemIds = collectRecentlyWornItemIds(wornOutfits, RECENTLY_WORN_WINDOW_DAYS);
+    const { excludedItemIds, fallbackItems } = computeRecentlyWornExclusions(individualItems, recentlyWornItemIds);
+    // L'article ancré (PRIORITÉ 0, doit apparaître dans les 3 tenues) ne
+    // doit jamais disparaître de la liste à cause de cette règle — sinon
+    // le prompt exigerait un article que l'IA ne voit même plus.
+    if (anchorItemOrSet && !('name' in anchorItemOrSet)) {
+        excludedItemIds.delete(anchorItemOrSet.id);
+    }
+    const promptIndividualItems = individualItems.filter(item => !excludedItemIds.has(item.id));
+
+    const individualItemsFormatted = promptIndividualItems.map(item =>
       `- ${item.analysis} (ID: ${item.id}, Cat: ${item.category}, Matière: ${item.material})`
     ).join('\n');
     const setsFormatted = sets.map(set => {
@@ -61,46 +87,20 @@ export async function generateOutfits(
     }).join('\n');
     const availableClothes = [individualItemsFormatted, setsFormatted].filter(Boolean).join('\n');
 
-    // Extraire les hauts portés récemment (règle uniquement pour les Hauts)
-    let recentlyWornInstruction = '';
-    if (wornOutfits && wornOutfits.length > 0) {
-        const now = Date.now();
-        const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
-
-        // Extraire les IDs portés dans les 7 derniers jours
-        const itemsWornLast7Days = new Set<string>();
-        wornOutfits.forEach(outfit => {
-            if (outfit.wornAt >= sevenDaysAgo) {
-                outfit.itemIds.forEach(id => itemsWornLast7Days.add(id));
-            }
-        });
-
-        // Identifier UNIQUEMENT les hauts (catégorie "Hauts") portés récemment
-        const topsToAvoid: string[] = [];
-        clothingList.forEach(item => {
-            if (item.category === 'Hauts' && itemsWornLast7Days.has(item.id)) {
-                topsToAvoid.push(`${item.analysis} (ID: ${item.id})`);
-            }
-        });
-
-        if (topsToAvoid.length > 0) {
-            recentlyWornInstruction = `
+    const recentlyWornInstruction = fallbackItems.length > 0
+        ? `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🟣 VARIÉTÉ DES HAUTS
+🟣 VARIÉTÉ (RECOURS UNIQUEMENT)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📝 **Hauts portés dans les 7 derniers jours** (si possible, privilégie d'autres options) :
-${topsToAvoid.map(item => `- ${item}`).join('\n')}
+📝 **Portés il y a moins de ${RECENTLY_WORN_WINDOW_DAYS} jours, gardés dans la liste faute d'alternative dans leur catégorie** :
+${fallbackItems.map(item => `- ${item.analysis} (ID: ${item.id})`).join('\n')}
 
-⚠️ **NOTE IMPORTANTE** :
-- Essaie de varier les hauts pour éviter la monotonie
-- MAIS cette règle est flexible : si aucune autre option ne convient au style/météo/occasion, tu peux utiliser un de ces hauts
-- **PRIORITÉ ABSOLUE** : Cohérence stylistique + Respect des règles thermiques > Variété des hauts
+⚠️ Utilise-les seulement si aucune autre option ne convient au style/météo/occasion.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-`;
-        }
-    }
+`
+        : '';
 
     const anchorInstruction = anchorItemOrSet
         ? `
