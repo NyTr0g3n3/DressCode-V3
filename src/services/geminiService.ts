@@ -128,7 +128,7 @@ ${availableClothes}
 
 ⚠️ **NOTE IMPORTANTE SUR LES ENSEMBLES** :
 Les articles marqués "(Ensemble)" avec "[Contient: ...]" sont des tenues pré-composées dont les pièces doivent être utilisées ENSEMBLE (jamais séparément).
-Avant de sélectionner un ensemble, vérifie que TOUTES ses pièces respectent les règles de température. Si un ensemble contient un short et qu'il fait < 22°C, cet ensemble est INTERDIT.
+Avant de sélectionner un ensemble, vérifie que TOUTES ses pièces respectent les règles de température. Si un ensemble contient un short et qu'il fait < 24°C, cet ensemble est INTERDIT.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎯 INSTRUCTION CRITIQUE : EXPLORATION DE LA GARDE-ROBE

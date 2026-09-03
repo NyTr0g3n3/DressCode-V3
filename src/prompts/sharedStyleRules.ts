@@ -17,7 +17,8 @@ Analyse la météo dans le contexte et applique :
 
 ⚠️ **INTERDICTIONS THERMIQUES** :
 - Doudoune/manteau si > 15°C
-- Short si < 22°C
+- Short si < 24°C
+- Lin (chemise, pantalon...) si < 24°C — matière trop fine/fraîche en dessous
 - Pull laine si > 15°C
 - Sandales si < 25°C
 

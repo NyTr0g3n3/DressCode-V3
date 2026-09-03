@@ -1,7 +1,11 @@
 import type { ClothingItem, ClothingSet, OutfitItem, OutfitSuggestion } from '../types';
 import { detectSubcategory } from './subcategoryClassifier';
 
-const SHORTS_MIN_TEMPERATURE_C = 22;
+const SHORTS_MIN_TEMPERATURE_C = 24;
+const LINEN_MIN_TEMPERATURE_C = 24;
+// "Lin", "Coton/Lin", "100% Lin"... — jamais "linge" ou un mot qui contiendrait
+// "lin" sans être un mot à part entière, d'où les limites de mot \b.
+const LINEN_PATTERN = /\blin\b/i;
 
 // Uniquement les deux cas explicitement demandés — les autres pulls (col
 // rond, sweat...) ont aussi des règles de layering dans sharedStyleRules.ts
@@ -67,13 +71,24 @@ function isStructurallyComplete(resolvedItems: ClothingItem[]): boolean {
 
 /**
  * Un short (catégorie Bas, sous-catégorie Shorts/Shorts sportifs) alors
- * qu'il fait moins de 22°C — règle thermique non négociable.
+ * qu'il fait moins de 24°C — règle thermique non négociable.
  */
 function hasInappropriateShorts(resolvedItems: ClothingItem[], temperatureCelsius: number | null): boolean {
   if (temperatureCelsius === null || temperatureCelsius >= SHORTS_MIN_TEMPERATURE_C) return false;
   return resolvedItems.some(
     item => item.category === 'Bas' && (item.subcategory === 'Shorts' || item.subcategory === 'Shorts sportifs')
   );
+}
+
+/**
+ * Une pièce en lin (n'importe quelle catégorie — chemise, pantalon...)
+ * alors qu'il fait moins de 24°C — le lin est une matière fine et
+ * respirante pensée pour la chaleur, trop légère en dessous, même en
+ * une seule couche.
+ */
+function hasInappropriateLinen(resolvedItems: ClothingItem[], temperatureCelsius: number | null): boolean {
+  if (temperatureCelsius === null || temperatureCelsius >= LINEN_MIN_TEMPERATURE_C) return false;
+  return resolvedItems.some(item => LINEN_PATTERN.test(item.material));
 }
 
 /**
@@ -157,6 +172,10 @@ export function filterOutfitsByHardConstraints(
     }
     if (hasInappropriateShorts(resolvedItems, temperatureCelsius)) {
       console.warn(`⚠️ Tenue "${outfit.titre}" écartée : short proposé alors qu'il fait ${temperatureCelsius}°C (< ${SHORTS_MIN_TEMPERATURE_C}°C).`);
+      return false;
+    }
+    if (hasInappropriateLinen(resolvedItems, temperatureCelsius)) {
+      console.warn(`⚠️ Tenue "${outfit.titre}" écartée : pièce en lin proposée alors qu'il fait ${temperatureCelsius}°C (< ${LINEN_MIN_TEMPERATURE_C}°C).`);
       return false;
     }
     if (hasImproperlyLayeredPull(resolvedItems)) {

@@ -201,7 +201,7 @@ const AppContent: React.FC = () => {
 
     try {
       // Note : le dernier paramètre est la météo de référence pour les
-      // contraintes dures (short si < 22°C, etc.) — la météo actuelle en
+      // contraintes dures (short si < 24°C, etc.) — la météo actuelle en
       // mode "aujourd'hui", ou la prévision du matin en mode "demain" (voir
       // outfitConstraints.ts et weatherContext.ts).
       const referenceWeatherInfo = buildReferenceWeatherInfo(weatherDay, weatherInfo, tomorrowForecast);
