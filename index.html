@@ -2,7 +2,15 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <!-- interactive-widget=resizes-content : depuis Chrome 108, le
+         comportement PAR DÉFAUT du clavier virtuel sur Android est
+         resizes-visual, qui ne redimensionne QUE le viewport visuel — ni
+         le viewport de mise en page, ni donc les valeurs "dvh", qui
+         restent figées à la hauteur plein écran, clavier ouvert ou non.
+         resizes-content restaure le comportement voulu (le viewport de
+         mise en page ET les dvh rétrécissent avec le clavier), ce dont
+         dépend le panneau du chat styliste (OutfitChatModal) sur mobile. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>DressCode</title>
@@ -83,7 +91,7 @@
     background-color: inherit !important;
   }
 </style>
-    <script type="module" crossorigin src="/assets/index-CqUnPnBV.js"></script>
+    <script type="module" crossorigin src="/assets/index-C29tbgB-.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-CunosSd1.css">
   </head>
   <body>
