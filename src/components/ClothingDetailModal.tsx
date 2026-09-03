@@ -410,12 +410,17 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                     <div className="flex items-center justify-between w-full px-4 py-2">
                         <h2 className="text-lg font-bold text-raisin-black dark:text-snow">Détails de l'article</h2>
                         <div className="flex items-center gap-1">
+                            {/* Couleur explicite plutôt qu'héritée : la BottomSheet (react-spring-bottom-sheet)
+                                rend ce header hors de l'arbre React de l'app (portail), donc le texte
+                                dark:text-snow posé sur le conteneur racine de l'app ne s'hérite pas
+                                jusqu'ici — sans classe de couleur dédiée, les icônes restent en noir
+                                (currentColor par défaut) et disparaissent sur fond sombre. */}
                             <button
                                 onClick={handleToggleDirty}
                                 className={`p-1.5 rounded-full transition-colors ${
                                     item.dirtySince
                                         ? 'bg-gold/20 text-gold-dark dark:text-gold'
-                                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                                        : 'text-gray-700 dark:text-snow hover:bg-gray-100 dark:hover:bg-gray-800'
                                 }`}
                                 aria-label={item.dirtySince ? "Marquer comme propre" : "Mettre au bac à linge"}
                                 title={item.dirtySince ? "Marquer comme propre" : "Mettre au bac à linge"}
@@ -427,7 +432,7 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                                 className={`p-1.5 rounded-full transition-colors ${
                                     item.isExcluded
                                         ? 'bg-gray-500/20 text-gray-700 dark:text-gray-300'
-                                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                                        : 'text-gray-700 dark:text-snow hover:bg-gray-100 dark:hover:bg-gray-800'
                                 }`}
                                 aria-label={item.isExcluded ? "Inclure dans les suggestions" : "Exclure des suggestions"}
                                 title={item.isExcluded ? "Inclure dans les suggestions" : "Ne pas suggérer cet article"}
@@ -436,7 +441,7 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                             </button>
                             <button
                                 onClick={handleToggleFavorite}
-                                className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                                className="p-1.5 text-gray-700 dark:text-snow hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
                                 aria-label="Ajouter aux favoris"
                             >
                                 {item.isFavorite ? (
@@ -488,7 +493,7 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                             className={`p-2 rounded-full transition-colors ${
                                 item.dirtySince
                                     ? 'bg-gold/20 text-gold-dark dark:text-gold'
-                                    : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                                    : 'text-gray-700 dark:text-snow hover:bg-gray-100 dark:hover:bg-gray-800'
                             }`}
                             aria-label={item.dirtySince ? "Marquer comme propre" : "Mettre au bac à linge"}
                             title={item.dirtySince ? "Marquer comme propre" : "Mettre au bac à linge"}
@@ -500,7 +505,7 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                             className={`p-2 rounded-full transition-colors ${
                                 item.isExcluded
                                     ? 'bg-gray-500/20 text-gray-700 dark:text-gray-300'
-                                    : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                                    : 'text-gray-700 dark:text-snow hover:bg-gray-100 dark:hover:bg-gray-800'
                             }`}
                             aria-label={item.isExcluded ? "Inclure dans les suggestions" : "Exclure des suggestions"}
                             title={item.isExcluded ? "Inclure dans les suggestions" : "Ne pas suggérer cet article"}
@@ -509,7 +514,7 @@ const ClothingDetailModal: React.FC<ClothingDetailModalProps> = ({
                         </button>
                         <button
                             onClick={handleToggleFavorite}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                            className="p-2 text-gray-700 dark:text-snow hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
                             aria-label="Ajouter aux favoris"
                         >
                             {item.isFavorite ? (

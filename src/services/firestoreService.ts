@@ -9,6 +9,7 @@ import {
   onSnapshot,
   query,
   where,
+  deleteField,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { ClothingItem, ClothingSet, FavoriteOutfit, OutfitSuggestion, OutfitWearHistory } from '../types';
@@ -67,7 +68,18 @@ export const addClothingItem = async (userId: string, item: NewClothingItem): Pr
 export const updateClothingItem = async (userId: string, itemId: string, updates: Partial<ClothingItem>) => {
   try {
     const itemDoc = doc(db, 'users', userId, 'items', itemId);
-    await updateDoc(itemDoc, updates);
+    // Firestore rejette purement et simplement `undefined` comme valeur de
+    // champ (updateDoc lève "Unsupported field value: undefined") — un
+    // champ qu'on veut explicitement effacer (ex: dirtySince: undefined
+    // pour sortir un article du bac à linge) doit passer par le sentinel
+    // deleteField(), sans quoi l'appel échoue silencieusement pour
+    // l'utilisateur (promesse rejetée, mais le champ visible ne change
+    // jamais côté UI tant qu'on ne regarde pas l'erreur de près).
+    const sanitizedUpdates: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(updates)) {
+      sanitizedUpdates[key] = value === undefined ? deleteField() : value;
+    }
+    await updateDoc(itemDoc, sanitizedUpdates);
   } catch (error) {
     console.error("Erreur lors de la mise à jour d'un vêtement:", error);
     throw error;
