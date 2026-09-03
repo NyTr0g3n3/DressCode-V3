@@ -4,7 +4,7 @@ import { functions } from '../firebase';
 import { STYLE_RULES, ACCESSORY_RULES } from '../prompts/sharedStyleRules';
 import { buildFavoritesInstruction } from '../prompts/personalization';
 import { validateAndFixOutfitIds, validateAndFixVacationPlanIds } from '../utils/outfitValidation';
-import { parseTemperatureCelsius, filterOutfitsByHardConstraints } from '../utils/outfitConstraints';
+import { parseTemperatureCelsius, filterOutfitsByHardConstraints, parseTemperatureFromContext, filterVacationItemsByHardConstraints } from '../utils/outfitConstraints';
 
 // Les appels Gemini passent maintenant par des Cloud Functions sécurisées
 // La clé API reste côté serveur et n'est jamais exposée au client
@@ -713,9 +713,10 @@ export async function generateVacationPlan(
 
 2. **INTERDICTIONS ABSOLUES** (NON NÉGOCIABLE) :
    - ❌ **TOUTE veste/blouson/manteau si > 25°C** (veste légère, suède, cuir, toile - TOUTES interdites)
-   - ❌ Doudoune/veste ski/polaire si > 20°C
-   - ❌ Shorts si < 15°C
-   - ❌ Sandales si < 18°C
+   - ❌ Doudoune/veste ski/polaire si > 15°C
+   - ❌ Shorts si < 24°C
+   - ❌ Sandales si < 25°C
+   - ❌ Lin (chemise, pantalon...) si < 24°C — matière trop fine/fraîche en dessous
    - ❌ Pulls en laine si > 25°C
    - ❌ Jeans épais si > 32°C
 
@@ -724,7 +725,7 @@ export async function generateVacationPlan(
    - Destination : Ski -5°C → INTERDIT : shorts, t-shirts seuls, sandales
 
 3. **MATIÈRES ADAPTÉES** :
-   - **Climat chaud** : Coton léger, lin, matières respirantes uniquement
+   - **Climat chaud (≥ 24°C)** : Coton léger, lin, matières respirantes uniquement
    - **Climat froid** : Laine, polaire, matières isolantes
    - **Voyage** : Privilégier matières qui ne se froissent pas
 
@@ -804,7 +805,16 @@ Dans ta réponse JSON, tu DOIS mettre :
         // ✅ Validation et correction automatique des IDs
         const validatedPlan = validateAndFixVacationPlanIds(rawPlan, clothingList, sets);
 
-        return validatedPlan;
+        // 🌡️ Filtre thermique dur (short, lin) — filet de sécurité au cas
+        // où l'IA ignore les règles du prompt ci-dessus, comme pour le
+        // Créateur de Tenues. La température vient du texte libre saisi
+        // par l'utilisateur (pas de météo structurée pour la valise) :
+        // si aucune température n'y est reconnue, le filtre ne retire
+        // simplement rien plutôt que de risquer un faux positif.
+        const temperatureCelsius = parseTemperatureFromContext(context);
+        const filteredValise = filterVacationItemsByHardConstraints(validatedPlan.valise, clothingList, sets, temperatureCelsius);
+
+        return { ...validatedPlan, valise: filteredValise };
     } catch (error) {
         console.error("Erreur génération plan vacances:", error);
         throw new Error("Erreur lors de la génération du plan vacances.", { cause: error });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTemperatureCelsius, filterOutfitsByHardConstraints } from './outfitConstraints';
+import { parseTemperatureCelsius, filterOutfitsByHardConstraints, parseTemperatureFromContext, filterVacationItemsByHardConstraints } from './outfitConstraints';
 import type { ClothingItem, ClothingSet, OutfitSuggestion } from '../types';
 
 describe('parseTemperatureCelsius', () => {
@@ -246,6 +246,65 @@ describe('filterOutfitsByHardConstraints', () => {
       vetements: [{ id: colVPull.id, description: colVPull.analysis }, { id: shirt.id, description: shirt.analysis }, { id: jean.id, description: jean.analysis }, { id: sneakers.id, description: sneakers.analysis }],
     };
     const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 10 });
+    expect(result).toHaveLength(1);
+  });
+});
+
+describe('parseTemperatureFromContext', () => {
+  it('trouve une température en "°C" n\'importe où dans le texte libre', () => {
+    expect(parseTemperatureFromContext('Vacances en Espagne, 35°C prévus')).toBe(35);
+  });
+
+  it('trouve une température écrite en toutes lettres ("degrés")', () => {
+    expect(parseTemperatureFromContext('Ski dans les Alpes, -5 degrés')).toBe(-5);
+    expect(parseTemperatureFromContext('Environ 30 degré la journée')).toBe(30);
+  });
+
+  it('retourne null si aucune température ne figure dans le texte', () => {
+    expect(parseTemperatureFromContext('Weekend à Barcelone entre amis')).toBeNull();
+    expect(parseTemperatureFromContext(null)).toBeNull();
+    expect(parseTemperatureFromContext(undefined)).toBeNull();
+    expect(parseTemperatureFromContext('')).toBeNull();
+  });
+});
+
+describe('filterVacationItemsByHardConstraints', () => {
+  const valise = [
+    { id: tshirt.id, description: tshirt.analysis },
+    { id: short.id, description: short.analysis },
+    { id: linenShirt.id, description: linenShirt.analysis },
+    { id: sneakers.id, description: sneakers.analysis },
+  ];
+
+  it('retire le short et la pièce en lin par temps frais, garde le reste', () => {
+    const result = filterVacationItemsByHardConstraints(valise, allItems, [], 18);
+    expect(result.map(v => v.id)).toEqual([tshirt.id, sneakers.id]);
+  });
+
+  it('garde tout par temps assez chaud', () => {
+    const result = filterVacationItemsByHardConstraints(valise, allItems, [], 26);
+    expect(result).toHaveLength(4);
+  });
+
+  it('ne filtre rien si aucune température n\'est reconnue', () => {
+    const result = filterVacationItemsByHardConstraints(valise, allItems, [], null);
+    expect(result).toHaveLength(4);
+  });
+
+  it('retire un ensemble entier (indivisible) si un seul de ses items est fautif', () => {
+    const set: ClothingSet = { id: 'set-linen', name: 'Ensemble été', itemIds: [linenShirt.id, jean.id], imageSrc: '' };
+    const valiseWithSet = [
+      { id: tshirt.id, description: tshirt.analysis },
+      { id: set.id, description: set.name },
+      { id: sneakers.id, description: sneakers.analysis },
+    ];
+    const result = filterVacationItemsByHardConstraints(valiseWithSet, allItems, [set], 18);
+    expect(result.map(v => v.id)).toEqual([tshirt.id, sneakers.id]);
+  });
+
+  it('laisse passer un ID inconnu (ni item ni ensemble) sans le filtrer', () => {
+    const valiseWithUnknown = [{ id: 'id-inconnu', description: 'Article fantôme' }];
+    const result = filterVacationItemsByHardConstraints(valiseWithUnknown, allItems, [], 10);
     expect(result).toHaveLength(1);
   });
 });
