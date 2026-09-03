@@ -160,13 +160,16 @@ export const SortIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-
   </svg>
 );
 
-// Panier à linge (bac à linge) : anse arrondie + corps évasé + lignes de
-// tressage. Distinct de SuitcaseIcon (rectangle rigide à poignée droite).
+// Panier à linge (bac à linge) : corps évasé + DEUX anses latérales (au
+// lieu d'une anse haute unique) — c'est justement ce qui le distingue
+// clairement d'une poubelle au premier coup d'œil, vérifié visuellement
+// avant intégration. Distinct de SuitcaseIcon (rectangle rigide à
+// poignée droite, pour la valise).
 export const LaundryBasketIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-5" }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M5 9l1.2 10a2 2 0 002 1.8h7.6a2 2 0 002-1.8L19 9" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 9h17" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V6.5A3 3 0 0112 3.5a3 3 0 013 3V9" />
-    <path strokeLinecap="round" d="M9 12.5v6M12 12.5v7M15 12.5v6" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10l1.1 8.5A2 2 0 007.6 20h8.8a2 2 0 002-1.5L19.5 10" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 10c0-2 2-3 3-3M21 10c0-2-2-3-3-3" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18" />
+    <path strokeLinecap="round" d="M8 13.5v4M12 13.5v5M16 13.5v4" />
   </svg>
 );
