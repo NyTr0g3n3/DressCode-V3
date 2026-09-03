@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { parseTemperatureCelsius, filterOutfitsByHardConstraints, parseTemperatureFromContext, filterVacationItemsByHardConstraints } from './outfitConstraints';
-import type { ClothingItem, ClothingSet, OutfitSuggestion } from '../types';
+import {
+  parseTemperatureCelsius, filterOutfitsByHardConstraints,
+  parseTemperatureFromContext, filterVacationItemsByHardConstraints,
+  collectRecentlyWornItemIds, computeRecentlyWornExclusions
+} from './outfitConstraints';
+import type { ClothingItem, ClothingSet, OutfitSuggestion, OutfitWearHistory } from '../types';
 
 describe('parseTemperatureCelsius', () => {
   it('extrait la température du format produit par useWeather', () => {
@@ -306,5 +310,49 @@ describe('filterVacationItemsByHardConstraints', () => {
     const valiseWithUnknown = [{ id: 'id-inconnu', description: 'Article fantôme' }];
     const result = filterVacationItemsByHardConstraints(valiseWithUnknown, allItems, [], 10);
     expect(result).toHaveLength(1);
+  });
+});
+
+describe('collectRecentlyWornItemIds', () => {
+  const NOW = 1_700_000_000_000;
+  const ONE_DAY = 24 * 60 * 60 * 1000;
+
+  it('ne garde que les IDs portés dans la fenêtre demandée', () => {
+    const wornOutfits: OutfitWearHistory[] = [
+      { id: 'h1', outfitTitle: 'Look 1', outfitDescription: '', itemIds: ['a', 'b'], wornAt: NOW - 1 * ONE_DAY },
+      { id: 'h2', outfitTitle: 'Look 2', outfitDescription: '', itemIds: ['c'], wornAt: NOW - 5 * ONE_DAY },
+    ];
+    expect(collectRecentlyWornItemIds(wornOutfits, 2, NOW)).toEqual(new Set(['a', 'b']));
+  });
+
+  it('retourne un Set vide si wornOutfits est absent ou vide', () => {
+    expect(collectRecentlyWornItemIds(undefined, 2, NOW)).toEqual(new Set());
+    expect(collectRecentlyWornItemIds([], 2, NOW)).toEqual(new Set());
+  });
+});
+
+describe('computeRecentlyWornExclusions', () => {
+  it('exclut un haut porté récemment tant qu\'une alternative reste dans sa catégorie', () => {
+    const result = computeRecentlyWornExclusions([tshirt, shirt, jean], new Set([tshirt.id]));
+    expect(result.excludedItemIds).toEqual(new Set([tshirt.id]));
+    expect(result.fallbackItems).toEqual([]);
+  });
+
+  it('ignore les catégories hors périmètre (Chaussures, Accessoires)', () => {
+    const result = computeRecentlyWornExclusions([sneakers], new Set([sneakers.id]));
+    expect(result.excludedItemIds.size).toBe(0);
+    expect(result.fallbackItems).toEqual([]);
+  });
+
+  it('réintègre en fallback si l\'exclusion viderait toute la catégorie', () => {
+    const result = computeRecentlyWornExclusions([jean], new Set([jean.id]));
+    expect(result.excludedItemIds.size).toBe(0);
+    expect(result.fallbackItems).toEqual([jean]);
+  });
+
+  it('ne touche à rien si aucun item n\'a été porté récemment', () => {
+    const result = computeRecentlyWornExclusions([tshirt, jean], new Set());
+    expect(result.excludedItemIds.size).toBe(0);
+    expect(result.fallbackItems).toEqual([]);
   });
 });
