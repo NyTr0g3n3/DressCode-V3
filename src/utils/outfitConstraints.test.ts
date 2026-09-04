@@ -65,7 +65,13 @@ const dress: ClothingItem = {
 const dressUnclassified: ClothingItem = {
   id: 'top-10', imageSrc: '', analysis: 'Robe portefeuille noire', category: 'Hauts', color: 'Noir', material: 'Viscose',
 };
-const allItems = [tshirt, jean, short, sneakers, zipSweater, zipSweaterUnclassified, turtleneck, shirt, colVPull, crewNeckPull, linenShirt, linenBlendPants, dress, dressUnclassified];
+const miniSkirt: ClothingItem = {
+  id: 'bottom-4', imageSrc: '', analysis: 'Mini-jupe en jean', category: 'Bas', subcategory: 'Jupes', color: 'Bleu', material: 'Denim',
+};
+const longSkirt: ClothingItem = {
+  id: 'bottom-5', imageSrc: '', analysis: 'Jupe longue plissée', category: 'Bas', subcategory: 'Jupes', color: 'Marine', material: 'Laine',
+};
+const allItems = [tshirt, jean, short, sneakers, zipSweater, zipSweaterUnclassified, turtleneck, shirt, colVPull, crewNeckPull, linenShirt, linenBlendPants, dress, dressUnclassified, miniSkirt, longSkirt];
 
 const completeOutfit: OutfitSuggestion = {
   titre: 'Look complet', description: '',
@@ -138,6 +144,24 @@ describe('filterOutfitsByHardConstraints', () => {
       vetements: [{ id: tshirt.id, description: tshirt.analysis }, { id: short.id, description: short.analysis }, { id: sneakers.id, description: sneakers.analysis }],
     };
     const result = filterOutfitsByHardConstraints([shortsOutfit], allItems, [], { temperatureCelsius: 25 });
+    expect(result).toHaveLength(1);
+  });
+
+  it('écarte une mini-jupe explicitement décrite comme telle quand il fait moins de 24°C', () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Mini-jupe par temps froid', description: '',
+      vetements: [{ id: tshirt.id, description: tshirt.analysis }, { id: miniSkirt.id, description: miniSkirt.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 15 });
+    expect(result).toHaveLength(0);
+  });
+
+  it("garde une jupe longue par temps froid — contrairement à un short, une jupe n'est pas systématiquement courte", () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Jupe longue par temps froid', description: '',
+      vetements: [{ id: tshirt.id, description: tshirt.analysis }, { id: longSkirt.id, description: longSkirt.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 15 });
     expect(result).toHaveLength(1);
   });
 

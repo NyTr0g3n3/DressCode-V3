@@ -119,7 +119,7 @@ export const analyzeClothingImages = onCall(
     2. Sa catégorie : "Hauts", "Bas", "Chaussures", ou "Accessoires".
     3. Sa sous-catégorie (selon la catégorie) :
        - Si "Hauts" : "T-shirts", "Chemises", "Pulls", "Vestes", ou "Robes"
-       - Si "Bas" : "Pantalons", "Shorts", ou "Shorts sportifs"
+       - Si "Bas" : "Pantalons", "Shorts", "Shorts sportifs", ou "Jupes"
        - Si "Chaussures" : "Sneakers", "Classiques", ou "Bottines"
        - Si "Accessoires" : "Montres & Bijoux", "Écharpes & Foulards", "Ceintures", "Lunettes", "Chapeaux", ou "Sacs"
 
@@ -162,7 +162,7 @@ export const analyzeClothingImages = onCall(
                         // Hauts
                         "T-shirts", "Chemises", "Pulls", "Vestes", "Robes",
                         // Bas
-                        "Pantalons", "Shorts", "Shorts sportifs",
+                        "Pantalons", "Shorts", "Shorts sportifs", "Jupes",
                         // Chaussures
                         "Sneakers", "Classiques", "Bottines",
                         // Accessoires
