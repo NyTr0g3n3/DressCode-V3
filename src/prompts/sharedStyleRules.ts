@@ -10,7 +10,7 @@ Analyse la météo dans le contexte et applique :
 
 | Température | Règle stricte |
 |-------------|---------------|
-| **< 15°C** | Layering OBLIGATOIRE : Base (t-shirt/chemise) + Pull/Sweat + Manteau |
+| **< 15°C** | Layering OBLIGATOIRE : Base (t-shirt/chemise/robe) + Pull/Sweat + Manteau |
 | **15-20°C** | Pull, sweat, ou veste légère suffisent |
 | **20-25°C** | 1 seule couche (t-shirt OU chemise légère) |
 | **> 25°C** | Vêtements TRÈS légers uniquement. INTERDITS : jeans épais, pulls, vestes |
@@ -49,9 +49,10 @@ confortablement plutôt qu'un pull épais qu'on garderait tout l'après-midi.
 ✅ **Pull col zippé/camionneur** → TOUJOURS avec t-shirt ou chemise dessous
 ✅ **Pull col rond (classique)** → UNIQUEMENT avec t-shirt uni dessous, JAMAIS avec chemise
 ✅ **Sweat/Pull sportif** → UNIQUEMENT avec t-shirt, JAMAIS avec chemise
-✅ **Veste/Blazer** → Sur t-shirt, chemise, pull fin, ou col roulé
-✅ **Manteau** → Sur pull, sweat, ou veste (si très froid)
+✅ **Veste/Blazer** → Sur t-shirt, chemise, pull fin, col roulé, ou robe
+✅ **Manteau** → Sur pull, sweat, veste, ou robe (si très froid)
 ✅ **Col roulé** → JAMAIS avec chemise !
+✅ **Robe** → Se suffit à elle-même (voir exception structure ci-dessous), une veste/un cardigan par-dessus reste bienvenu selon la météo — ne cherche PAS à lui ajouter un pull dessous
 
 ❌ **INTERDICTIONS ABSOLUES DE LAYERING** :
 - JAMAIS chemise avec col roulé (aberration stylistique)
@@ -152,9 +153,20 @@ export const ACCESSORY_RULES = `━━━━━━━━━━━━━━━━
 ⭐ ACCESSOIRES & SÉLECTION INTELLIGENTE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔴 **RÈGLE ABSOLUE : UNE MONTRE PAR TENUE**
-Si l'utilisateur possède des montres dans sa garde-robe, tu DOIS en inclure UNE dans chaque tenue.
-La montre n'est PAS optionnelle si disponible !
+🔴 **RÈGLE ABSOLUE : UN ACCESSOIRE-ANCRE PAR TENUE**
+Si l'utilisateur possède des montres, bijoux, ou sacs dans sa garde-robe,
+tu DOIS en inclure AU MOINS UN dans chaque tenue — ce n'est PAS optionnel
+si disponible ! Un collier, une bague, un bracelet fin ou un sac sont des
+choix tout aussi valables qu'une montre : ne la privilégie PAS par défaut
+simplement parce qu'elle est listée en premier ci-dessous.
+
+⚠️ **"Montres & Bijoux" est UNE SEULE sous-catégorie** dans la garde-robe
+(montres ET bijoux y sont mélangés sans distinction de champ) : lis la
+description de chaque article pour savoir s'il s'agit d'une montre
+(→ applique les règles de sélection par type de bracelet ci-dessous) ou
+d'un autre bijou — collier, bague, bracelet fin (→ applique "AUTRES
+BIJOUX (hors montre)" plus bas ; les règles de bracelet de MONTRE,
+pensées pour un cadran assorti aux chaussures, ne s'y appliquent pas).
 
 ⌚ **SÉLECTION INTELLIGENTE DES MONTRES** (CRUCIAL - Ne pas choisir au hasard !)
 
@@ -210,15 +222,24 @@ La montre n'est PAS optionnelle si disponible !
 - ❌ Montre dorée élégante avec sweat + jogger
 - ❌ Choisir toujours la même montre pour les 3 tenues (sauf si une seule disponible)
 
-🔄 **VARIÉTÉ DES MONTRES** :
-Si l'utilisateur possède plusieurs montres, VARIE les montres entre les 3 tenues selon les styles !
+💍 **AUTRES BIJOUX (hors montre)** — collier, bague, bracelet fin, boucles d'oreilles :
+- **Or/doré** : Tons chauds (beige, camel, marron), blanc, noir — statement, à utiliser avec intention comme une montre dorée
+- **Argent/acier** : Très polyvalent, va avec presque tout — safe choice équivalente à une montre acier
+- ⚠️ ÉVITER de mélanger or et argent dans la même tenue (règle classique — sauf si le style personnel de l'utilisateur montre qu'il/elle l'assume, cf. note sur les guides de goût)
+- Un collier ou des boucles d'oreilles fonctionnent aussi bien qu'une montre comme accessoire-ancre d'une tenue élégante ou construite autour d'une robe
+
+🔄 **VARIÉTÉ DES ACCESSOIRES-ANCRES** :
+Si l'utilisateur possède plusieurs montres/bijoux/sacs, VARIE-les entre les 3 tenues selon les styles — pas systématiquement la même pièce, ni systématiquement une montre s'il y a des bijoux ou sacs disponibles !
 
 📿 **AUTRES ACCESSOIRES** :
 
 **Bracelets** :
-- Peuvent être ajoutés EN PLUS de la montre (au poignet opposé)
-- Style casual/décontracté uniquement
-- Éviter avec tenues très formelles
+- Peuvent être LE bijou-ancre de la tenue (voir plus haut), ou ajoutés EN PLUS d'une montre déjà choisie (au poignet opposé) pour un effet superposé — dans ce dernier cas, style casual/décontracté uniquement, à éviter avec les tenues très formelles
+
+**Sac** :
+- Accessoire-ancre à part entière, au même titre qu'une montre ou un bijou — pas juste un détail pratique
+- Coordonner sa couleur avec les chaussures ou la ceinture (même famille de couleur, ou contraste neutre volontaire)
+- Format adapté à l'occasion : sac structuré pour smart-casual/formel, sac bandoulière/tote pour casual
 
 **Ceinture** :
 - OBLIGATOIRE avec pantalons classiques à passants (chino, pantalon habillé)
