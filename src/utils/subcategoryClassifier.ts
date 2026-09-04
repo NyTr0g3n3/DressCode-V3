@@ -6,7 +6,7 @@ console.log('📦 subcategoryClassifier.ts loaded - VERSION 2.0');
 // Définition des sous-catégories par catégorie
 export const SUBCATEGORIES: Record<Category, string[]> = {
   Hauts: ['T-shirts', 'Chemises', 'Pulls', 'Vestes', 'Robes'],
-  Bas: ['Pantalons', 'Shorts', 'Shorts sportifs'],
+  Bas: ['Pantalons', 'Shorts', 'Shorts sportifs', 'Jupes'],
   Chaussures: ['Sneakers', 'Classiques', 'Bottines'],
   Accessoires: [
     'Ceintures',
@@ -45,6 +45,7 @@ const KEYWORDS = {
   'Pantalons': ['pantalon', 'jean', 'chino', 'trouser', 'cargo', 'jogging', 'survêtement', 'slim', 'regular', 'straight'],
   'Shorts': ['short', 'bermuda'],
   'Shorts sportifs': ['short sport', 'short jogging', 'short running', 'short gym', 'short fitness'],
+  'Jupes': ['jupe', 'skirt'],
 
   // Chaussures
   'Sneakers': ['sneaker', 'basket', 'tennis', 'running', 'sport', 'air force', 'dunk', 'jordan', 'stan smith', 'adidas', 'nike'],

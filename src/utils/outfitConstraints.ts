@@ -6,6 +6,13 @@ const LINEN_MIN_TEMPERATURE_C = 24;
 // "Lin", "Coton/Lin", "100% Lin"... — jamais "linge" ou un mot qui contiendrait
 // "lin" sans être un mot à part entière, d'où les limites de mot \b.
 const LINEN_PATTERN = /\blin\b/i;
+// Une jupe "Jupes" générique n'est PAS logée à la même enseigne qu'un
+// short : contrairement à un short, une jupe peut être longue/mi-longue
+// et donc parfaitement adaptée au froid (portée avec des collants). Seule
+// une pièce explicitement décrite comme mini-jupe/jupe courte a la même
+// couverture limitée qu'un short — on ne peut pas déduire la longueur
+// d'une jupe générique depuis sa seule description.
+const MINI_SKIRT_PATTERN = /mini[- ]?jupe|jupe courte/i;
 
 // Uniquement les deux cas explicitement demandés — les autres pulls (col
 // rond, sweat...) ont aussi des règles de layering dans sharedStyleRules.ts
@@ -97,14 +104,18 @@ function isStructurallyComplete(resolvedItems: ClothingItem[]): boolean {
 }
 
 /**
- * Un short (catégorie Bas, sous-catégorie Shorts/Shorts sportifs) alors
- * qu'il fait moins de 24°C — règle thermique non négociable.
+ * Un short (catégorie Bas, sous-catégorie Shorts/Shorts sportifs), ou une
+ * mini-jupe explicitement décrite comme telle (voir MINI_SKIRT_PATTERN —
+ * une jupe générique n'est PAS concernée, elle peut très bien être longue),
+ * alors qu'il fait moins de 24°C — règle thermique non négociable.
  */
 function hasInappropriateShorts(resolvedItems: ClothingItem[], temperatureCelsius: number | null): boolean {
   if (temperatureCelsius === null || temperatureCelsius >= SHORTS_MIN_TEMPERATURE_C) return false;
-  return resolvedItems.some(
-    item => item.category === 'Bas' && (item.subcategory === 'Shorts' || item.subcategory === 'Shorts sportifs')
-  );
+  return resolvedItems.some(item => {
+    if (item.category !== 'Bas') return false;
+    if (item.subcategory === 'Shorts' || item.subcategory === 'Shorts sportifs') return true;
+    return MINI_SKIRT_PATTERN.test(item.analysis);
+  });
 }
 
 /**
@@ -198,7 +209,7 @@ export function filterOutfitsByHardConstraints(
       return false;
     }
     if (hasInappropriateShorts(resolvedItems, temperatureCelsius)) {
-      console.warn(`⚠️ Tenue "${outfit.titre}" écartée : short proposé alors qu'il fait ${temperatureCelsius}°C (< ${SHORTS_MIN_TEMPERATURE_C}°C).`);
+      console.warn(`⚠️ Tenue "${outfit.titre}" écartée : short/mini-jupe proposé alors qu'il fait ${temperatureCelsius}°C (< ${SHORTS_MIN_TEMPERATURE_C}°C).`);
       return false;
     }
     if (hasInappropriateLinen(resolvedItems, temperatureCelsius)) {
@@ -250,7 +261,7 @@ export function filterVacationItemsByHardConstraints(
       : set!.itemIds.map(id => itemById.get(id)).filter((i): i is ClothingItem => i !== undefined);
 
     if (hasInappropriateShorts(resolvedItems, temperatureCelsius)) {
-      console.warn(`⚠️ Valise : "${entry.description}" retiré (short) alors qu'il fait ${temperatureCelsius}°C (< ${SHORTS_MIN_TEMPERATURE_C}°C).`);
+      console.warn(`⚠️ Valise : "${entry.description}" retiré (short/mini-jupe) alors qu'il fait ${temperatureCelsius}°C (< ${SHORTS_MIN_TEMPERATURE_C}°C).`);
       return false;
     }
     if (hasInappropriateLinen(resolvedItems, temperatureCelsius)) {

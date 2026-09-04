@@ -749,6 +749,7 @@ export async function generateVacationPlan(
    - ❌ **TOUTE veste/blouson/manteau si > 25°C** (veste légère, suède, cuir, toile - TOUTES interdites)
    - ❌ Doudoune/veste ski/polaire si > 15°C
    - ❌ Shorts si < 24°C
+   - ❌ Mini-jupe/jupe courte si < 24°C — même couverture limitée qu'un short (une jupe longue/mi-longue n'est PAS concernée)
    - ❌ Sandales si < 25°C
    - ❌ Lin (chemise, pantalon...) si < 24°C — matière trop fine/fraîche en dessous
    - ❌ Pulls en laine si > 25°C

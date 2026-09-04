@@ -39,6 +39,10 @@ describe('detectSubcategory', () => {
     expect(detectSubcategory('Robe chemise à manches longues', 'Hauts')).toBe('Robes');
   });
 
+  it('détecte une jupe dans les Bas', () => {
+    expect(detectSubcategory('Jupe plissée midi beige', 'Bas')).toBe('Jupes');
+  });
+
   it("n'est pas sensible à la casse", () => {
     expect(detectSubcategory('CHEMISE BLANCHE', 'Hauts')).toBe('Chemises');
   });

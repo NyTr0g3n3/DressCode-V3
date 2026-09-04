@@ -18,6 +18,7 @@ Analyse la météo dans le contexte et applique :
 ⚠️ **INTERDICTIONS THERMIQUES** :
 - Doudoune/manteau si > 15°C
 - Short si < 24°C
+- Mini-jupe/jupe courte si < 24°C — même couverture limitée qu'un short (une jupe longue/mi-longue n'est PAS concernée, elle se porte très bien avec des collants par temps froid)
 - Lin (chemise, pantalon...) si < 24°C — matière trop fine/fraîche en dessous
 - Pull laine si > 15°C
 - Sandales si < 25°C
