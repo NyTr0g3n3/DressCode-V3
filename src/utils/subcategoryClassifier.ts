@@ -5,7 +5,7 @@ console.log('📦 subcategoryClassifier.ts loaded - VERSION 2.0');
 
 // Définition des sous-catégories par catégorie
 export const SUBCATEGORIES: Record<Category, string[]> = {
-  Hauts: ['T-shirts', 'Chemises', 'Pulls', 'Vestes'],
+  Hauts: ['T-shirts', 'Chemises', 'Pulls', 'Vestes', 'Robes'],
   Bas: ['Pantalons', 'Shorts', 'Shorts sportifs'],
   Chaussures: ['Sneakers', 'Classiques', 'Bottines'],
   Accessoires: [
@@ -34,6 +34,12 @@ const KEYWORDS = {
   'Chemises': ['chemise', 'shirt', 'blouse', 'tunique', 'chemisier'],
   'Pulls': ['pull', 'sweater', 'sweat', 'hoodie', 'gilet', 'cardigan', 'tricot', 'col roulé', 'col v'],
   'Vestes': ['veste', 'blouson', 'manteau', 'parka', 'doudoune', 'blazer', 'jacket', 'coat', 'trench', 'bomber', 'perfecto', 'teddy'],
+  // Les expressions composées ("robe chemise", "robe pull"...) doivent
+  // être listées explicitement : le mot-clé le plus LONG l'emporte (cf.
+  // detectSubcategory), donc sans elles "Robe chemise fleurie" perdrait
+  // face au "chemise" plus court mais présent aussi dans la chaîne,
+  // alors qu'une robe reste structurellement une robe avant tout.
+  'Robes': ['robe chemise', 'robe-chemise', 'robe pull', 'robe-pull', 'robe polo', 'robe cardigan', 'robe veste', 'robe-veste', 'robe', 'dress', 'sundress', 'kaftan', 'caftan'],
 
   // Bas
   'Pantalons': ['pantalon', 'jean', 'chino', 'trouser', 'cargo', 'jogging', 'survêtement', 'slim', 'regular', 'straight'],

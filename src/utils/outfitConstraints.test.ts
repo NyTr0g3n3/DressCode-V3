@@ -59,7 +59,13 @@ const colVPull: ClothingItem = {
 const crewNeckPull: ClothingItem = {
   id: 'top-7', imageSrc: '', analysis: 'Pull col rond vert', category: 'Hauts', subcategory: 'Pulls', color: 'Vert', material: 'Laine',
 };
-const allItems = [tshirt, jean, short, sneakers, zipSweater, zipSweaterUnclassified, turtleneck, shirt, colVPull, crewNeckPull, linenShirt, linenBlendPants];
+const dress: ClothingItem = {
+  id: 'top-9', imageSrc: '', analysis: 'Robe longue fleurie', category: 'Hauts', subcategory: 'Robes', color: 'Rouge', material: 'Soie',
+};
+const dressUnclassified: ClothingItem = {
+  id: 'top-10', imageSrc: '', analysis: 'Robe portefeuille noire', category: 'Hauts', color: 'Noir', material: 'Viscose',
+};
+const allItems = [tshirt, jean, short, sneakers, zipSweater, zipSweaterUnclassified, turtleneck, shirt, colVPull, crewNeckPull, linenShirt, linenBlendPants, dress, dressUnclassified];
 
 const completeOutfit: OutfitSuggestion = {
   titre: 'Look complet', description: '',
@@ -79,6 +85,42 @@ describe('filterOutfitsByHardConstraints', () => {
     };
     const result = filterOutfitsByHardConstraints([incomplete], allItems, [], { temperatureCelsius: 20 });
     expect(result).toHaveLength(0);
+  });
+
+  it('garde une robe + chaussures comme tenue complète, sans exiger de Bas', () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Robe seule', description: '',
+      vetements: [{ id: dress.id, description: dress.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 20 });
+    expect(result).toHaveLength(1);
+  });
+
+  it('garde une robe non classifiée détectée par sa description (fallback texte)', () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Robe portefeuille seule', description: '',
+      vetements: [{ id: dressUnclassified.id, description: dressUnclassified.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 20 });
+    expect(result).toHaveLength(1);
+  });
+
+  it('écarte une robe sans chaussures (les chaussures restent obligatoires)', () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Robe sans chaussures', description: '',
+      vetements: [{ id: dress.id, description: dress.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 20 });
+    expect(result).toHaveLength(0);
+  });
+
+  it('garde une robe portée avec un Bas en plus (la présence de Bas ne casse rien)', () => {
+    const outfit: OutfitSuggestion = {
+      titre: 'Robe + pantalon', description: '',
+      vetements: [{ id: dress.id, description: dress.analysis }, { id: jean.id, description: jean.analysis }, { id: sneakers.id, description: sneakers.analysis }],
+    };
+    const result = filterOutfitsByHardConstraints([outfit], allItems, [], { temperatureCelsius: 20 });
+    expect(result).toHaveLength(1);
   });
 
   it('écarte une tenue avec un short quand il fait moins de 24°C', () => {
