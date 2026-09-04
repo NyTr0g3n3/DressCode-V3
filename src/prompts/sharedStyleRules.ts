@@ -65,6 +65,10 @@ confortablement plutôt qu'un pull épais qu'on garderait tout l'après-midi.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **STRUCTURE** : Chaque tenue = Haut + Bas + Chaussures (minimum)
+⚠️ **EXCEPTION ROBE** : une robe (Hauts, sous-catégorie "Robes") couvre déjà
+haut ET bas à elle seule — Robe + Chaussures est une tenue COMPLÈTE, ne lui
+ajoute PAS de pantalon/jupe par réflexe pour "compléter" la structure. Une
+veste, un gilet ou un cardigan par-dessus reste bienvenu selon la météo.
 
 **COHÉRENCE DE STYLE (CRUCIAL)** :
 - ❌ JAMAIS mélanger sportif et formel (ex: sweat délavé + chemise = NON)

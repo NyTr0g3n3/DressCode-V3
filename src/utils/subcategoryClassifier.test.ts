@@ -28,7 +28,15 @@ describe('detectSubcategory', () => {
   });
 
   it("retourne undefined quand aucun mot-clé ne correspond", () => {
-    expect(detectSubcategory('Robe longue fleurie', 'Hauts')).toBeUndefined();
+    expect(detectSubcategory('Pièce vintage non identifiée', 'Hauts')).toBeUndefined();
+  });
+
+  it('détecte une robe dans les Hauts', () => {
+    expect(detectSubcategory('Robe longue fleurie', 'Hauts')).toBe('Robes');
+  });
+
+  it('priorise "robe chemise" (composé) sur "chemise" (plus court mais aussi présent)', () => {
+    expect(detectSubcategory('Robe chemise à manches longues', 'Hauts')).toBe('Robes');
   });
 
   it("n'est pas sensible à la casse", () => {
@@ -55,10 +63,18 @@ describe('classifyItems', () => {
 
   it('laisse la sous-catégorie undefined si rien ne correspond', () => {
     const items: ClothingItem[] = [
-      { id: '1', imageSrc: '', analysis: 'Robe longue fleurie', category: 'Hauts', color: 'Rouge', material: 'Soie' },
+      { id: '1', imageSrc: '', analysis: 'Pièce vintage non identifiée', category: 'Hauts', color: 'Rouge', material: 'Soie' },
     ];
     const result = classifyItems(items);
     expect(result[0].subcategory).toBeUndefined();
+  });
+
+  it('classe une robe comme Hauts/Robes', () => {
+    const items: ClothingItem[] = [
+      { id: '1', imageSrc: '', analysis: 'Robe longue fleurie', category: 'Hauts', color: 'Rouge', material: 'Soie' },
+    ];
+    const result = classifyItems(items);
+    expect(result[0].subcategory).toBe('Robes');
   });
 
   it("ne mute pas le tableau d'entrée", () => {

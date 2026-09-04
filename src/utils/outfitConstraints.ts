@@ -83,11 +83,17 @@ export function resolveOutfitItems(
 
 /**
  * Une tenue complète a au moins un Haut, un Bas et une paire de
- * Chaussures (les Accessoires sont optionnels).
+ * Chaussures (les Accessoires sont optionnels) — SAUF si le Haut est une
+ * robe (subcategory "Robes") : une robe couvre déjà haut ET bas à elle
+ * seule, donc Robe + Chaussures suffit, sans qu'il faille lui adjoindre
+ * un pantalon/une jupe pour être jugée complète.
  */
 function isStructurallyComplete(resolvedItems: ClothingItem[]): boolean {
   const categories = new Set(resolvedItems.map(item => item.category));
-  return categories.has('Hauts') && categories.has('Bas') && categories.has('Chaussures');
+  if (!categories.has('Hauts') || !categories.has('Chaussures')) return false;
+  if (categories.has('Bas')) return true;
+
+  return resolvedItems.some(item => item.category === 'Hauts' && resolveSubcategory(item) === 'Robes');
 }
 
 /**

@@ -187,7 +187,7 @@ L'utilisateur possède de nombreux hauts différents. Tu DOIS explorer toute la 
 
 ✅ **OBLIGATION DE DIVERSITÉ** :
 - Chaque tenue DOIT avoir un haut DIFFÉRENT (nom, couleur, style)
-- Varier les TYPES de hauts : Mix t-shirt + chemise + pull, ou t-shirt + sweat + polo, etc.
+- Varier les TYPES de hauts : Mix t-shirt + chemise + pull, ou t-shirt + sweat + polo, etc. Une robe compte comme un haut à part entière (voir l'exception structure dans les règles ci-dessous) — l'explorer au même titre que les autres si la garde-robe en contient.
 - Varier les COULEURS de hauts : Si tenue 1 = haut blanc, alors tenue 2 et 3 = autres couleurs
 - Varier les STYLES : Alterner entre casual (t-shirt, sweat) et smart-casual (chemise, pull structuré)
 - Utiliser des pièces MOINS ÉVIDENTES : Explorer les hauts colorés, à motifs, originaux (pas toujours les neutres basiques)

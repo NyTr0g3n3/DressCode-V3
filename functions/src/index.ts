@@ -118,10 +118,13 @@ export const analyzeClothingImages = onCall(
     1. Une description concise incluant son type (ex: T-shirt, jean), sa couleur principale, et son style.
     2. Sa catégorie : "Hauts", "Bas", "Chaussures", ou "Accessoires".
     3. Sa sous-catégorie (selon la catégorie) :
-       - Si "Hauts" : "T-shirts", "Chemises", "Pulls", ou "Vestes"
+       - Si "Hauts" : "T-shirts", "Chemises", "Pulls", "Vestes", ou "Robes"
        - Si "Bas" : "Pantalons", "Shorts", ou "Shorts sportifs"
        - Si "Chaussures" : "Sneakers", "Classiques", ou "Bottines"
        - Si "Accessoires" : "Montres & Bijoux", "Écharpes & Foulards", "Ceintures", "Lunettes", "Chapeaux", ou "Sacs"
+
+       Une robe couvre à la fois le haut et le bas du corps : classe-la
+       "Hauts" avec la sous-catégorie "Robes", jamais "Bas".
     4. Sa couleur principale (ex: "Bleu", "Noir"). Sois concis.
     5. Sa matière principale (ex: "Coton", "Cuir"). Sois concis.
 
@@ -157,7 +160,7 @@ export const analyzeClothingImages = onCall(
                       type: Type.STRING,
                       enum: [
                         // Hauts
-                        "T-shirts", "Chemises", "Pulls", "Vestes",
+                        "T-shirts", "Chemises", "Pulls", "Vestes", "Robes",
                         // Bas
                         "Pantalons", "Shorts", "Shorts sportifs",
                         // Chaussures
