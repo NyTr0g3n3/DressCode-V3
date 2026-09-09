@@ -2,18 +2,19 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ClothingItem, MobileTab } from '../types';
 import type { useMobileWardrobeFilters } from '../hooks/useMobileWardrobeFilters';
-import { LinkIcon, HeartIconSolid, ChevronDownIcon, SearchIcon, SortIcon, LaundryBasketIcon } from './icons.tsx';
+import { LinkIcon, HeartIconSolid, ChevronDownIcon, SearchIcon, SortIcon, LaundryBasketIcon, SparklesIcon } from './icons.tsx';
 
 interface MobileWardrobeViewProps {
   activeTab: Exclude<MobileTab, 'home'>;
   itemIdsInSets: Set<string>;
   onItemClick: (item: ClothingItem) => void;
+  onGenerateFrom: (item: ClothingItem) => void;
   filters: ReturnType<typeof useMobileWardrobeFilters>;
 }
 
 // Vue garde-robe mobile pour un onglet catégorie (Hauts/Bas/Chaussures/
 // Accessoires) : recherche, tri, filtres Type/Couleur/Matière et grille.
-const MobileWardrobeView: React.FC<MobileWardrobeViewProps> = ({ activeTab, itemIdsInSets, onItemClick, filters }) => {
+const MobileWardrobeView: React.FC<MobileWardrobeViewProps> = ({ activeTab, itemIdsInSets, onItemClick, onGenerateFrom, filters }) => {
   const {
     filteredItems,
     searchQuery, setSearchQuery,
@@ -173,13 +174,29 @@ const MobileWardrobeView: React.FC<MobileWardrobeViewProps> = ({ activeTab, item
                   </span>
                 )}
 
-                <div className="aspect-square">
+                <div className="aspect-square relative">
                   <img
                     src={item.imageSrc}
                     alt={item.analysis}
                     loading="lazy"
                     className={`w-full h-full object-cover ${item.dirtySince ? 'opacity-50' : ''}`}
                   />
+                  {/* Accès direct à "Créer une tenue à partir de cet article"
+                      sans passer par la modale de détail — celle-ci garde son
+                      propre bouton, les deux sont complémentaires. */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!item.dirtySince) onGenerateFrom(item);
+                    }}
+                    disabled={!!item.dirtySince}
+                    title={item.dirtySince ? "Cet article est au bac à linge — sortez-le d'abord pour l'utiliser dans une tenue" : "Créer une tenue à partir de cet article"}
+                    aria-label="Créer une tenue à partir de cet article"
+                    className="absolute bottom-2 right-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-gold z-10 active:bg-gold active:text-onyx transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <SparklesIcon className="w-4 h-4" />
+                  </button>
                 </div>
                 <div className="p-3">
                   <p className="text-sm font-medium line-clamp-2">{item.analysis}</p>

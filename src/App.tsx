@@ -459,10 +459,14 @@ const AppContent: React.FC = () => {
     analyzeClothingItems(files).catch(err => setError(getUserFriendlyError(err)));
   }, [analyzeClothingItems]);
 
-  const handleGenerateFromModal = (item: ClothingItem) => {
-    // Stocker l'item comme ancre et ouvrir le modal de génération
+  // Appelé depuis la modale de détail ET depuis le bouton d'accès rapide sur
+  // chaque carte de la galerie (desktop et mobile) : stocke l'item comme
+  // ancre et ouvre le modal de génération. setSelectedItem(null) ferme la
+  // modale de détail quand elle est ouverte ; sans effet sinon (appel direct
+  // depuis la galerie, aucune modale à fermer).
+  const handleGenerateFromItem = (item: ClothingItem) => {
     setAnchorItemForGeneration(item);
-    setSelectedItem(null); // Fermer le modal de détails
+    setSelectedItem(null);
     setShowOutfitModal(true); // Ouvrir le modal de génération
   };
   
@@ -662,12 +666,13 @@ useEffect(() => {
           </div>
         
           <div className="hidden md:block">
-            <ClothingGallery 
-              clothingItems={safeClothingItems} 
+            <ClothingGallery
+              clothingItems={safeClothingItems}
               clothingSets={safeClothingSets}
               onItemClick={handleItemClick}
               onDeleteItem={handleDeleteItem}
               onCreateSet={handleCreateSet}
+              onGenerateFrom={handleGenerateFromItem}
               isLoading={loading}
             />
           </div>
@@ -704,6 +709,7 @@ useEffect(() => {
                     activeTab={activeTab}
                     itemIdsInSets={itemIdsInSets}
                     onItemClick={handleItemClick}
+                    onGenerateFrom={handleGenerateFromItem}
                     filters={mobileFilters}
                   />
                 )}
@@ -888,7 +894,7 @@ useEffect(() => {
           clothingSets={safeClothingSets}
           onClose={handleCloseModal}
           onUpdate={handleUpdateItem}
-          onGenerateFrom={handleGenerateFromModal}
+          onGenerateFrom={handleGenerateFromItem}
           onRemoveSet={handleRemoveSet}
           onDelete={handleDeleteItem}
           getItemWearCount={getItemWearCount}

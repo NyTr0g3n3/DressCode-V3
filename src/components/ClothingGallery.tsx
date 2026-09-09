@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import type { ClothingItem as ClothingItemType, ClothingSet, Category } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SkeletonCard } from './SkeletonCard';
-import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, HeartIconSolid, SearchIcon, SortIcon, EyeSlashIcon, LaundryBasketIcon } from './icons.tsx';
+import { RemoveIcon, WardrobeIcon, TshirtIcon, PantIcon, ShoeIcon, AccessoryIcon, ChevronDownIcon, CheckCircleIcon, LinkIcon, HeartIconSolid, SearchIcon, SortIcon, EyeSlashIcon, LaundryBasketIcon, SparklesIcon } from './icons.tsx';
 import { classifyItems, SUBCATEGORIES } from '../utils/subcategoryClassifier';
 
 interface CardProps {
@@ -11,6 +11,7 @@ interface CardProps {
   onClick: () => void;
   onPreview?: (imageSrc: string, analysis: string) => void;
   onCancelPreview?: () => void;
+  onGenerateFrom?: () => void;
   isSelected: boolean;
   isSet?: boolean;
   isFavorite?: boolean;
@@ -18,7 +19,7 @@ interface CardProps {
   isDirty?: boolean;
 }
 
-const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onPreview, onCancelPreview, isSelected, isSet, isFavorite, isExcluded, isDirty }) => {
+const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onPreview, onCancelPreview, onGenerateFrom, isSelected, isSet, isFavorite, isExcluded, isDirty }) => {
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const [isLongPressing, setIsLongPressing] = useState(false);
 
@@ -91,6 +92,27 @@ const Card: React.FC<CardProps> = ({ imageSrc, analysis, onClick, onPreview, onC
       <span className="absolute top-2 left-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white z-10"><LinkIcon /></span>
     ) : null}
 
+    {/* Accès direct à "Créer une tenue à partir de cet article" sans passer
+        par la modale de détail — celle-ci garde son propre bouton (voir
+        ClothingDetailModal), les deux sont complémentaires. Masqué en mode
+        création d'ensemble (le clic sur la carte sert alors à sélectionner),
+        désactivé si l'article est au bac à linge, comme dans la modale. */}
+    {onGenerateFrom && (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!isDirty) onGenerateFrom();
+        }}
+        disabled={isDirty}
+        title={isDirty ? "Cet article est au bac à linge — sortez-le d'abord pour l'utiliser dans une tenue" : "Créer une tenue à partir de cet article"}
+        aria-label="Créer une tenue à partir de cet article"
+        className="absolute bottom-2 right-2 p-1.5 bg-black/50 backdrop-blur-sm rounded-full text-gold z-10 hover:bg-gold hover:text-onyx transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-black/50 disabled:hover:text-gold"
+      >
+        <SparklesIcon className="w-4 h-4" />
+      </button>
+    )}
+
     <div className="absolute bottom-0 left-0 right-0 p-3">
       <p className="text-white text-sm font-medium line-clamp-2">{analysis}</p>
     </div>
@@ -106,6 +128,7 @@ interface ClothingGalleryProps {
   onItemClick: (item: ClothingItemType) => void;
   onDeleteItem: (id: string) => void;
   onCreateSet: (name: string, itemIds: string[]) => void;
+  onGenerateFrom: (item: ClothingItemType) => void;
   isLoading: boolean;
 }
 
@@ -121,7 +144,7 @@ const initialFilters: Record<Category, { color: string; material: string; subcat
 // onItemClick), pas depuis la grille elle-même. Prop gardée telle quelle
 // (contrat public du composant) plutôt que retirée, pour ne pas trancher
 // cette question de produit dans un simple nettoyage de lint.
-const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoading, clothingSets = [], onItemClick, onDeleteItem: _onDeleteItem, onCreateSet }) => {
+const ClothingGallery: React.FC<ClothingGalleryProps> = ({ clothingItems, isLoading, clothingSets = [], onItemClick, onDeleteItem: _onDeleteItem, onCreateSet, onGenerateFrom }) => {
   const [openCategory, setOpenCategory] = useState<Category | null>('Hauts');
   const [filters, setFilters] = useState(initialFilters);
   const [searchQuery, setSearchQuery] = useState('');
@@ -670,6 +693,7 @@ const filteredItems = useMemo(() => {
                               onClick={() => handleCardClick(item)}
                               onPreview={handlePreview}
                               onCancelPreview={handleCancelPreview}
+                              onGenerateFrom={isSetCreationMode ? undefined : () => onGenerateFrom(item)}
                               isSelected={selectedItemIds.has(item.id)}
                               isSet={itemIdsInSets.has(item.id)}
                               isFavorite={item.isFavorite}

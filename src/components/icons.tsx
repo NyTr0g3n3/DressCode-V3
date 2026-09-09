@@ -26,8 +26,8 @@ export const LoadingSpinner: React.FC<{ className?: string }> = ({ className = "
   </svg>
 );
 
-export const SparklesIcon: React.FC = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+export const SparklesIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-5" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
     <path d="M10 3a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0V7H8a1 1 0 110-2h1V4a1 1 0 011-1zM4 9a1 1 0 011 1v1h1a1 1 0 110 2H5v1a1 1 0 11-2 0v-1H2a1 1 0 110-2h1v-1a1 1 0 011-1zM16 9a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
   </svg>
 );
