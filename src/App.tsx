@@ -102,6 +102,17 @@ const AppContent: React.FC = () => {
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isWornOutfitsOpen, setIsWornOutfitsOpen] = useState(false);
   const [isLaundryBinOpen, setIsLaundryBinOpen] = useState(false);
+  // Sections repliables du desktop (favoris/portées/bac à linge) : nichées
+  // dans la colonne latérale sticky, sous le générateur et les tenues
+  // suggérées, donc pas toujours visibles sans scroller. La barre d'accès
+  // rapide en haut de page (desktop) les ouvre ET les amène à l'écran.
+  const favoritesSectionRef = useRef<HTMLDivElement>(null);
+  const wornOutfitsSectionRef = useRef<HTMLDivElement>(null);
+  const laundryBinSectionRef = useRef<HTMLDivElement>(null);
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement>, setOpen: (open: boolean) => void) => {
+    setOpen(true);
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
   const [anchorItemForGeneration, setAnchorItemForGeneration] = useState<ClothingItem | ClothingSet | null>(null);
   const [showChatModal, setShowChatModal] = useState(false);
   const [chatOutfit, setChatOutfit] = useState<OutfitSuggestion | null>(null);
@@ -548,6 +559,44 @@ useEffect(() => {
   </div>
 )}
 
+      {/* Accès rapide desktop : Portées/Favoris/Bac à linge vivent dans la
+          colonne latérale, sous le générateur et les tenues suggérées — pas
+          toujours visibles sans scroller. Cette barre, en haut de page,
+          ouvre la section ET l'amène à l'écran en un clic. */}
+      {(wornOutfitsLast7Days.length > 0 || favoriteOutfits.length > 0 || dirtyItems.length > 0) && (
+        <div className="hidden md:flex items-center gap-3 mb-8 flex-wrap">
+          {wornOutfitsLast7Days.length > 0 && (
+            <button
+              onClick={() => scrollToSection(wornOutfitsSectionRef, setIsWornOutfitsOpen)}
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-raisin-black border border-black/10 dark:border-white/10 rounded-full hover:border-gold transition-colors shadow-sm"
+            >
+              <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm font-medium">Portées <span className="text-gray-500">({wornOutfitsLast7Days.length})</span></span>
+            </button>
+          )}
+          {favoriteOutfits.length > 0 && (
+            <button
+              onClick={() => scrollToSection(favoritesSectionRef, setIsFavoritesOpen)}
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-raisin-black border border-black/10 dark:border-white/10 rounded-full hover:border-gold transition-colors shadow-sm"
+            >
+              <HeartIconSolid className="w-4 h-4 text-red-500" />
+              <span className="text-sm font-medium">Favoris <span className="text-gray-500">({favoriteOutfits.length})</span></span>
+            </button>
+          )}
+          {dirtyItems.length > 0 && (
+            <button
+              onClick={() => scrollToSection(laundryBinSectionRef, setIsLaundryBinOpen)}
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-raisin-black border border-black/10 dark:border-white/10 rounded-full hover:border-gold transition-colors shadow-sm"
+            >
+              <LaundryBasketIcon className="w-4 h-4 text-amber-600 dark:text-amber-500" />
+              <span className="text-sm font-medium">Bac à linge <span className="text-gray-500">({dirtyItems.length})</span></span>
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         
         <div className="lg:col-span-2 space-y-10">
@@ -689,7 +738,7 @@ useEffect(() => {
               )}
 
           {favoriteOutfits.length > 0 && (
-  <div className="mt-10 border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-raisin-black shadow-sm">
+  <div ref={favoritesSectionRef} className="mt-10 border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-raisin-black shadow-sm">
     <button
       onClick={() => setIsFavoritesOpen(!isFavoritesOpen)}
       className="w-full flex items-center justify-between p-5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
@@ -719,7 +768,7 @@ useEffect(() => {
 )}
 
           {wornOutfitsLast7Days.length > 0 && (
-  <div className="mt-10 border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-raisin-black shadow-sm">
+  <div ref={wornOutfitsSectionRef} className="mt-10 border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-raisin-black shadow-sm">
     <button
       onClick={() => setIsWornOutfitsOpen(!isWornOutfitsOpen)}
       className="w-full flex items-center justify-between p-5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
@@ -790,7 +839,7 @@ useEffect(() => {
 )}
 
           {dirtyItems.length > 0 && (
-  <div className="mt-10 border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-raisin-black shadow-sm">
+  <div ref={laundryBinSectionRef} className="mt-10 border border-black/10 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-raisin-black shadow-sm">
     <button
       onClick={() => setIsLaundryBinOpen(!isLaundryBinOpen)}
       className="w-full flex items-center justify-between p-5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
